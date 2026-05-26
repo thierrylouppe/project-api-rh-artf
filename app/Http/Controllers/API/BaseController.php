@@ -9,57 +9,55 @@ use Illuminate\Http\Request;
 
 abstract class BaseController extends Controller
 {
-    abstract protected function service(): BaseService;
+    public function __construct(protected BaseService $service) {}
 
     abstract protected function resource(): string;
 
     public function index(Request $request): JsonResponse
     {
-        $items = $this->service()->getAll($request->query());
+        $items = $this->service->getAll($request->query());
 
         return response()->json(['data' => $this->resource()::collection($items)]);
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request): JsonResponse
     {
-        $item = $this->service()->findById($id);
+        $id = (int) collect($request->route()->parameters())->first();
 
-        return response()->json(['data' => new ($this->resource())($item)]);
+        return $this->showWithRelations($id);
     }
 
-    public function store(Request $request): JsonResponse
+    protected function showWithRelations(int $id): JsonResponse
     {
-        $item = $this->service()->create($request->validate($this->storeRules()));
+        $model = $this->service->findById($id);
 
-        return response()->json(
-            ['data' => new ($this->resource())($item), 'message' => 'Créé avec succès'],
-            201
-        );
+        if ($relations = $this->showRelations()) {
+            $model->load($relations);
+        }
+
+        return $this->respond($model);
     }
 
-    public function update(Request $request, int $id): JsonResponse
-    {
-        $item = $this->service()->update($id, $request->validate($this->updateRules()));
-
-        return response()->json(
-            ['data' => new ($this->resource())($item), 'message' => 'Mis à jour avec succès']
-        );
-    }
-
-    public function destroy(int $id): JsonResponse
-    {
-        $this->service()->delete($id);
-
-        return response()->json(['message' => 'Supprimé avec succès']);
-    }
-
-    protected function storeRules(): array
+    /** @return list<string> */
+    protected function showRelations(): array
     {
         return [];
     }
 
-    protected function updateRules(): array
+    public function destroy(int $id): JsonResponse
     {
-        return $this->storeRules();
+        $this->service->delete($id);
+
+        return response()->json(['message' => 'Supprimé avec succès']);
+    }
+
+    protected function respond(mixed $model, ?string $message = null, int $status = 200): JsonResponse
+    {
+        $payload = ['data' => new ($this->resource())($model)];
+        if ($message !== null) {
+            $payload['message'] = $message;
+        }
+
+        return response()->json($payload, $status);
     }
 }

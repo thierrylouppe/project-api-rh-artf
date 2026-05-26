@@ -5,6 +5,8 @@
 
 **Légende :** ⬜ À réaliser · 🔄 En cours · ✅ Réalisé · ⏸ Non réalisé (reporté)
 
+**Base de données :** MySQL `bd_api_rh_artf` (utf8mb4_unicode_ci) sur `127.0.0.1:3306`
+
 ---
 
 ## Phase 0 — Socle technique
@@ -31,9 +33,9 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 1.1 Structures organisationnelles | ⬜ | — |
-| 1.2 Référentiels RH | ⬜ | — |
-| 1.3 Administration système | ⬜ | — |
+| 1.1 Structures organisationnelles | ✅ | Hiérarchie Localite → Administration → Direction → Service → Bureau avec CRUD, sigles auto, endpoints `byParent` et seeders (4/3/7/9/8 lignes) |
+| 1.2 Référentiels RH | ✅ | 11 référentiels CRUD (diplômes, grades, catégories, échelons, fonctions, types contrat/document/recrutement/absence/congé, motifs) avec seeders |
+| 1.3 Administration système | ✅ | Auth Sanctum, users/rôles/permissions, audit logs, paramètres app — 36 permissions, 5 rôles, 2 utilisateurs seedés |
 
 ---
 
