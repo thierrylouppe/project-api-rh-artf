@@ -6,17 +6,16 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
+    /** @var array<class-string, class-string> */
+    private array $repositoryBindings = [];
+
     public function register(): void
     {
-        //
+        foreach ($this->repositoryBindings as $interface => $repository) {
+            $this->app->bind($interface, $repository);
+        }
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         //
