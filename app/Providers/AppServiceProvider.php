@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Interfaces\ClassegrillesalarialeInterface;
+use App\Interfaces\ParametregrileInterface;
+use App\Interfaces\SalaireInterface;
 use App\Interfaces\AdministrationInterface;
 use App\Interfaces\AuditLogInterface;
 use App\Interfaces\BureauInterface;
@@ -23,6 +26,9 @@ use App\Interfaces\TypeContratInterface;
 use App\Interfaces\TypeDocumentInterface;
 use App\Interfaces\TypeRecrutementInterface;
 use App\Interfaces\UserInterface;
+use App\Repositories\ClassegrillesalarialeRepository;
+use App\Repositories\ParametregrileRepository;
+use App\Repositories\SalaireRepository;
 use App\Repositories\AdministrationRepository;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\BureauRepository;
@@ -68,6 +74,10 @@ class AppServiceProvider extends ServiceProvider
         TypeAbsenceInterface::class       => TypeAbsenceRepository::class,
         TypeCongeInterface::class         => TypeCongeRepository::class,
         MotifAdministratifInterface::class => MotifAdministratifRepository::class,
+        // Module Grille Salariale
+        ClassegrillesalarialeInterface::class => ClassegrillesalarialeRepository::class,
+        ParametregrileInterface::class        => ParametregrileRepository::class,
+        SalaireInterface::class               => SalaireRepository::class,
         // Module 1.3 — Administration système
         UserInterface::class                => UserRepository::class,
         RoleInterface::class                => RoleRepository::class,

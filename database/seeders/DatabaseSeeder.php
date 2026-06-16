@@ -33,6 +33,9 @@ class DatabaseSeeder extends Seeder
             // Module 1.3 — Utilisateurs & paramètres
             UserSeeder::class,
             ParametreApplicationSeeder::class,
+            // Module Grille Salariale (dépend des référentiels categories + grades)
+            ClassegrillesalarialeSeeder::class,
+            ParametregrileSeeder::class,
         ]);
     }
 }

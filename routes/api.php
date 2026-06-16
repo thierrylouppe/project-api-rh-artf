@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\API\ClassegrillesalarialeController;
+use App\Http\Controllers\API\ParametregrileController;
+use App\Http\Controllers\API\SalaireController;
 use App\Http\Controllers\API\AdministrationController;
 use App\Http\Controllers\API\AuditLogController;
 use App\Http\Controllers\API\AuthController;
@@ -57,6 +60,18 @@ Route::apiResource('types-recrutements', TypeRecrutementController::class);
 Route::apiResource('types-absences', TypeAbsenceController::class);
 Route::apiResource('types-conges', TypeCongeController::class);
 Route::apiResource('motifs-administratifs', MotifAdministratifController::class);
+
+// ============================================================
+// MODULE GRILLE SALARIALE
+// ============================================================
+Route::apiResource('grille-classes', ClassegrillesalarialeController::class)
+    ->parameters(['grille-classes' => 'classegrillesalariale']);
+
+Route::get('grille-parametres/current', [ParametregrileController::class, 'current']);
+Route::put('grille-parametres/{parametregrile}', [ParametregrileController::class, 'update']);
+
+Route::get('salaires', [SalaireController::class, 'index']);
+Route::post('salaires/generation', [SalaireController::class, 'generate']);
 
 // ============================================================
 // MODULE 1.3 — AUTH & ADMINISTRATION SYSTÈME
