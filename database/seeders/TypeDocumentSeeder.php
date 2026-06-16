@@ -10,18 +10,18 @@ class TypeDocumentSeeder extends Seeder
     public function run(): void
     {
         $types = [
-            ['nom' => 'Carte Nationale d\'Identité',        'obligatoire' => true],
-            ['nom' => 'Acte de Naissance',                   'obligatoire' => true],
-            ['nom' => 'Diplôme de Formation',                'obligatoire' => true],
-            ['nom' => 'Curriculum Vitae',                    'obligatoire' => true],
-            ['nom' => 'Casier Judiciaire',                   'obligatoire' => true],
-            ['nom' => 'Certificat Médical d\'Aptitude',      'obligatoire' => true],
-            ['nom' => 'Photo d\'Identité',                   'obligatoire' => true],
-            ['nom' => 'Attestation de Résidence',            'obligatoire' => false],
-            ['nom' => 'Extrait du Registre de Commerce',     'obligatoire' => false],
-            ['nom' => 'Relevé de Notes',                     'obligatoire' => false],
-            ['nom' => 'Lettre de Recommandation',            'obligatoire' => false],
-            ['nom' => 'Attestation de Travail',              'obligatoire' => false],
+            // Documents obligatoires pour CDI / CDD
+            ['nom' => 'Curriculum vitae',           'obligatoire' => true,  'description' => 'CV — obligatoire pour tous les contrats'],
+            ['nom' => 'Demande',                    'obligatoire' => true,  'description' => 'Lettre de demande — obligatoire pour tous les contrats'],
+            ['nom' => 'Diplôme',                    'obligatoire' => true,  'description' => 'Justificatif de niveau d\'études — obligatoire CDI/CDD'],
+            ['nom' => 'Engagement',                 'obligatoire' => true,  'description' => 'Acte d\'engagement — obligatoire CDI/CDD/Consultant'],
+            ['nom' => 'Certificat de nationalité',  'obligatoire' => true,  'description' => 'Justificatif de nationalité congolaise — obligatoire CDI/CDD'],
+            ['nom' => 'Casier judiciaire',          'obligatoire' => true,  'description' => 'Extrait du casier judiciaire — obligatoire CDI/CDD'],
+            ['nom' => 'Certificat médical',         'obligatoire' => true,  'description' => 'Certificat d\'aptitude médicale — obligatoire CDI/CDD'],
+            ['nom' => 'Acte de naissance',          'obligatoire' => true,  'description' => 'Extrait d\'acte de naissance — obligatoire CDI/CDD'],
+
+            // Document administratif complémentaire
+            ['nom' => 'Nomination',                 'obligatoire' => false, 'description' => 'Acte de nomination à un poste ou une fonction'],
         ];
 
         foreach ($types as $data) {

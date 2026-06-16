@@ -10,17 +10,16 @@ class GradeSeeder extends Seeder
     public function run(): void
     {
         $grades = [
-            ['nom' => 'Agent d\'Exécution',            'sigle' => 'AE',   'niveau' => 1],
-            ['nom' => 'Agent de Maîtrise',             'sigle' => 'AM',   'niveau' => 2],
-            ['nom' => 'Technicien',                    'sigle' => 'TECH', 'niveau' => 3],
-            ['nom' => 'Technicien Supérieur',          'sigle' => 'TS',   'niveau' => 4],
-            ['nom' => 'Attaché de Direction',          'sigle' => 'AD',   'niveau' => 5],
-            ['nom' => 'Chargé d\'Études',              'sigle' => 'CE',   'niveau' => 6],
-            ['nom' => 'Conseiller',                    'sigle' => 'CONS', 'niveau' => 7],
-            ['nom' => 'Directeur Adjoint',             'sigle' => 'DA',   'niveau' => 8],
-            ['nom' => 'Directeur',                     'sigle' => 'DIR',  'niveau' => 9],
-            ['nom' => 'Directeur Général Adjoint',     'sigle' => 'DGA',  'niveau' => 10],
-            ['nom' => 'Directeur Général',             'sigle' => 'DG',   'niveau' => 11],
+            ['nom' => 'Personnel de service',          'sigle' => 'PS',   'niveau' => 1,  'description' => 'Coefficient de base : 45'],
+            ['nom' => 'Personnel de service spécialisé','sigle' => 'PSS',  'niveau' => 2,  'description' => 'Coefficient de base : 50'],
+            ['nom' => 'Commis',                         'sigle' => 'COM',  'niveau' => 3,  'description' => 'Coefficient de base : 55'],
+            ['nom' => 'Commis Principal',               'sigle' => 'CP',   'niveau' => 4,  'description' => 'Coefficient de base : 60'],
+            ['nom' => 'Contrôleur',                     'sigle' => 'CTR',  'niveau' => 5,  'description' => 'Coefficient de base : 75'],
+            ['nom' => 'Contrôleur Principal',           'sigle' => 'CTRP', 'niveau' => 6,  'description' => 'Coefficient de base : 90'],
+            ['nom' => 'Vérificateur',                   'sigle' => 'VER',  'niveau' => 7,  'description' => 'Coefficient de base : 105'],
+            ['nom' => 'Inspecteur',                     'sigle' => 'INS',  'niveau' => 8,  'description' => 'Coefficient de base : 120'],
+            ['nom' => 'Inspecteur Principal',           'sigle' => 'INSP', 'niveau' => 9,  'description' => 'Coefficient de base : 145'],
+            ['nom' => 'Hors Classe',                    'sigle' => 'HC',   'niveau' => 10, 'description' => 'Coefficient de base : 170'],
         ];
 
         foreach ($grades as $data) {

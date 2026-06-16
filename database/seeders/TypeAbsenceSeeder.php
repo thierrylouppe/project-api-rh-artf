@@ -10,13 +10,14 @@ class TypeAbsenceSeeder extends Seeder
     public function run(): void
     {
         $types = [
-            ['nom' => 'Maladie',                      'justification_requise' => true,  'description' => 'Absence pour raison médicale'],
-            ['nom' => 'Accident de Travail',           'justification_requise' => true,  'description' => 'Absence suite à un accident survenu au travail'],
-            ['nom' => 'Absence Non Justifiée',         'justification_requise' => false, 'description' => 'Absence sans motif déclaré'],
-            ['nom' => 'Événement Familial',            'justification_requise' => true,  'description' => 'Décès, mariage ou naissance'],
-            ['nom' => 'Convocation Officielle',        'justification_requise' => true,  'description' => 'Convocation administrative ou judiciaire'],
-            ['nom' => 'Retard',                        'justification_requise' => false, 'description' => 'Arrivée tardive au poste de travail'],
-            ['nom' => 'Autorisation d\'Absence',       'justification_requise' => true,  'description' => 'Absence autorisée par la hiérarchie'],
+            ['nom' => 'Absence non justifiée',      'justification_requise' => false, 'description' => 'Absence non déclarée ou sans justificatif valable'],
+            ['nom' => 'Permission d\'absence',      'justification_requise' => true,  'description' => 'Courte absence autorisée préalablement par la hiérarchie'],
+            ['nom' => 'Absence pour maladie',       'justification_requise' => true,  'description' => 'Absence médicale avec certificat du médecin traitant'],
+            ['nom' => 'Absence pour formation',     'justification_requise' => true,  'description' => 'Participation à un stage ou séminaire professionnel'],
+            ['nom' => 'Absence pour mission',       'justification_requise' => true,  'description' => 'Déplacement de service ou mission officielle'],
+            ['nom' => 'Absence syndicale',          'justification_requise' => true,  'description' => 'Activité syndicale autorisée par la direction'],
+            ['nom' => 'Retard',                     'justification_requise' => false, 'description' => 'Arrivée tardive au poste de travail (absence partielle)'],
+            ['nom' => 'Mise en disponibilité',      'justification_requise' => true,  'description' => 'Suspension temporaire des obligations de service'],
         ];
 
         foreach ($types as $data) {
