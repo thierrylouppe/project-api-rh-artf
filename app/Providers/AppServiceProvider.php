@@ -24,7 +24,7 @@ use App\Interfaces\TypeAbsenceInterface;
 use App\Interfaces\TypeCongeInterface;
 use App\Interfaces\TypeContratInterface;
 use App\Interfaces\TypeDocumentInterface;
-use App\Interfaces\TypeRecrutementInterface;
+use App\Interfaces\TypeIntegrationInterface;
 use App\Interfaces\UserInterface;
 use App\Repositories\ClassegrillesalarialeRepository;
 use App\Repositories\ParametregrileRepository;
@@ -48,7 +48,7 @@ use App\Repositories\TypeAbsenceRepository;
 use App\Repositories\TypeCongeRepository;
 use App\Repositories\TypeContratRepository;
 use App\Repositories\TypeDocumentRepository;
-use App\Repositories\TypeRecrutementRepository;
+use App\Repositories\TypeIntegrationRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Support\ServiceProvider;
 
@@ -70,7 +70,7 @@ class AppServiceProvider extends ServiceProvider
         FonctionInterface::class          => FonctionRepository::class,
         TypeContratInterface::class       => TypeContratRepository::class,
         TypeDocumentInterface::class      => TypeDocumentRepository::class,
-        TypeRecrutementInterface::class   => TypeRecrutementRepository::class,
+        TypeIntegrationInterface::class   => TypeIntegrationRepository::class,
         TypeAbsenceInterface::class       => TypeAbsenceRepository::class,
         TypeCongeInterface::class         => TypeCongeRepository::class,
         MotifAdministratifInterface::class => MotifAdministratifRepository::class,

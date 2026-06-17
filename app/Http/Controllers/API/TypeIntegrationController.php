@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Requests\TypeRecrutement\CreateRequest;
-use App\Http\Requests\TypeRecrutement\UpdateRequest;
-use App\Http\Resources\TypeRecrutementResource;
-use App\Services\TypeRecrutementService;
+use App\Http\Requests\TypeIntegration\CreateRequest;
+use App\Http\Requests\TypeIntegration\UpdateRequest;
+use App\Http\Resources\TypeIntegrationResource;
+use App\Services\TypeIntegrationService;
 use Illuminate\Http\JsonResponse;
 
-class TypeRecrutementController extends BaseController
+class TypeIntegrationController extends BaseController
 {
-    public function __construct(TypeRecrutementService $service)
+    public function __construct(TypeIntegrationService $service)
     {
         parent::__construct($service);
     }
 
     protected function resource(): string
     {
-        return TypeRecrutementResource::class;
+        return TypeIntegrationResource::class;
     }
 
     public function store(CreateRequest $request): JsonResponse

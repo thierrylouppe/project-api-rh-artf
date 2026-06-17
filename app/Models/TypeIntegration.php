@@ -5,11 +5,11 @@ namespace App\Models;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 
-class TypeRecrutement extends Model
+class TypeIntegration extends Model
 {
     use HasFilterScope;
 
-    protected $table = 'type_recrutements';
+    protected $table = 'type_integrations';
 
     protected $fillable = ['nom', 'description'];
 

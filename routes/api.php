@@ -24,7 +24,7 @@ use App\Http\Controllers\API\TypeAbsenceController;
 use App\Http\Controllers\API\TypeCongeController;
 use App\Http\Controllers\API\TypeContratController;
 use App\Http\Controllers\API\TypeDocumentController;
-use App\Http\Controllers\API\TypeRecrutementController;
+use App\Http\Controllers\API\TypeIntegrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json(['status' => 'ok']));
@@ -56,7 +56,7 @@ Route::apiResource('echelons', EchelonController::class);
 Route::apiResource('fonctions', FonctionController::class);
 Route::apiResource('types-contrats', TypeContratController::class);
 Route::apiResource('types-documents', TypeDocumentController::class);
-Route::apiResource('types-recrutements', TypeRecrutementController::class);
+Route::apiResource('types-integrations', TypeIntegrationController::class);
 Route::apiResource('types-absences', TypeAbsenceController::class);
 Route::apiResource('types-conges', TypeCongeController::class);
 Route::apiResource('motifs-administratifs', MotifAdministratifController::class);

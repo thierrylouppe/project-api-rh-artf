@@ -1,7 +1,7 @@
 # Suivi de projet — Gestion RH API
 
-> Dernière mise à jour : 2026-05-26  
-> Références : [`roadmap.md`](./roadmap.md) · [`structuration_par_module.md`](./structuration_par_module.md)
+> Dernière mise à jour : 2026-06-17  
+> Références : [`roadmap.md`](./roadmap.md) · [`structuration_par_module.md`](./structuration_par_module.md) · [`REFERENTIELS-RH.md`](./REFERENTIELS-RH.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md)
 
 **Légende :** ⬜ À réaliser · 🔄 En cours · ✅ Réalisé · ⏸ Non réalisé (reporté)
 
@@ -23,7 +23,7 @@
 | 0.3 | `BaseInterface`, `BaseRepository`, `BaseService`, `BaseController` | ✅ | CRUD générique prêt pour héritage par module |
 | 0.4 | Traits `HasAutoSigle`, `HasFilterScope` | ✅ | Sigle auto depuis le nom et scope de filtrage générique |
 | 0.5 | `OpenApiDefinition` Swagger | ✅ | Annotations `@OA\Info` et schéma bearer Sanctum |
-| 0.6 | `AppServiceProvider` (bindings + observers) | ✅ | Tableau `$repositoryBindings` prêt pour les modules |
+| 0.6 | `AppServiceProvider` (bindings + observers) | ✅ | Tableau `$repositoryBindings` — 24 interfaces liées |
 
 **Phase 0 : terminée** (hors Swagger package et Pest, reportés)
 
@@ -34,7 +34,7 @@
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
 | 1.1 Structures organisationnelles | ✅ | Hiérarchie Localite → Administration → Direction → Service → Bureau avec CRUD, sigles auto, endpoints `byParent` et seeders (4/3/7/9/8 lignes) |
-| 1.2 Référentiels RH | ✅ | 11 référentiels CRUD (diplômes, grades, catégories, échelons, fonctions, types contrat/document/recrutement/absence/congé, motifs) avec seeders |
+| 1.2 Référentiels RH | ✅ | 11 référentiels CRUD + seeders alignés sur [`REFERENTIELS-RH.md`](./REFERENTIELS-RH.md) : 29 diplômes (Classe I–IX), 10 grades FP Congo, 10 catégories (Classe I–X), 12 échelons, 8 fonctions, 4 types contrat, 9 types document, 9 types recrutement, 8 types absence, 8 types congé, 24 motifs administratifs |
 | 1.3 Administration système | ✅ | Auth Sanctum, users/rôles/permissions, audit logs, paramètres app — 36 permissions, 5 rôles, 2 utilisateurs seedés |
 
 ---
@@ -74,8 +74,10 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 5.1 Grilles & barèmes | ⬜ | — |
+| 5.1 Grilles & barèmes | ✅ | Tables `classegrillesalariales` (FK vers `categories` + `grades`), `parametregrilles`, `salaires` — CRUD classes, paramètres singleton, génération automatique 120 lignes (10 classes × 12 échelons), bulk insert, formule validée (spec : Classe I ech.1 → 147 000 FCFA). Routes : `GET/POST/PUT/DELETE /api/grille-classes`, `GET/PUT /api/grille-parametres`, `GET /api/salaires`, `POST /api/salaires/generation` |
 | 5.2 Bulletins & historique | ⬜ | — |
+
+**Référence :** [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md)
 
 ---
 
@@ -149,3 +151,9 @@
 | 12.1 Classement documents | ⬜ | — |
 | 12.2 Archivage & recherche | ⬜ | — |
 | 12.3 Historique versions | ⬜ | — |
+
+---
+
+## Prochaine étape recommandée
+
+**Module 2 — Gestion du Personnel / Dossier Agent** (fiche agent, documents d'entrée, compte utilisateur lié).
