@@ -2,6 +2,18 @@
 
 namespace App\Providers;
 
+use App\Interfaces\ActeAdministratifInterface;
+use App\Interfaces\AffectationInterface;
+use App\Interfaces\AgentInterface;
+use App\Interfaces\CompteIntegrationInterface;
+use App\Interfaces\ContratInterface;
+use App\Interfaces\DocumentDossierInterface;
+use App\Interfaces\DossierIntegrationInterface;
+use App\Interfaces\HistoriqueIntegrationInterface;
+use App\Interfaces\NominationInterface;
+use App\Interfaces\PriseDeServiceInterface;
+use App\Interfaces\RemiseMaterielInterface;
+use App\Interfaces\ValidationWorkflowInterface;
 use App\Interfaces\ClassegrillesalarialeInterface;
 use App\Interfaces\ParametregrileInterface;
 use App\Interfaces\SalaireInterface;
@@ -26,6 +38,18 @@ use App\Interfaces\TypeContratInterface;
 use App\Interfaces\TypeDocumentInterface;
 use App\Interfaces\TypeIntegrationInterface;
 use App\Interfaces\UserInterface;
+use App\Repositories\ActeAdministratifRepository;
+use App\Repositories\AffectationRepository;
+use App\Repositories\AgentRepository;
+use App\Repositories\CompteIntegrationRepository;
+use App\Repositories\ContratRepository;
+use App\Repositories\DocumentDossierRepository;
+use App\Repositories\DossierIntegrationRepository;
+use App\Repositories\HistoriqueIntegrationRepository;
+use App\Repositories\NominationRepository;
+use App\Repositories\PriseDeServiceRepository;
+use App\Repositories\RemiseMaterielRepository;
+use App\Repositories\ValidationWorkflowRepository;
 use App\Repositories\ClassegrillesalarialeRepository;
 use App\Repositories\ParametregrileRepository;
 use App\Repositories\SalaireRepository;
@@ -56,6 +80,19 @@ class AppServiceProvider extends ServiceProvider
 {
     /** @var array<class-string, class-string> */
     private array $repositoryBindings = [
+        // Module 2 — Intégration Administrative
+        AgentInterface::class                  => AgentRepository::class,
+        DossierIntegrationInterface::class     => DossierIntegrationRepository::class,
+        DocumentDossierInterface::class        => DocumentDossierRepository::class,
+        ValidationWorkflowInterface::class     => ValidationWorkflowRepository::class,
+        ActeAdministratifInterface::class      => ActeAdministratifRepository::class,
+        ContratInterface::class                => ContratRepository::class,
+        AffectationInterface::class            => AffectationRepository::class,
+        NominationInterface::class             => NominationRepository::class,
+        CompteIntegrationInterface::class      => CompteIntegrationRepository::class,
+        RemiseMaterielInterface::class         => RemiseMaterielRepository::class,
+        PriseDeServiceInterface::class         => PriseDeServiceRepository::class,
+        HistoriqueIntegrationInterface::class  => HistoriqueIntegrationRepository::class,
         // Module 1.1 — Structure organisationnelle
         LocaliteInterface::class          => LocaliteRepository::class,
         AdministrationInterface::class    => AdministrationRepository::class,

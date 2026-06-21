@@ -1,5 +1,16 @@
 <?php
 
+use App\Http\Controllers\API\ActeAdministratifController;
+use App\Http\Controllers\API\AffectationController;
+use App\Http\Controllers\API\AgentController;
+use App\Http\Controllers\API\CompteIntegrationController;
+use App\Http\Controllers\API\ContratController;
+use App\Http\Controllers\API\DocumentDossierController;
+use App\Http\Controllers\API\DossierIntegrationController;
+use App\Http\Controllers\API\NominationController;
+use App\Http\Controllers\API\PriseDeServiceController;
+use App\Http\Controllers\API\RemiseMaterielController;
+use App\Http\Controllers\API\ValidationWorkflowController;
 use App\Http\Controllers\API\ClassegrillesalarialeController;
 use App\Http\Controllers\API\ParametregrileController;
 use App\Http\Controllers\API\SalaireController;
@@ -28,6 +39,82 @@ use App\Http\Controllers\API\TypeIntegrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json(['status' => 'ok']));
+
+// ============================================================
+// MODULE 2 — INTÉGRATION ADMINISTRATIVE DES AGENTS
+// ============================================================
+Route::prefix('integration')->middleware('auth:sanctum')->group(function () {
+
+    // — Agents ————————————————————————————————————————————
+    Route::apiResource('agents', AgentController::class);
+    Route::get('agents/{agent}/contrats', [ContratController::class, 'byAgent']);
+    Route::get('agents/{agent}/affectations', [AffectationController::class, 'byAgent']);
+    Route::get('agents/{agent}/nominations', [NominationController::class, 'byAgent']);
+    Route::get('agents/{agent}/remises-materiel', [RemiseMaterielController::class, 'byAgent']);
+    Route::get('agents/{agent}/compte', [CompteIntegrationController::class, 'byAgent']);
+
+    // — Dossiers d'intégration ————————————————————————————
+    Route::apiResource('dossiers', DossierIntegrationController::class);
+    Route::post('dossiers/{dossier}/soumettre',           [DossierIntegrationController::class, 'soumettre']);
+    Route::post('dossiers/{dossier}/passer-en-etude-rh',  [DossierIntegrationController::class, 'passerEnEtudeRH']);
+    Route::post('dossiers/{dossier}/marquer-incomplet',   [DossierIntegrationController::class, 'marquerIncomplet']);
+    Route::post('dossiers/{dossier}/marquer-complet',     [DossierIntegrationController::class, 'marquerComplet']);
+    Route::post('dossiers/{dossier}/valider-rh',          [DossierIntegrationController::class, 'validerRH']);
+    Route::post('dossiers/{dossier}/rejeter-rh',          [DossierIntegrationController::class, 'rejeterRH']);
+    Route::post('dossiers/{dossier}/valider-dg',          [DossierIntegrationController::class, 'validerDG']);
+    Route::post('dossiers/{dossier}/generer-acte',        [DossierIntegrationController::class, 'genererActe']);
+    Route::post('dossiers/{dossier}/assigner-matricule',  [DossierIntegrationController::class, 'assignerMatricule']);
+    Route::post('dossiers/{dossier}/marquer-acte-genere', [DossierIntegrationController::class, 'marquerActeGenere']);
+    Route::post('dossiers/{dossier}/marquer-contrat-signe', [DossierIntegrationController::class, 'marquerContratSigne']);
+    Route::post('dossiers/{dossier}/suspendre',           [DossierIntegrationController::class, 'suspendre']);
+    Route::post('dossiers/{dossier}/annuler',             [DossierIntegrationController::class, 'annuler']);
+    Route::get('dossiers/{dossier}/historique',           [DossierIntegrationController::class, 'historique']);
+
+    // — Documents du dossier ——————————————————————————————
+    Route::post('dossiers/{dossier}/documents',            [DocumentDossierController::class, 'store']);
+    Route::get('dossiers/{dossier}/documents',             [DocumentDossierController::class, 'parDossier']);
+    Route::post('documents/{document}/valider',            [DocumentDossierController::class, 'valider']);
+    Route::delete('documents/{document}',                  [DocumentDossierController::class, 'destroy']);
+
+    // — Circuit de validation ——————————————————————————————
+    Route::get('dossiers/{dossier}/circuit',              [ValidationWorkflowController::class, 'circuit']);
+    Route::post('validations/{validation}/approuver',     [ValidationWorkflowController::class, 'approuver']);
+    Route::post('validations/{validation}/rejeter',       [ValidationWorkflowController::class, 'rejeter']);
+    Route::post('validations/{validation}/renvoyer',      [ValidationWorkflowController::class, 'renvoyer']);
+
+    // — Actes administratifs ——————————————————————————————
+    Route::get('dossiers/{dossier}/actes',                [ActeAdministratifController::class, 'byDossier']);
+    Route::post('dossiers/{dossier}/actes',               [ActeAdministratifController::class, 'generer']);
+    Route::post('actes/{acte}/signer',                    [ActeAdministratifController::class, 'signer']);
+
+    // — Contrats ——————————————————————————————————————————
+    Route::apiResource('contrats', ContratController::class)->only(['index', 'store', 'show']);
+    Route::post('contrats/{contrat}/resilier',            [ContratController::class, 'resilier']);
+
+    // — Affectations ——————————————————————————————————————
+    Route::apiResource('affectations', AffectationController::class)->only(['index', 'store', 'show']);
+    Route::post('affectations/{affectation}/activer',     [AffectationController::class, 'activer']);
+    Route::post('affectations/{affectation}/rejeter',     [AffectationController::class, 'rejeter']);
+    Route::post('affectations/{affectation}/terminer',    [AffectationController::class, 'terminer']);
+
+    // — Nominations ———————————————————————————————————————
+    Route::apiResource('nominations', NominationController::class)->only(['index', 'store', 'show']);
+    Route::post('nominations/{nomination}/activer',       [NominationController::class, 'activer']);
+    Route::post('nominations/{nomination}/cloturer',      [NominationController::class, 'cloturer']);
+    Route::post('nominations/{nomination}/rejeter',       [NominationController::class, 'rejeter']);
+
+    // — Comptes utilisateurs ——————————————————————————————
+    Route::post('comptes/provisionner',                   [CompteIntegrationController::class, 'provisionner']);
+
+    // — Remises de matériel ———————————————————————————————
+    Route::apiResource('remises-materiel', RemiseMaterielController::class)
+        ->only(['index', 'store', 'show'])
+        ->parameters(['remises-materiel' => 'remise']);
+
+    // — Prises de service — étape finale ———————————————————
+    Route::post('prises-de-service',                              [PriseDeServiceController::class, 'store']);
+    Route::post('dossiers/{dossier}/integrer',                    [PriseDeServiceController::class, 'integrer']);
+});
 
 // ============================================================
 // MODULE 1.1 — STRUCTURE ORGANISATIONNELLE

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Classegrillesalariale;
 use App\Models\Diplome;
 use Illuminate\Database\Seeder;
 
@@ -58,8 +59,17 @@ class DiplomeSeeder extends Seeder
             ['nom' => 'Doctorat',                                   'sigle' => 'DOC',    'description' => 'Classe IX — Inspecteur Principal'],
         ];
 
+        // Charger les classes grille indexées par nom de catégorie pour éviter N+1
+        $classesParNom = Classegrillesalariale::with('categorie')
+            ->get()
+            ->keyBy(fn ($c) => $c->categorie->nom ?? '');
+
         foreach ($diplomes as $data) {
-            Diplome::firstOrCreate(['nom' => $data['nom']], $data);
+            // Extraire le nom de classe depuis la description (ex: "Classe VII — Vérificateur")
+            $classeNom = explode(' — ', $data['description'])[0] ?? null;
+            $data['classegrillesalariale_id'] = $classesParNom[$classeNom]->id ?? null;
+
+            Diplome::updateOrCreate(['nom' => $data['nom']], $data);
         }
     }
 }
