@@ -110,6 +110,16 @@ class Agent extends Model
         return $this->hasOne(DossierIntegration::class);
     }
 
+    public function conventionStageActive(): HasOne
+    {
+        return $this->hasOne(ConventionStage::class)->where('statut_stage', 'EN_COURS')->latest();
+    }
+
+    public function conventionsStage(): HasMany
+    {
+        return $this->hasMany(ConventionStage::class);
+    }
+
     public function affectationActive(): HasOne
     {
         return $this->hasOne(Affectation::class)->where('statut', 'active')->latest();

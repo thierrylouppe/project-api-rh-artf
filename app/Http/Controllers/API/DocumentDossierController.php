@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Requests\DocumentDossier\CreateRequest;
 use App\Http\Resources\DocumentDossierResource;
+use App\Http\Resources\TypeDocumentResource;
 use App\Services\DocumentDossierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,9 +40,18 @@ class DocumentDossierController extends BaseController
 
     public function parDossier(int $dossierId): JsonResponse
     {
-        $documents = $this->service->getByDossier($dossierId);
+        $etat = $this->service->getEtatDocuments($dossierId);
 
-        return response()->json(['data' => DocumentDossierResource::collection($documents)]);
+        return response()->json([
+            'data' => [
+                'deposes'   => DocumentDossierResource::collection($etat['deposes']),
+                'manquants' => collect($etat['manquants'])->map(fn (array $item) => [
+                    'type_document'   => new TypeDocumentResource($item['type_document']),
+                    'est_obligatoire' => $item['est_obligatoire'],
+                ]),
+                'resume' => $etat['resume'],
+            ],
+        ]);
     }
 
     public function valider(Request $request, int $id): JsonResponse

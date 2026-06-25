@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Enums\StatutDossier;
+use App\Enums\TypeStage;
 use App\Interfaces\ActeAdministratifInterface;
 use App\Interfaces\AgentInterface;
+use App\Interfaces\ConventionStageInterface;
 use App\Interfaces\DossierIntegrationInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
 use App\Interfaces\ValidationWorkflowInterface;
@@ -22,6 +24,8 @@ class DossierIntegrationService extends BaseService
         private readonly HistoriqueIntegrationInterface $historiqueRepository,
         private readonly ActeAdministratifInterface $acteRepository,
         private readonly AgentInterface $agentRepository,
+        private readonly ConventionStageInterface $conventionStageRepository,
+        private readonly DocumentDossierService $documentDossierService,
     ) {
         parent::__construct($repository);
     }
@@ -64,6 +68,22 @@ class DossierIntegrationService extends BaseService
 
     public function marquerComplet(int $id): DossierIntegration
     {
+        if (! $this->documentDossierService->tousObligatoiresDeposes($id)) {
+            $manquants = $this->documentDossierService->getDocumentsObligatoiresManquants($id)
+                ->pluck('type_document.nom')
+                ->implode(', ');
+
+            abort(422, "Impossible de marquer le dossier complet : documents obligatoires manquants ({$manquants}).");
+        }
+
+        $nonValides = $this->documentDossierService->getDocumentsObligatoiresNonValides($id);
+
+        if ($nonValides->isNotEmpty()) {
+            $noms = $nonValides->pluck('typeDocument.nom')->implode(', ');
+
+            abort(422, "Impossible de marquer le dossier complet : documents obligatoires non validés ({$noms}).");
+        }
+
         return $this->transitionner($id, StatutDossier::DOSSIER_COMPLET, 'Dossier complet — toutes les pièces obligatoires validées');
     }
 
@@ -155,7 +175,42 @@ class DossierIntegrationService extends BaseService
 
     public function integrer(int $id): DossierIntegration
     {
-        return $this->transitionner($id, StatutDossier::INTEGRE, 'Intégration administrative finalisée');
+        return DB::transaction(function () use ($id) {
+            $dossier = $this->transitionner($id, StatutDossier::INTEGRE, 'Intégration administrative finalisée');
+            $dossier->load('typeIntegration', 'agent.contratActif');
+
+            if ($dossier->typeIntegration?->estUnStage() && $dossier->agent_id) {
+                $this->agentRepository->update($dossier->agent_id, ['statut' => 'stagiaire']);
+                $this->creerConventionStage($dossier);
+            }
+
+            return $dossier;
+        });
+    }
+
+    private function creerConventionStage(DossierIntegration $dossier): void
+    {
+        $nom = $dossier->typeIntegration->nom;
+        $typeStage = match (true) {
+            str_contains($nom, 'académique')    => TypeStage::ACADEMIQUE->value,
+            str_contains($nom, 'qualification') => TypeStage::QUALIFICATION->value,
+            default                             => TypeStage::PROFESSIONNEL->value,
+        };
+
+        $contrat = $dossier->agent?->contratActif;
+        $debut   = $contrat?->date_debut ?? now()->toDateString();
+        $fin     = $contrat?->date_fin   ?? now()->addMonths(6)->toDateString();
+
+        $this->conventionStageRepository->create([
+            'agent_id'              => $dossier->agent_id,
+            'contrat_id'            => $contrat?->id,
+            'dossier_integration_id' => $dossier->id,
+            'type_stage'            => $typeStage,
+            'etablissement'         => $dossier->notes ?? 'Non renseigné',
+            'date_debut'            => $debut,
+            'date_fin'              => $fin,
+            'statut_stage'          => 'EN_COURS',
+        ]);
     }
 
     public function suspendre(int $id, string $commentaire): DossierIntegration

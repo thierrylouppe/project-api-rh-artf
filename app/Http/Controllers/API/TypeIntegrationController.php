@@ -20,6 +20,11 @@ class TypeIntegrationController extends BaseController
         return TypeIntegrationResource::class;
     }
 
+    protected function showRelations(): array
+    {
+        return ['documentsObligatoires'];
+    }
+
     public function store(CreateRequest $request): JsonResponse
     {
         return $this->respond($this->service->create($request->validated()), 'Créé avec succès', 201);

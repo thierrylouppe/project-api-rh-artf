@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\ActeAdministratifController;
+use App\Http\Controllers\API\ConventionStageController;
 use App\Http\Controllers\API\AffectationController;
 use App\Http\Controllers\API\AgentController;
 use App\Http\Controllers\API\CompteIntegrationController;
@@ -114,6 +115,13 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () {
     // — Prises de service — étape finale ———————————————————
     Route::post('prises-de-service',                              [PriseDeServiceController::class, 'store']);
     Route::post('dossiers/{dossier}/integrer',                    [PriseDeServiceController::class, 'integrer']);
+
+    // — Stages (ConventionStage) ———————————————————————————
+    Route::get('stages',                                          [ConventionStageController::class, 'index']);
+    Route::get('stages/{stage}',                                  [ConventionStageController::class, 'show']);
+    Route::patch('stages/{stage}/prolonger',                      [ConventionStageController::class, 'prolonger']);
+    Route::post('stages/{stage}/cloturer',                        [ConventionStageController::class, 'cloturer']);
+    Route::get('stages/{stage}/attestation',                      [ConventionStageController::class, 'attestation']);
 });
 
 // ============================================================

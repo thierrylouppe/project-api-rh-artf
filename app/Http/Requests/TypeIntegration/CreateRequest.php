@@ -11,8 +11,10 @@ class CreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nom'         => ['required', 'string', 'max:255', 'unique:type_integrations,nom'],
-            'description' => ['nullable', 'string'],
+            'nom'              => ['required', 'string', 'max:255', 'unique:type_integrations,nom'],
+            'description'      => ['nullable', 'string'],
+            'documents_ids'    => ['nullable', 'array'],
+            'documents_ids.*'  => ['integer', 'exists:type_documents,id'],
         ];
     }
 }

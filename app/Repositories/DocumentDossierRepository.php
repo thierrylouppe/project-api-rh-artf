@@ -15,7 +15,9 @@ class DocumentDossierRepository extends BaseRepository implements DocumentDossie
 
     public function getByDossier(int $dossierId): Collection
     {
-        return DocumentDossier::where('dossier_integration_id', $dossierId)->get();
+        return DocumentDossier::with('typeDocument')
+            ->where('dossier_integration_id', $dossierId)
+            ->get();
     }
 
     public function validerDocument(int $id, int $validateurId, ?string $commentaire): DocumentDossier

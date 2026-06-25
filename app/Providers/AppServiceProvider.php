@@ -20,6 +20,7 @@ use App\Interfaces\SalaireInterface;
 use App\Interfaces\AdministrationInterface;
 use App\Interfaces\AuditLogInterface;
 use App\Interfaces\BureauInterface;
+use App\Interfaces\ConventionStageInterface;
 use App\Interfaces\CategorieInterface;
 use App\Interfaces\DirectionInterface;
 use App\Interfaces\DiplomeInterface;
@@ -56,6 +57,7 @@ use App\Repositories\SalaireRepository;
 use App\Repositories\AdministrationRepository;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\BureauRepository;
+use App\Repositories\ConventionStageRepository;
 use App\Repositories\CategorieRepository;
 use App\Repositories\DirectionRepository;
 use App\Repositories\DiplomeRepository;
@@ -80,6 +82,8 @@ class AppServiceProvider extends ServiceProvider
 {
     /** @var array<class-string, class-string> */
     private array $repositoryBindings = [
+        // Module Stage
+        ConventionStageInterface::class        => ConventionStageRepository::class,
         // Module 2 — Intégration Administrative
         AgentInterface::class                  => AgentRepository::class,
         DossierIntegrationInterface::class     => DossierIntegrationRepository::class,
