@@ -58,7 +58,7 @@ enum StatutDossier: string
             self::EN_ETUDE_RH       => [self::DOSSIER_INCOMPLET, self::DOSSIER_COMPLET, self::REJETE],
             self::DOSSIER_INCOMPLET => [self::EN_ETUDE_RH, self::ANNULE],
             self::DOSSIER_COMPLET   => [self::VALIDE_RH, self::REJETE],
-            self::VALIDE_RH         => [self::EN_ATTENTE_DG, self::REJETE],
+            self::VALIDE_RH         => [self::EN_ATTENTE_DG, self::VALIDE_DG, self::REJETE],
             self::EN_ATTENTE_DG     => [self::VALIDE_DG, self::REJETE],
             self::VALIDE_DG         => [self::ACTE_GENERE],
             self::ACTE_GENERE       => [self::CONTRAT_SIGNE, self::MATRICULE_CREE],

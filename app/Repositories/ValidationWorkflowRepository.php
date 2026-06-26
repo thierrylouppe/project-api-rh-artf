@@ -15,17 +15,21 @@ class ValidationWorkflowRepository extends BaseRepository implements ValidationW
         return ValidationWorkflow::class;
     }
 
-    public function initialiserCircuit(string $type, int $id): Collection
+    public function initialiserCircuit(string $type, int $id, ?array $niveaux = null): Collection
     {
-        $niveaux = NiveauValidation::circuitComplet();
-        $created = collect();
+        // Si aucun circuit configuré, on replie sur le circuit complet par défaut.
+        $steps = $niveaux ?? array_map(
+            fn (NiveauValidation $n) => ['niveau' => $n->value, 'ordre' => $n->ordre()],
+            NiveauValidation::circuitComplet()
+        );
 
-        foreach ($niveaux as $niveau) {
+        $created = collect();
+        foreach ($steps as $step) {
             $created->push(ValidationWorkflow::create([
                 'validable_type' => $type,
                 'validable_id'   => $id,
-                'niveau'         => $niveau->value,
-                'ordre'          => $niveau->ordre(),
+                'niveau'         => $step['niveau'],
+                'ordre'          => $step['ordre'],
                 'statut'         => 'en_attente',
             ]));
         }

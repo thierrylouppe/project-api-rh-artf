@@ -30,4 +30,19 @@ class AgentRepository extends BaseRepository implements AgentInterface
 
         return $agent->fresh();
     }
+
+    public function modifierMatricule(int $agentId, string $nouveauMatricule): Agent
+    {
+        $agent = $this->findById($agentId);
+        $agent->update(['matricule' => $nouveauMatricule]);
+
+        return $agent->fresh();
+    }
+
+    public function matriculeEstPris(string $matricule, int $excludeAgentId): bool
+    {
+        return Agent::where('matricule', $matricule)
+            ->where('id', '!=', $excludeAgentId)
+            ->exists();
+    }
 }

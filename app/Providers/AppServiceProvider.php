@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Interfaces\CircuitValidationInterface;
 use App\Interfaces\ActeAdministratifInterface;
 use App\Interfaces\AffectationInterface;
 use App\Interfaces\AgentInterface;
@@ -39,6 +40,7 @@ use App\Interfaces\TypeContratInterface;
 use App\Interfaces\TypeDocumentInterface;
 use App\Interfaces\TypeIntegrationInterface;
 use App\Interfaces\UserInterface;
+use App\Repositories\CircuitValidationRepository;
 use App\Repositories\ActeAdministratifRepository;
 use App\Repositories\AffectationRepository;
 use App\Repositories\AgentRepository;
@@ -84,6 +86,8 @@ class AppServiceProvider extends ServiceProvider
     private array $repositoryBindings = [
         // Module Stage
         ConventionStageInterface::class        => ConventionStageRepository::class,
+        // Circuit de validation configurable
+        CircuitValidationInterface::class      => CircuitValidationRepository::class,
         // Module 2 — Intégration Administrative
         AgentInterface::class                  => AgentRepository::class,
         DossierIntegrationInterface::class     => DossierIntegrationRepository::class,

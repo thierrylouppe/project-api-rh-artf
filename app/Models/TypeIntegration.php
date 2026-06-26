@@ -6,6 +6,7 @@ use App\Enums\TypeActeAdministratif;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TypeIntegration extends Model
 {
@@ -47,6 +48,13 @@ class TypeIntegration extends Model
     public function estUnStage(): bool
     {
         return str_starts_with($this->nom, 'Stage');
+    }
+
+    public function circuitValidation(): HasMany
+    {
+        return $this->hasMany(CircuitValidationTypeIntegration::class)
+            ->where('actif', true)
+            ->orderBy('ordre');
     }
 
     protected array $filterable = ['nom'];

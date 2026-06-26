@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Requests\Agent\CreateRequest;
+use App\Http\Requests\Agent\ModifierMatriculeRequest;
 use App\Http\Requests\Agent\UpdateRequest;
 use App\Http\Resources\AgentResource;
 use App\Http\Resources\DossierIntegrationResource;
 use App\Services\AgentService;
 use Illuminate\Http\JsonResponse;
 
+/** @property AgentService $service */
 class AgentController extends BaseController
 {
     public function __construct(AgentService $service)
@@ -42,5 +44,12 @@ class AgentController extends BaseController
     public function update(UpdateRequest $request, int $id): JsonResponse
     {
         return $this->respond($this->service->update($id, $request->validated()), 'Agent mis à jour avec succès');
+    }
+
+    public function modifierMatricule(ModifierMatriculeRequest $request, int $id): JsonResponse
+    {
+        $agent = $this->service->modifierMatricule($id, $request->validated('matricule'));
+
+        return $this->respond($agent, "Matricule modifié : {$agent->matricule}");
     }
 }

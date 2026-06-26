@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             TypeContratSeeder::class,
             TypeDocumentSeeder::class,
             TypeIntegrationSeeder::class,
+            CircuitValidationSeeder::class,
             TypeAbsenceSeeder::class,
             TypeCongeSeeder::class,
             MotifAdministratifSeeder::class,

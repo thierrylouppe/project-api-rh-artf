@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+/** @property AgentInterface $repository */
 class AgentService extends BaseService
 {
     public function __construct(
@@ -92,6 +93,21 @@ class AgentService extends BaseService
     public function assignerMatricule(int $agentId, string $matricule): Agent
     {
         return $this->repository->assignerMatricule($agentId, $matricule);
+    }
+
+    /**
+     * Modifie le matricule d'un agent déjà existant.
+     * Vérifie que le nouveau matricule n'est pas déjà utilisé par un autre agent.
+     */
+    public function modifierMatricule(int $agentId, string $nouveauMatricule): Agent
+    {
+        abort_if(
+            $this->repository->matriculeEstPris($nouveauMatricule, $agentId),
+            422,
+            "Le matricule « {$nouveauMatricule} » est déjà attribué à un autre agent."
+        );
+
+        return $this->repository->modifierMatricule($agentId, $nouveauMatricule);
     }
 
     public function mettreAJourStatut(int $id, string $statut): Model

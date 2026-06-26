@@ -31,6 +31,13 @@ class ActeAdministratifRepository extends BaseRepository implements ActeAdminist
         return $acte->fresh();
     }
 
+    public function acteExistePourType(int $dossierId, string $typeActe): bool
+    {
+        return ActeAdministratif::where('dossier_integration_id', $dossierId)
+            ->where('type_acte', $typeActe)
+            ->exists();
+    }
+
     public function genererNumero(TypeActeAdministratif $type): string
     {
         $annee = now()->year;

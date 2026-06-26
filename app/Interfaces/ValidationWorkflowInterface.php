@@ -7,7 +7,11 @@ use Illuminate\Support\Collection;
 
 interface ValidationWorkflowInterface extends BaseInterface
 {
-    public function initialiserCircuit(string $type, int $id): Collection;
+    /**
+     * @param  array<int, array{niveau: string, ordre: int}>|null  $niveaux
+     *         Si null, utilise NiveauValidation::circuitComplet() (rétro-compatibilité).
+     */
+    public function initialiserCircuit(string $type, int $id, ?array $niveaux = null): Collection;
 
     public function getProchainEnAttente(string $type, int $id): ?ValidationWorkflow;
 

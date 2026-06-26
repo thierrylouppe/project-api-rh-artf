@@ -6,15 +6,13 @@ use App\Enums\TypeActeAdministratif;
 use App\Http\Requests\ActeAdministratif\GenererRequest;
 use App\Http\Resources\ActeAdministratifResource;
 use App\Services\ActeAdministratifService;
-use App\Services\DossierIntegrationService;
 use Illuminate\Http\JsonResponse;
 
+/** @property ActeAdministratifService $service */
 class ActeAdministratifController extends BaseController
 {
-    public function __construct(
-        ActeAdministratifService $service,
-        private readonly DossierIntegrationService $dossierService,
-    ) {
+    public function __construct(ActeAdministratifService $service)
+    {
         parent::__construct($service);
     }
 
@@ -27,8 +25,6 @@ class ActeAdministratifController extends BaseController
     {
         $typeActe = TypeActeAdministratif::from($request->input('type_acte'));
         $acte     = $this->service->generer($dossierId, $typeActe, $request->input('contenu'));
-
-        $this->dossierService->marquerActeGenere($dossierId);
 
         return $this->respond($acte, "Acte {$typeActe->label()} généré avec le numéro {$acte->numero}", 201);
     }

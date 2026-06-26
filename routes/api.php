@@ -36,6 +36,7 @@ use App\Http\Controllers\API\TypeAbsenceController;
 use App\Http\Controllers\API\TypeCongeController;
 use App\Http\Controllers\API\TypeContratController;
 use App\Http\Controllers\API\TypeDocumentController;
+use App\Http\Controllers\API\CircuitValidationController;
 use App\Http\Controllers\API\TypeIntegrationController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +49,7 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () {
 
     // — Agents ————————————————————————————————————————————
     Route::apiResource('agents', AgentController::class);
+    Route::patch('agents/{agent}/matricule', [AgentController::class, 'modifierMatricule']);
     Route::get('agents/{agent}/contrats', [ContratController::class, 'byAgent']);
     Route::get('agents/{agent}/affectations', [AffectationController::class, 'byAgent']);
     Route::get('agents/{agent}/nominations', [NominationController::class, 'byAgent']);
@@ -152,6 +154,11 @@ Route::apiResource('fonctions', FonctionController::class);
 Route::apiResource('types-contrats', TypeContratController::class);
 Route::apiResource('types-documents', TypeDocumentController::class);
 Route::apiResource('types-integrations', TypeIntegrationController::class);
+// Circuit de validation configurable par type d'intégration
+Route::get('types-integrations/{typeIntegration}/circuit',         [CircuitValidationController::class, 'lister']);
+Route::put('types-integrations/{typeIntegration}/circuit',         [CircuitValidationController::class, 'remplacer']);
+Route::post('types-integrations/{typeIntegration}/circuit',        [CircuitValidationController::class, 'store']);
+Route::delete('types-integrations/{typeIntegration}/circuit/{circuitStep}', [CircuitValidationController::class, 'retirerNiveau']);
 Route::apiResource('types-absences', TypeAbsenceController::class);
 Route::apiResource('types-conges', TypeCongeController::class);
 Route::apiResource('motifs-administratifs', MotifAdministratifController::class);

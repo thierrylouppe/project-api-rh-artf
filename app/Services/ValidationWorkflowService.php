@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+/** @property ValidationWorkflowInterface $repository */
 class ValidationWorkflowService extends BaseService
 {
     public function __construct(
@@ -26,6 +27,25 @@ class ValidationWorkflowService extends BaseService
     public function approuver(int $validationId, ?string $commentaire = null): ValidationWorkflow
     {
         return DB::transaction(function () use ($validationId, $commentaire) {
+            $cible = $this->repository->findById($validationId);
+
+            abort_unless(
+                $cible->estEnAttente(),
+                422,
+                'Cette validation a déjà été traitée.'
+            );
+
+            $prochain = $this->repository->getProchainEnAttente(
+                $cible->validable_type,
+                $cible->validable_id
+            );
+
+            abort_if(
+                $prochain && $prochain->id !== $validationId,
+                422,
+                "Validation hors ordre : le niveau « {$prochain->niveau->label()} » (ordre {$prochain->ordre}) doit être validé en premier."
+            );
+
             $validation = $this->repository->approuver($validationId, Auth::id(), $commentaire);
 
             $this->historiqueRepository->enregistrer(

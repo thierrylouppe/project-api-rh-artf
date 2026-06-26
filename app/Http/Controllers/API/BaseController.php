@@ -4,11 +4,14 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Services\BaseService;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 abstract class BaseController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(protected BaseService $service) {}
 
     abstract protected function resource(): string;
@@ -17,7 +20,7 @@ abstract class BaseController extends Controller
     {
         $items = $this->service->getAll($request->query());
 
-        return response()->json(['data' => $this->resource()::collection($items)]);
+        return $this->collectionResponse($this->resource()::collection($items));
     }
 
     public function show(Request $request): JsonResponse
@@ -48,16 +51,15 @@ abstract class BaseController extends Controller
     {
         $this->service->delete($id);
 
-        return response()->json(['message' => 'Supprimé avec succès']);
+        return $this->messageResponse('Supprimé avec succès');
     }
 
     protected function respond(mixed $model, ?string $message = null, int $status = 200): JsonResponse
     {
-        $payload = ['data' => new ($this->resource())($model)];
-        if ($message !== null) {
-            $payload['message'] = $message;
-        }
-
-        return response()->json($payload, $status);
+        return $this->successResponse(
+            new ($this->resource())($model),
+            $message,
+            $status
+        );
     }
 }

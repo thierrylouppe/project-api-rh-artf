@@ -6,6 +6,7 @@ use App\Enums\StatutDossier;
 use App\Enums\TypeStage;
 use App\Interfaces\ActeAdministratifInterface;
 use App\Interfaces\AgentInterface;
+use App\Interfaces\CircuitValidationInterface;
 use App\Interfaces\ConventionStageInterface;
 use App\Interfaces\DossierIntegrationInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
@@ -21,6 +22,7 @@ class DossierIntegrationService extends BaseService
     public function __construct(
         DossierIntegrationInterface $repository,
         private readonly ValidationWorkflowInterface $workflowRepository,
+        private readonly CircuitValidationInterface $circuitValidationRepository,
         private readonly HistoriqueIntegrationInterface $historiqueRepository,
         private readonly ActeAdministratifInterface $acteRepository,
         private readonly AgentInterface $agentRepository,
@@ -90,7 +92,16 @@ class DossierIntegrationService extends BaseService
     public function validerRH(int $id): DossierIntegration
     {
         $dossier = $this->transitionner($id, StatutDossier::VALIDE_RH, 'Validation RH effectuée');
-        $this->workflowRepository->initialiserCircuit(DossierIntegration::class, $id);
+
+        // Résolution du circuit configuré pour ce type d'intégration.
+        // Si aucun niveau n'est configuré, le repository replie sur le circuit complet par défaut.
+        $niveaux = $this->circuitValidationRepository->getCircuitPourType($dossier->type_integration_id);
+
+        $this->workflowRepository->initialiserCircuit(
+            DossierIntegration::class,
+            $id,
+            $niveaux ?: null
+        );
 
         return $dossier;
     }
@@ -122,10 +133,10 @@ class DossierIntegrationService extends BaseService
 
     /**
      * Assigne le matricule fourni par le système externe à l'agent du dossier,
-     * puis fait passer le dossier au statut MATRICULE_CREE.
+     * puis fait passer le dossier au statut MATRICULE_CREE si ce n'est pas déjà le cas.
      *
-     * Le dossier doit déjà avoir un agent_id lié.
-     * Le statut courant doit être ACTE_GENERE ou CONTRAT_SIGNE.
+     * Le dossier peut être en ACTE_GENERE, CONTRAT_SIGNE ou déjà MATRICULE_CREE
+     * (cas d'un type sans contrat où genererActeAdministratif() a auto-transitionné).
      */
     public function assignerMatricule(int $id, string $matricule): DossierIntegration
     {
@@ -138,7 +149,20 @@ class DossierIntegrationService extends BaseService
                 'Aucun agent lié au dossier — veuillez créer la fiche agent avant d\'assigner le matricule'
             );
 
+            $agent = $this->agentRepository->findById($dossier->agent_id);
+
+            abort_if(
+                $agent->matricule !== null,
+                422,
+                "Un matricule est déjà assigné à cet agent ({$agent->matricule}). Il ne peut pas être modifié."
+            );
+
             $this->agentRepository->assignerMatricule($dossier->agent_id, $matricule);
+
+            // Statut déjà MATRICULE_CREE (acte généré sans contrat) : pas de transition à refaire
+            if ($dossier->statut === StatutDossier::MATRICULE_CREE) {
+                return $dossier->fresh();
+            }
 
             return $this->transitionner($id, StatutDossier::MATRICULE_CREE, "Matricule {$matricule} assigné (source : système externe)");
         });
