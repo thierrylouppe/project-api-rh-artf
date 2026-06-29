@@ -60,7 +60,7 @@ enum StatutDossier: string
             self::DOSSIER_COMPLET   => [self::VALIDE_RH, self::REJETE],
             self::VALIDE_RH         => [self::EN_ATTENTE_DG, self::VALIDE_DG, self::REJETE],
             self::EN_ATTENTE_DG     => [self::VALIDE_DG, self::REJETE],
-            self::VALIDE_DG         => [self::ACTE_GENERE],
+            self::VALIDE_DG         => [self::ACTE_GENERE, self::INTEGRE],
             self::ACTE_GENERE       => [self::CONTRAT_SIGNE, self::MATRICULE_CREE],
             self::CONTRAT_SIGNE     => [self::MATRICULE_CREE],
             self::MATRICULE_CREE    => [self::AFFECTE],

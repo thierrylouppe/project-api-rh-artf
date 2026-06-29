@@ -37,6 +37,24 @@ POST /login
 
 ---
 
+## Vue d'ensemble — flux simplifié
+
+```
+Étapes 1 → 10  (obligatoires, inchangées)
+      │
+      └─► Étape 11 — Intégration + Création du compte  POST /dossiers/7/integrer
+                     Statut : INTEGRE ✓
+                     → réponse inclut la liste des tâches post-intégration restantes
+```
+
+**Les étapes 12 à 18 sont post-intégration : elles peuvent être réalisées dans n'importe quel ordre, après l'intégration.**  
+Un endpoint dédié permet de consulter leur avancement à tout moment :
+```
+GET /integration/dossiers/7/taches-post-integration
+```
+
+---
+
 ## Étape 1 — Sélectionner le type d'intégration
 
 Consulter les types disponibles. Le champ `necessite_contrat` conditionne l'affichage de l'étape 3 (contrat).
@@ -118,7 +136,7 @@ GET /diplomes
 
 Un seul appel suffit. Le dossier d'intégration est créé **en arrière-plan** avec `type_integration_id`, `agent_id` et `date_demande` (= aujourd'hui). Statut initial du dossier : **`BROUILLON`**
 
-> Le matricule n'est pas saisi ici — il sera fourni plus tard par le système externe (étape 13).
+> Le matricule n'est pas saisi ici — il sera fourni plus tard par le système externe (tâche post-intégration 13).
 
 ### Cas 1 — Avec `diplome_id` *(recommandé)*
 
@@ -441,7 +459,94 @@ POST /integration/validations/11/renvoyer
 
 ---
 
-## Étape 11 — Génération automatique de l'acte administratif 🆕
+## Étape 11 — Intégration + Création du compte utilisateur ✅
+
+> **Étape finale du flux obligatoire.**  
+> Le dossier doit être en statut **`VALIDE_DG`**.
+
+Un seul appel suffit pour :
+1. Clôturer le dossier → statut **`INTEGRE`**
+2. Créer automatiquement le compte applicatif de l'agent (login, email professionnel, badge)
+3. Retourner la liste des **tâches post-intégration** restantes à réaliser
+
+**Requête**
+```
+POST /integration/dossiers/7/integrer
+```
+*(body vide)*
+
+**Réponse `200`**
+```json
+{
+  "data": {
+    "dossier": {
+      "reference": "ARTF-INT-2026-000007",
+      "statut": "INTEGRE",
+      "statut_label": "Intégré",
+      "agent": {
+        "id": 42,
+        "matricule": null,
+        "nom_complet": "Thierry LOUPPE"
+      }
+    },
+    "compte": {
+      "login": "tlouppe",
+      "email_professionnel": "tlouppe@artf.cg",
+      "badge_numero": "ARTF-BADGE-00042"
+    },
+    "taches_post_integration": [
+      { "etape": 11, "label": "Générer l'acte administratif",        "endpoint": "POST /integration/dossiers/7/generer-acte",    "statut": "non_fait", "obligatoire": true  },
+      { "etape": 13, "label": "Assigner le matricule",               "endpoint": "POST /integration/dossiers/7/assigner-matricule","statut": "non_fait", "obligatoire": true  },
+      { "etape": 14, "label": "Affecter l'agent",                    "endpoint": "POST /integration/affectations",               "statut": "non_fait", "obligatoire": true  },
+      { "etape": 15, "label": "Nommer l'agent (responsabilité)",     "endpoint": "POST /integration/nominations",                "statut": "non_fait", "obligatoire": false },
+      { "etape": 17, "label": "Remettre le matériel",                "endpoint": "POST /integration/remises-materiel",           "statut": "non_fait", "obligatoire": false },
+      { "etape": 18, "label": "Confirmer la prise de service",       "endpoint": "POST /integration/prises-de-service",          "statut": "non_fait", "obligatoire": false }
+    ],
+    "rappel": "6 tâche(s) post-intégration en attente — consultez taches_post_integration."
+  },
+  "message": "Intégration administrative finalisée avec succès"
+}
+```
+
+> Pour les types **Contractuel** et **Stage professionnel** (`necessite_contrat = true`), la tâche 12 (signature du contrat) apparaît également dans la liste.
+
+---
+
+## Consulter les tâches post-intégration à tout moment
+
+Après l'intégration, ce point d'accès retourne l'état d'avancement de chaque tâche restante.
+
+**Requête**
+```
+GET /integration/dossiers/7/taches-post-integration
+```
+
+**Réponse**
+```json
+{
+  "data": [
+    { "etape": 11, "label": "Générer l'acte administratif",    "endpoint": "POST /integration/dossiers/7/generer-acte",     "statut": "fait",     "obligatoire": true  },
+    { "etape": 13, "label": "Assigner le matricule",           "endpoint": "POST /integration/dossiers/7/assigner-matricule","statut": "non_fait", "obligatoire": true  },
+    { "etape": 14, "label": "Affecter l'agent",                "endpoint": "POST /integration/affectations",                "statut": "non_fait", "obligatoire": true  },
+    { "etape": 15, "label": "Nommer l'agent (responsabilité)", "endpoint": "POST /integration/nominations",                 "statut": "non_fait", "obligatoire": false },
+    { "etape": 17, "label": "Remettre le matériel",            "endpoint": "POST /integration/remises-materiel",            "statut": "non_fait", "obligatoire": false },
+    { "etape": 18, "label": "Confirmer la prise de service",   "endpoint": "POST /integration/prises-de-service",           "statut": "non_fait", "obligatoire": false }
+  ],
+  "rappel": "5 tâche(s) post-intégration en attente."
+}
+```
+
+> Le champ `statut` passe automatiquement à `"fait"` dès que l'action correspondante est réalisée.
+
+---
+
+## Tâches post-intégration (différées)
+
+Ces actions peuvent être réalisées dans n'importe quel ordre, après que le dossier est `INTEGRE`.
+
+---
+
+### Tâche 11 — Générer l'acte administratif
 
 Le type d'acte est **déterminé automatiquement** depuis le type d'intégration du dossier — aucun champ à saisir.
 
@@ -461,51 +566,30 @@ POST /integration/dossiers/7/generer-acte
       "numero": "ARTF-REC-2026-0001",
       "signe": false
     },
-    "dossier": { "id": 7, "statut": "MATRICULE_CREE" },
-    "necessite_contrat": false,
-    "prochaine_etape": "matricule_cree"
+    "dossier": { "id": 7, "statut": "INTEGRE" },
+    "necessite_contrat": false
   },
-  "message": "Acte généré — passage direct à la création du matricule (pas de contrat requis)"
-}
-```
-
-**Réponse `201` — exemple pour Contractuel (`necessite_contrat = true`)**
-```json
-{
-  "data": {
-    "acte": {
-      "id": 2,
-      "type_acte": "contrat",
-      "numero": "ARTF-CTR-2026-0001",
-      "signe": false
-    },
-    "dossier": { "id": 7, "statut": "ACTE_GENERE" },
-    "necessite_contrat": true,
-    "prochaine_etape": "contrat_signe"
-  },
-  "message": "Acte généré — veuillez enregistrer la signature du contrat avant de créer le matricule"
+  "message": "Acte généré"
 }
 ```
 
 **Correspondance types → actes**
 
-| Type d'intégration | Acte généré | `necessite_contrat` |
-|--------------------|-------------|---------------------|
-| Recrutement externe | `ARTF-REC-YYYY-XXXX` | `false` → passe directement à MATRICULE_CREE |
-| Mutation | `ARTF-MUT-YYYY-XXXX` | `false` → passe directement à MATRICULE_CREE |
-| Détachement | `ARTF-DET-YYYY-XXXX` | `false` → passe directement à MATRICULE_CREE |
-| Mise à disposition | `ARTF-NDS-YYYY-XXXX` | `false` → passe directement à MATRICULE_CREE |
-| Réintégration | `ARTF-REC-YYYY-XXXX` | `false` → passe directement à MATRICULE_CREE |
-| Contractuel | `ARTF-CTR-YYYY-XXXX` | `true` → étape 12 requise |
-| Stage professionnel | `ARTF-CTR-YYYY-XXXX` | `true` → étape 12 requise |
+| Type d'intégration | Acte généré |
+|--------------------|-------------|
+| Recrutement externe | `ARTF-REC-YYYY-XXXX` |
+| Mutation | `ARTF-MUT-YYYY-XXXX` |
+| Détachement | `ARTF-DET-YYYY-XXXX` |
+| Mise à disposition | `ARTF-NDS-YYYY-XXXX` |
+| Réintégration | `ARTF-REC-YYYY-XXXX` |
+| Contractuel | `ARTF-CTR-YYYY-XXXX` |
+| Stage professionnel | `ARTF-CTR-YYYY-XXXX` |
 
 ---
 
-## Étape 12 — Marquer le contrat signé *(uniquement si `necessite_contrat = true`)*
+### Tâche 12 — Marquer le contrat signé *(uniquement si `necessite_contrat = true`)*
 
-> **Skip si `necessite_contrat = false` — le dossier est déjà à `MATRICULE_CREE`.**
-
-Statut → **`CONTRAT_SIGNE`**
+> **Applicable uniquement aux types : Contractuel et Stage professionnel.**
 
 **Requête**
 ```
@@ -515,10 +599,9 @@ POST /integration/dossiers/7/marquer-contrat-signe
 
 ---
 
-## Étape 13 — Assigner le matricule (fourni par le système externe) 🆕
+### Tâche 13 — Assigner le matricule (fourni par le système externe)
 
-Le matricule est saisi manuellement car il est généré par un système externe.  
-Statut → **`MATRICULE_CREE`**
+Le matricule est saisi manuellement car il est généré par un système externe.
 
 **Requête**
 ```
@@ -535,8 +618,8 @@ POST /integration/dossiers/7/assigner-matricule
 {
   "data": {
     "id": 7,
-    "statut": "MATRICULE_CREE",
-    "statut_label": "Matricule créé",
+    "statut": "INTEGRE",
+    "statut_label": "Intégré",
     "agent": {
       "id": 42,
       "matricule": "ARTF-2026-000042",
@@ -547,13 +630,13 @@ POST /integration/dossiers/7/assigner-matricule
 }
 ```
 
-> **Contrainte** : le matricule doit être unique dans la table `agents` — une erreur `422` est retournée s'il est déjà attribué.
+> **Contrainte** : le matricule doit être unique — une erreur `422` est retournée s'il est déjà attribué.
 
 ---
 
-## Étape 14 — Affecter l'agent
+### Tâche 14 — Affecter l'agent
 
-Détermine où l'agent exerce ses fonctions. Statut affectation → **`en_attente_validation`**
+Détermine où l'agent exerce ses fonctions.
 
 **Requête**
 ```
@@ -578,8 +661,6 @@ POST /integration/affectations/1/activer
 { "dossier_integration_id": 7 }
 ```
 
-Statut dossier → **`AFFECTE`**
-
 **Types de structures disponibles**
 
 | structurable_type | Description |
@@ -590,7 +671,7 @@ Statut dossier → **`AFFECTE`**
 
 ---
 
-## Étape 15 — Nommer l'agent *(optionnel — postes de responsabilité)*
+### Tâche 15 — Nommer l'agent *(optionnel — postes de responsabilité)*
 
 Uniquement pour les agents nommés à un poste de responsabilité.  
 **Clôture automatiquement** l'ancienne nomination active sur la même structure.
@@ -618,41 +699,9 @@ POST /integration/nominations/1/activer
 { "dossier_integration_id": 7 }
 ```
 
-Statut dossier → **`NOMME`**
-
 ---
 
-## Étape 16 — Créer le compte utilisateur
-
-Génère automatiquement le compte applicatif de l'agent. Statut → **`COMPTE_CREE`**
-
-**Requête**
-```
-POST /integration/comptes/provisionner
-```
-```json
-{
-  "agent_id": 42,
-  "dossier_integration_id": 7
-}
-```
-
-**Réponse `201`**
-```json
-{
-  "data": {
-    "login": "tlouppe",
-    "email_professionnel": "tlouppe@artf.cg",
-    "badge_numero": "ARTF-BADGE-00042",
-    "mot_de_passe_provisoire_envoye": false
-  },
-  "message": "Compte créé — login : tlouppe, email : tlouppe@artf.cg"
-}
-```
-
----
-
-## Étape 17 — Remettre le matériel
+### Tâche 17 — Remettre le matériel
 
 Enregistre la remise des équipements de travail.
 
@@ -676,9 +725,9 @@ POST /integration/remises-materiel
 
 ---
 
-## Étape 18 — Confirmer la prise de service
+### Tâche 18 — Confirmer la prise de service
 
-Le responsable hiérarchique confirme l'installation de l'agent. Statut → **`PRISE_DE_SERVICE`**
+Le responsable hiérarchique confirme l'installation de l'agent.
 
 **Requête**
 ```
@@ -699,33 +748,6 @@ POST /integration/prises-de-service
 
 ---
 
-## Étape 19 — Finaliser l'intégration
-
-Clôture définitive du processus. Statut → **`INTEGRE`** ✓
-
-**Requête**
-```
-POST /integration/dossiers/7/integrer
-```
-
-**Réponse `200`**
-```json
-{
-  "data": {
-    "reference": "ARTF-INT-2026-000007",
-    "statut": "INTEGRE",
-    "statut_label": "Intégré",
-    "agent": {
-      "matricule": "ARTF-2026-000042",
-      "nom_complet": "Thierry LOUPPE"
-    }
-  },
-  "message": "Intégration administrative finalisée avec succès"
-}
-```
-
----
-
 ## Consultation de l'historique complet
 
 ```
@@ -737,7 +759,7 @@ GET /integration/dossiers/7/historique
   "data": [
     {
       "action": "transition_statut",
-      "ancienne_valeur": { "statut": "PRISE_DE_SERVICE" },
+      "ancienne_valeur": { "statut": "VALIDE_DG" },
       "nouvelle_valeur": { "statut": "INTEGRE" },
       "commentaire": "Intégration administrative finalisée",
       "utilisateur": { "name": "Admin" },
@@ -761,20 +783,17 @@ BROUILLON
                           └─► VALIDE_RH  POST /dossiers/7/valider-rh
                                 └─► (circuit 5 validations)
                                       └─► VALIDE_DG  (auto après DG)
-                                            └─► ACTE_GENERE  POST /dossiers/7/generer-acte (auto)
-                                                  │
-                                    ┌─────────────┴──────────────┐
-                              sans contrat                  avec contrat
-                                    │                            │
-                              MATRICULE_CREE         CONTRAT_SIGNE (marquer-contrat-signe)
-                                    │                            │
-                                    └────────────────────────────┘
-                                              MATRICULE_CREE  POST /dossiers/7/assigner-matricule
-                                                    └─► AFFECTE   POST /affectations + /activer
-                                                          └─► NOMME (optionnel)
-                                                                └─► COMPTE_CREE  POST /comptes/provisionner
-                                                                      └─► PRISE_DE_SERVICE
-                                                                            └─► INTEGRE ✓
+                                            │
+                                            └─► INTEGRE ✓  POST /dossiers/7/integrer
+                                                            (compte créé automatiquement)
+                                                            └─► taches_post_integration:
+                                                                  ├─ [11] Générer l'acte
+                                                                  ├─ [12] Contrat signé (si necessite_contrat)
+                                                                  ├─ [13] Assigner le matricule
+                                                                  ├─ [14] Affecter l'agent
+                                                                  ├─ [15] Nomination (optionnel)
+                                                                  ├─ [17] Remise matériel (optionnel)
+                                                                  └─ [18] Prise de service (optionnel)
 
 À tout moment :
     └─► REJETE    POST /dossiers/7/rejeter-rh  ou  /validations/x/rejeter
@@ -791,10 +810,10 @@ BROUILLON
 | Redirigé vers page HTML | Header `Accept` manquant | Ajouter `Accept: application/json` |
 | `401 Unauthorized` | Token absent ou expiré | Refaire `/login` et mettre à jour le token |
 | `422 Unprocessable` sur transition | Transition de statut invalide | Respecter l'ordre des étapes ci-dessus |
-| `422` sur `/generer-acte` | Dossier pas à `VALIDE_DG` | Compléter le circuit hiérarchique d'abord |
-| `422` sur `/generer-acte` | Aucun acte configuré sur le type | Relancer le seeder `TypeIntegrationSeeder` |
+| `422` sur `/integrer` | Dossier pas à `VALIDE_DG` | Compléter le circuit hiérarchique d'abord (étapes 1-10) |
 | `422` sur `/assigner-matricule` | Matricule déjà attribué | Vérifier via `GET /integration/agents?matricule=...` |
-| `422` sur `/assigner-matricule` | Pas d'agent lié au dossier | Créer l'agent à l'étape 2 et lier via `agent_id` à l'étape 2-bis |
+| `422` sur `/assigner-matricule` | Pas d'agent lié au dossier | Créer l'agent à l'étape 2 |
 | `422` sur création dossier | `type_integration_id` inexistant | Vérifier via `GET /types-integrations` |
 | `422` sur affectation | `structurable_id` inexistant | Vérifier via `GET /bureaux` ou `GET /services` |
 | `diplome_id` fourni mais grade non rempli | Diplôme sans classe grille liée | Relancer `php artisan db:seed --class=DiplomeSeeder` |
+| Compte non créé après `/integrer` | Agent sans `agent_id` sur le dossier | Vérifier que l'agent est bien lié à l'étape 2 |

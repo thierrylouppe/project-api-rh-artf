@@ -7,6 +7,7 @@ use App\Enums\TypeStage;
 use App\Interfaces\ActeAdministratifInterface;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\CircuitValidationInterface;
+use App\Interfaces\CompteIntegrationInterface;
 use App\Interfaces\ConventionStageInterface;
 use App\Interfaces\DossierIntegrationInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
@@ -27,7 +28,9 @@ class DossierIntegrationService extends BaseService
         private readonly ActeAdministratifInterface $acteRepository,
         private readonly AgentInterface $agentRepository,
         private readonly ConventionStageInterface $conventionStageRepository,
+        private readonly CompteIntegrationInterface $compteRepository,
         private readonly DocumentDossierService $documentDossierService,
+        private readonly CompteIntegrationService $compteService,
     ) {
         parent::__construct($repository);
     }
@@ -197,19 +200,124 @@ class DossierIntegrationService extends BaseService
         return $this->transitionner($id, StatutDossier::PRISE_DE_SERVICE, 'Prise de service confirmée');
     }
 
-    public function integrer(int $id): DossierIntegration
+    /**
+     * Intègre le dossier en un seul appel depuis VALIDE_DG (flux simplifié)
+     * ou depuis PRISE_DE_SERVICE (flux complet legacy).
+     *
+     * Depuis VALIDE_DG : crée automatiquement le compte utilisateur de l'agent
+     * et retourne la liste des tâches post-intégration restantes.
+     *
+     * @return array{dossier: DossierIntegration, compte: ?object, taches_post_integration: array}
+     */
+    public function integrer(int $id): array
     {
         return DB::transaction(function () use ($id) {
+            $dossier = $this->repository->findById($id);
+            $dossier->load('typeIntegration', 'agent.contratActif');
+
+            $depuisValideeDG = $dossier->statut === StatutDossier::VALIDE_DG;
+
             $dossier = $this->transitionner($id, StatutDossier::INTEGRE, 'Intégration administrative finalisée');
             $dossier->load('typeIntegration', 'agent.contratActif');
+
+            $compte = null;
+
+            if ($depuisValideeDG && $dossier->agent_id) {
+                $agent = $this->agentRepository->findById($dossier->agent_id);
+
+                if ($this->compteRepository->findByAgent($dossier->agent_id) === null) {
+                    $compte = $this->compteService->provisionner($agent);
+                }
+            }
 
             if ($dossier->typeIntegration?->estUnStage() && $dossier->agent_id) {
                 $this->agentRepository->update($dossier->agent_id, ['statut' => 'stagiaire']);
                 $this->creerConventionStage($dossier);
             }
 
-            return $dossier;
+            return [
+                'dossier'                => $dossier,
+                'compte'                 => $compte,
+                'taches_post_integration' => $this->tachesPostIntegration($id),
+            ];
         });
+    }
+
+    /**
+     * Retourne la liste des tâches post-intégration avec leur statut (fait / non_fait).
+     *
+     * Chaque tâche indique si l'action a déjà été réalisée en inspectant
+     * les données associées au dossier et à son agent.
+     */
+    public function tachesPostIntegration(int $id): array
+    {
+        $dossier = $this->repository->findById($id);
+        $dossier->load('agent.affectations', 'agent.nominations', 'agent.remisesMateriel', 'priseDeService', 'actes');
+
+        $agent             = $dossier->agent;
+        $necessite_contrat = (bool) $dossier->typeIntegration?->necessite_contrat;
+
+        $taches = [];
+
+        $taches[] = [
+            'etape'       => 11,
+            'label'       => 'Générer l\'acte administratif',
+            'endpoint'    => "POST /integration/dossiers/{$id}/generer-acte",
+            'statut'      => $dossier->actes->isNotEmpty() ? 'fait' : 'non_fait',
+            'obligatoire' => true,
+        ];
+
+        if ($necessite_contrat) {
+            $taches[] = [
+                'etape'       => 12,
+                'label'       => 'Marquer le contrat signé',
+                'endpoint'    => "POST /integration/dossiers/{$id}/marquer-contrat-signe",
+                'statut'      => $agent?->contratActif ? 'fait' : 'non_fait',
+                'obligatoire' => false,
+            ];
+        }
+
+        $taches[] = [
+            'etape'       => 13,
+            'label'       => 'Assigner le matricule',
+            'endpoint'    => "POST /integration/dossiers/{$id}/assigner-matricule",
+            'statut'      => $agent?->matricule ? 'fait' : 'non_fait',
+            'obligatoire' => true,
+        ];
+
+        $taches[] = [
+            'etape'       => 14,
+            'label'       => 'Affecter l\'agent',
+            'endpoint'    => 'POST /integration/affectations',
+            'statut'      => $agent?->affectations?->isNotEmpty() ? 'fait' : 'non_fait',
+            'obligatoire' => true,
+        ];
+
+        $taches[] = [
+            'etape'       => 15,
+            'label'       => 'Nommer l\'agent (poste de responsabilité)',
+            'endpoint'    => 'POST /integration/nominations',
+            'statut'      => $agent?->nominations?->isNotEmpty() ? 'fait' : 'non_fait',
+            'obligatoire' => false,
+        ];
+
+        $taches[] = [
+            'etape'       => 17,
+            'label'       => 'Remettre le matériel',
+            'endpoint'    => 'POST /integration/remises-materiel',
+            'statut'      => $agent?->remisesMateriel?->isNotEmpty() ? 'fait' : 'non_fait',
+            'obligatoire' => false,
+        ];
+
+        $taches[] = [
+            'etape'       => 18,
+            'label'       => 'Confirmer la prise de service',
+            'endpoint'    => 'POST /integration/prises-de-service',
+            'statut'      => $dossier->priseDeService ? 'fait' : 'non_fait',
+            'obligatoire' => false,
+        ];
+
+        return $taches;
     }
 
     private function creerConventionStage(DossierIntegration $dossier): void

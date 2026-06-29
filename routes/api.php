@@ -72,6 +72,7 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () {
     Route::post('dossiers/{dossier}/suspendre',           [DossierIntegrationController::class, 'suspendre']);
     Route::post('dossiers/{dossier}/annuler',             [DossierIntegrationController::class, 'annuler']);
     Route::get('dossiers/{dossier}/historique',           [DossierIntegrationController::class, 'historique']);
+    Route::get('dossiers/{dossier}/taches-post-integration', [DossierIntegrationController::class, 'tachesPostIntegration']);
 
     // — Documents du dossier ——————————————————————————————
     Route::post('dossiers/{dossier}/documents',            [DocumentDossierController::class, 'store']);

@@ -47,10 +47,27 @@ class PriseDeServiceController extends BaseController
 
     public function integrer(int $dossierId): JsonResponse
     {
-        $dossier = $this->dossierService->integrer($dossierId);
+        $result = $this->dossierService->integrer($dossierId);
+
+        $data = ['dossier' => new \App\Http\Resources\DossierIntegrationResource($result['dossier'])];
+
+        if ($result['compte'] !== null) {
+            $data['compte'] = [
+                'login'               => $result['compte']->login,
+                'email_professionnel' => $result['compte']->email_professionnel,
+                'badge_numero'        => $result['compte']->badge_numero,
+            ];
+        }
+
+        $restantes = collect($result['taches_post_integration'])->where('statut', 'non_fait');
+
+        $data['taches_post_integration'] = $result['taches_post_integration'];
+        $data['rappel']                  = $restantes->isEmpty()
+            ? 'Toutes les tâches post-intégration sont complètes.'
+            : "{$restantes->count()} tâche(s) post-intégration en attente — consultez taches_post_integration.";
 
         return response()->json([
-            'data'    => new \App\Http\Resources\DossierIntegrationResource($dossier),
+            'data'    => $data,
             'message' => 'Intégration administrative finalisée avec succès',
         ]);
     }

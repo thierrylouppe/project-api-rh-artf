@@ -135,6 +135,20 @@ class DossierIntegrationController extends BaseController
         ], 201);
     }
 
+    public function tachesPostIntegration(int $id): JsonResponse
+    {
+        $taches = $this->service->tachesPostIntegration($id);
+
+        $restantes = collect($taches)->where('statut', 'non_fait')->count();
+
+        return response()->json([
+            'data'   => $taches,
+            'rappel' => $restantes === 0
+                ? 'Toutes les tâches post-intégration sont complètes.'
+                : "{$restantes} tâche(s) post-intégration en attente.",
+        ]);
+    }
+
     public function historique(int $id): JsonResponse
     {
         $historique = $this->historiqueService->getHistorique(\App\Models\DossierIntegration::class, $id);
