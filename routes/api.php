@@ -96,10 +96,14 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () {
     Route::post('contrats/{contrat}/resilier',            [ContratController::class, 'resilier']);
 
     // — Affectations ——————————————————————————————————————
+    // Routes littérales AVANT apiResource pour éviter toute ambiguïté de paramètre
+    Route::post('affectations/groupee',               [AffectationController::class, 'groupee']);
+    Route::post('affectations/notes-service/lot',     [AffectationController::class, 'noteServiceLot']);
     Route::apiResource('affectations', AffectationController::class)->only(['index', 'store', 'show']);
     Route::post('affectations/{affectation}/activer',     [AffectationController::class, 'activer']);
     Route::post('affectations/{affectation}/rejeter',     [AffectationController::class, 'rejeter']);
     Route::post('affectations/{affectation}/terminer',    [AffectationController::class, 'terminer']);
+    Route::get('affectations/{affectation}/note-service', [AffectationController::class, 'noteService']);
 
     // — Nominations ———————————————————————————————————————
     Route::apiResource('nominations', NominationController::class)->only(['index', 'store', 'show']);

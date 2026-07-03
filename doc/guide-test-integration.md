@@ -47,7 +47,11 @@ POST /login
                      → réponse inclut la liste des tâches post-intégration restantes
 ```
 
-**Les étapes 12 à 18 sont post-intégration : elles peuvent être réalisées dans n'importe quel ordre, après l'intégration.**  
+**Les étapes 12 à 18 sont post-intégration : elles peuvent être réalisées dans n'importe quel ordre, après l'intégration.**
+
+> **Tâche 14 — Affectation :** supporte l'affectation unitaire et groupée (plusieurs agents → chacun vers sa propre structure, note de service commune), la résolution automatique du supérieur hiérarchique par structure, l'upload de la note de service, la génération PDF à la demande et la génération en lot (ZIP).
+
+
 Un endpoint dédié permet de consulter leur avancement à tout moment :
 ```
 GET /integration/dossiers/7/taches-post-integration
@@ -636,29 +640,57 @@ POST /integration/dossiers/7/assigner-matricule
 
 ### Tâche 14 — Affecter l'agent
 
-Détermine où l'agent exerce ses fonctions.
+Détermine où l'agent exerce ses fonctions.  
+La requête utilise `multipart/form-data` car la note de service est un fichier.
 
 **Requête**
 ```
 POST /integration/affectations
-```
-```json
-{
-  "agent_id": 42,
-  "structurable_type": "App\\Models\\Bureau",
-  "structurable_id": 2,
-  "date_affectation": "2026-07-01",
-  "motif": "Première affectation suite à recrutement",
-  "superieur_hierarchique_id": 5
-}
+Content-Type: multipart/form-data
 ```
 
-Après les approbations du circuit, activer l'affectation :
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| `agent_id` | integer | Oui | ID de l'agent à affecter |
+| `structurable_type` | string | Oui | Classe du lieu d'affectation (voir tableau ci-dessous) |
+| `structurable_id` | integer | Oui | ID du lieu d'affectation |
+| `date_affectation` | date | Oui | Date de prise d'effet |
+| `motif` | string | Non | Motif textuel de l'affectation |
+| `note_service` | file | Non | Fichier PDF/JPG/PNG, max 10 Mo |
+| `superieur_hierarchique_id` | integer | Non | Résolu automatiquement si absent |
+
+**Exemple Insomnia / Postman (form-data)**
 ```
-POST /integration/affectations/1/activer
+agent_id              = 42
+structurable_type     = App\Models\Bureau
+structurable_id       = 2
+date_affectation      = 2026-07-01
+motif                 = Première affectation suite à recrutement
+note_service          = [fichier] note_affectation.pdf
 ```
+> `superieur_hierarchique_id` est **optionnel** : si non fourni, l'API remonte automatiquement la hiérarchie Bureau → Service → Direction pour trouver le responsable porteur d'une nomination active. Si aucun n'est trouvé, le champ reste `null` et le message de réponse le signale.
+
+**Réponse `201`**
 ```json
-{ "dossier_integration_id": 7 }
+{
+  "data": {
+    "id": 1,
+    "agent_id": 42,
+    "structurable_type": "App\\Models\\Bureau",
+    "structurable_id": 2,
+    "motif": "Première affectation suite à recrutement",
+    "note_service": "affectations/42/notes-service/note_affectation.pdf",
+    "note_service_nom_original": "note_affectation.pdf",
+    "date_affectation": "2026-07-01",
+    "date_fin": null,
+    "statut": "en_attente_validation",
+    "statut_label": "En attente de validation",
+    "superieur_hierarchique_id": 5,
+    "superieur_hierarchique": null,
+    "validations": []
+  },
+  "message": "Affectation créée — circuit de validation initialisé"
+}
 ```
 
 **Types de structures disponibles**
@@ -668,6 +700,229 @@ POST /integration/affectations/1/activer
 | `App\Models\Direction` | Affectation à une direction |
 | `App\Models\Service` | Affectation à un service |
 | `App\Models\Bureau` | Affectation à un bureau |
+
+---
+
+#### Cycle de vie de l'affectation
+
+```
+en_attente_validation
+      │
+      ├─► POST /validations/{id}/approuver  (×5 niveaux)
+      │         └─► approuvee  (automatique quand le dernier niveau est validé)
+      │                  │
+      │                  └─► POST /affectations/1/activer  → active
+      │                                                          │
+      │                                                          └─► POST /affectations/1/terminer  → terminee
+      │
+      └─► POST /validations/{id}/rejeter  → rejetee  (à n'importe quel niveau)
+          POST /affectations/1/rejeter    → rejetee  (rejet manuel, commentaire obligatoire)
+```
+
+---
+
+#### Étape 14a — Valider le circuit de l'affectation
+
+Les validations suivent le même circuit que les dossiers (5 niveaux hiérarchiques).  
+Consulter les validations de l'affectation (le tableau `validations` est inclus dans la réponse `show`) :
+
+```
+GET /integration/affectations/1
+```
+
+Récupérer les IDs de validation depuis le champ `validations[]` de la réponse, puis approuver chaque niveau dans l'ordre :
+
+```
+POST /integration/validations/{validation_id}/approuver
+```
+```json
+{ "commentaire": "Approuvé au niveau chef de bureau" }
+```
+
+**Comportement automatique** : dès que le 5ᵉ et dernier niveau est approuvé, le statut de l'affectation passe automatiquement à `approuvee` sans action supplémentaire.
+
+Si un niveau est rejeté :
+```
+POST /integration/validations/{validation_id}/rejeter
+```
+```json
+{ "commentaire": "Motif du rejet" }
+```
+→ Le statut passe immédiatement à `rejetee`.
+
+---
+
+#### Étape 14b — Activer l'affectation
+
+Une fois le statut `approuvee`, activer l'affectation et mettre à jour le dossier :
+
+```
+POST /integration/affectations/1/activer
+```
+```json
+{ "dossier_integration_id": 7 }
+```
+
+> - Clôture automatiquement l'affectation active précédente de l'agent si elle existe.
+> - Met à jour le statut du dossier d'intégration à `AFFECTE` si `dossier_integration_id` est fourni.
+> - **Erreur `422`** si l'affectation n'est pas en statut `approuvee`.
+
+---
+
+#### Autres actions sur l'affectation
+
+**Rejeter manuellement** (commentaire obligatoire) :
+```
+POST /integration/affectations/1/rejeter
+```
+```json
+{ "commentaire": "Structure inexistante à la date indiquée" }
+```
+
+**Terminer une affectation active** :
+```
+POST /integration/affectations/1/terminer
+```
+```json
+{ "date_fin": "2026-12-31" }
+```
+> `date_fin` est optionnelle — si absente, la date du jour est utilisée.
+
+**Consulter toutes les affectations d'un agent** :
+```
+GET /integration/agents/42/affectations
+```
+
+---
+
+#### Affectation groupée — plusieurs agents, chacun vers sa propre structure
+
+Crée une affectation distincte par agent. Chaque agent est affecté à **sa propre structure** avec **son propre supérieur hiérarchique** (résolu automatiquement si absent). Seuls `date_affectation`, `motif` et `note_service` sont communs à l'ensemble du lot.
+
+```
+POST /integration/affectations/groupee
+Content-Type: multipart/form-data
+```
+
+**Champs communs (racine)**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| `date_affectation` | date | Oui | Date de prise d'effet commune à tous |
+| `motif` | string | Non | Motif commun (ex : réorganisation) |
+| `note_service` | file | Non | Document partagé — PDF/JPG/PNG, max 10 Mo |
+
+**Par agent — `agents[i].*`**
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| `agents[i][agent_id]` | integer | Oui | ID de l'agent (doit exister, distinct) |
+| `agents[i][structurable_type]` | string | Oui | Classe de la structure de destination |
+| `agents[i][structurable_id]` | integer | Oui | ID de la structure de destination |
+| `agents[i][superieur_hierarchique_id]` | integer | Non | Résolu automatiquement par structure si absent |
+
+**Exemple Insomnia / Postman (form-data)**
+```
+date_affectation                    = 2026-07-01
+motif                               = Réorganisation trimestrielle
+note_service                        = [fichier] note-service-lot.pdf
+
+agents[0][agent_id]                 = 42
+agents[0][structurable_type]        = App\Models\Bureau
+agents[0][structurable_id]          = 2
+agents[0][superieur_hierarchique_id]= (vide — résolution automatique)
+
+agents[1][agent_id]                 = 43
+agents[1][structurable_type]        = App\Models\Service
+agents[1][structurable_id]          = 7
+agents[1][superieur_hierarchique_id]= 15
+
+agents[2][agent_id]                 = 44
+agents[2][structurable_type]        = App\Models\Direction
+agents[2][structurable_id]          = 3
+agents[2][superieur_hierarchique_id]= (vide — résolution automatique)
+```
+
+> Le supérieur hiérarchique est résolu **individuellement** par agent, en fonction de la structure qui lui est propre.
+
+**Réponse `201`**
+```json
+{
+  "data": {
+    "total": 3,
+    "affectations": [
+      { "id": 10, "agent_id": 42, "statut": "en_attente_validation", "statut_label": "En attente de validation", "superieur_hierarchique_id": 8 },
+      { "id": 11, "agent_id": 43, "statut": "en_attente_validation", "statut_label": "En attente de validation", "superieur_hierarchique_id": 15 },
+      { "id": 12, "agent_id": 44, "statut": "en_attente_validation", "statut_label": "En attente de validation", "superieur_hierarchique_id": 2 }
+    ]
+  },
+  "message": "3 affectation(s) créée(s) — circuits de validation initialisés"
+}
+```
+
+---
+
+#### Générer la note de service PDF (unitaire)
+
+Génère le PDF officiel de la note de service pour une affectation, le stocke sur le serveur et le retourne en téléchargement direct. La référence est automatique : `NS-AFF-{année}-{id:04d}`.
+
+```
+GET /integration/affectations/1/note-service
+```
+*(body vide — retourne le fichier PDF)*
+
+> - Le fichier généré est stocké dans `affectations/{agent_id}/notes-service/generated/`.
+> - L'affectation est mise à jour avec le nouveau `note_service` (chemin) et `note_service_nom_original`.
+> - Peut être appelé plusieurs fois — régénère et écrase la version précédente.
+
+**Contenu du PDF**
+- En-tête ARTF avec référence et date
+- Nom, prénom, matricule, grade, catégorie et échelon de l'agent
+- Structure d'affectation avec hiérarchie complète (Bureau → Service → Direction)
+- Date d'effet, motif, supérieur hiérarchique
+- Blocs de signature (supérieur + Directeur Général)
+
+---
+
+#### Générer les notes de service en lot (ZIP)
+
+Génère les PDFs pour une liste d'affectations et les archive dans un fichier ZIP retourné en téléchargement. Maximum 50 affectations par lot.
+
+```
+POST /integration/affectations/notes-service/lot
+Content-Type: application/json
+```
+```json
+{
+  "affectation_ids": [10, 11, 12]
+}
+```
+*(retourne un fichier ZIP)*
+
+> Le ZIP est nommé `notes-service-affectations-{date}.zip` et contient un PDF par affectation nommé `NS-AFF-{année}-{id:04d}.pdf`.
+
+**Erreurs possibles**
+- `422` si `affectation_ids` est vide ou dépasse 50 éléments
+- Les affectations introuvables sont silencieusement ignorées (les autres PDFs sont inclus)
+
+---
+
+#### Récapitulatif — tous les endpoints affectation
+
+| Méthode | Endpoint | Action | Body |
+|---------|----------|--------|------|
+| `POST` | `/integration/affectations` | Créer une affectation (unitaire) | `multipart/form-data` |
+| `POST` | `/integration/affectations/groupee` | Créer plusieurs affectations (structure propre par agent, note de service commune) | `multipart/form-data` |
+| `GET` | `/integration/affectations` | Lister toutes les affectations | — |
+| `GET` | `/integration/affectations/{id}` | Détail + validations d'une affectation | — |
+| `GET` | `/integration/agents/{id}/affectations` | Affectations d'un agent | — |
+| `POST` | `/integration/affectations/{id}/activer` | Activer (requiert statut `approuvee`) | `{ dossier_integration_id? }` |
+| `POST` | `/integration/affectations/{id}/rejeter` | Rejeter manuellement | `{ commentaire }` |
+| `POST` | `/integration/affectations/{id}/terminer` | Terminer une affectation active | `{ date_fin? }` |
+| `GET` | `/integration/affectations/{id}/note-service` | Générer et télécharger le PDF | — |
+| `POST` | `/integration/affectations/notes-service/lot` | Générer un ZIP de PDFs | `{ affectation_ids[] }` |
+| `POST` | `/integration/validations/{id}/approuver` | Approuver un niveau de validation | `{ commentaire? }` |
+| `POST` | `/integration/validations/{id}/rejeter` | Rejeter un niveau (→ affectation `rejetee`) | `{ commentaire }` |
 
 ---
 
@@ -801,6 +1056,36 @@ BROUILLON
     └─► ANNULE    POST /dossiers/7/annuler
 ```
 
+### Cycle de vie d'une affectation (StatutAffectation)
+
+```
+                                   POST /affectations          POST /affectations/groupee
+                                         │                              │
+                                         └──────────────────────────────┘
+                                                        │
+                                              en_attente_validation
+                                                        │
+                          POST /validations/{id}/approuver  (×5 niveaux, dans l'ordre)
+                                                        │
+                                              approuvee  ◄── automatique au 5ᵉ niveau
+                                                        │
+                          POST /affectations/{id}/activer  (+ dossier_integration_id optionnel)
+                                                        │
+                                                      active
+                                                        │
+                          POST /affectations/{id}/terminer  (+ date_fin optionnelle)
+                                                        │
+                                                    terminee  ✓
+
+À tout moment avant activation :
+    └─► rejetee   POST /affectations/{id}/rejeter  (commentaire obligatoire)
+                  POST /validations/{id}/rejeter   (n'importe quel niveau du circuit)
+
+Génération PDF (disponible sur n'importe quel statut) :
+    GET  /affectations/{id}/note-service         → PDF unitaire (NS-AFF-{année}-{id}.pdf)
+    POST /affectations/notes-service/lot         → ZIP de PDFs (max 50)
+```
+
 ---
 
 ## Cas d'erreurs courants
@@ -815,5 +1100,15 @@ BROUILLON
 | `422` sur `/assigner-matricule` | Pas d'agent lié au dossier | Créer l'agent à l'étape 2 |
 | `422` sur création dossier | `type_integration_id` inexistant | Vérifier via `GET /types-integrations` |
 | `422` sur affectation | `structurable_id` inexistant | Vérifier via `GET /bureaux` ou `GET /services` |
+| `422` sur `/affectations/{id}/activer` | Statut ≠ `approuvee` | Compléter les 5 niveaux du circuit de validation d'abord |
+| `422` sur `/affectations/{id}/rejeter` | Statut terminal (`active`, `terminee`) | Le rejet n'est possible qu'avant activation |
+| `422` sur `/affectations/{id}/terminer` | Statut ≠ `active` | Activer l'affectation avant de la terminer |
+| `422` sur `/validations/{id}/rejeter` (affectation) | `commentaire` absent | Le commentaire est obligatoire pour un rejet |
+| `superieur_hierarchique_id` est `null` | Aucune nomination active dans la structure ou ses parents | Créer une nomination active (tâche 15) ou fournir `superieur_hierarchique_id` manuellement |
+| Upload `note_service` échoue | Format non supporté ou taille > 10 Mo | Utiliser PDF, JPG ou PNG, taille ≤ 10 Mo |
+| `422` sur affectation groupée | Même `agent_id` présent deux fois dans `agents` | Chaque agent doit apparaître une seule fois (`distinct`) |
+| `422` sur affectation groupée | `structurable_type` ou `structurable_id` absent pour un agent | Chaque entrée `agents[i]` doit avoir sa propre structure |
+| `422` sur lot notes de service | Plus de 50 IDs fournis | Diviser en plusieurs requêtes de 50 max |
+| PDF vide ou mal rendu | Agent sans grade/matricule | Compléter le profil agent avant de générer le PDF |
 | `diplome_id` fourni mais grade non rempli | Diplôme sans classe grille liée | Relancer `php artisan db:seed --class=DiplomeSeeder` |
 | Compte non créé après `/integrer` | Agent sans `agent_id` sur le dossier | Vérifier que l'agent est bien lié à l'étape 2 |

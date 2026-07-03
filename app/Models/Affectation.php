@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatutAffectation;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,6 +22,7 @@ class Affectation extends Model
         'structurable_id',
         'motif',
         'note_service',
+        'note_service_nom_original',
         'superieur_hierarchique_id',
         'date_affectation',
         'date_fin',
@@ -31,6 +33,7 @@ class Affectation extends Model
     protected $casts = [
         'date_affectation' => 'date',
         'date_fin'         => 'date',
+        'statut'           => StatutAffectation::class,
     ];
 
     protected array $filterable = ['agent_id', 'statut'];
