@@ -19,10 +19,13 @@ class DatabaseSeeder extends Seeder
             ServiceSeeder::class,
             BureauSeeder::class,
             // Module 1.2 — Référentiels RH
-            DiplomeSeeder::class,
+            // Ordre grille : Grade + Categorie → Classegrillesalariale → Diplome
             GradeSeeder::class,
             CategorieSeeder::class,
             EchelonSeeder::class,
+            ClassegrillesalarialeSeeder::class,
+            DiplomeSeeder::class,
+            ParametregrileSeeder::class,
             FonctionSeeder::class,
             TypeContratSeeder::class,
             TypeDocumentSeeder::class,
@@ -34,9 +37,6 @@ class DatabaseSeeder extends Seeder
             // Module 1.3 — Utilisateurs & paramètres
             UserSeeder::class,
             ParametreApplicationSeeder::class,
-            // Module Grille Salariale (dépend des référentiels categories + grades)
-            ClassegrillesalarialeSeeder::class,
-            ParametregrileSeeder::class,
         ]);
     }
 }
