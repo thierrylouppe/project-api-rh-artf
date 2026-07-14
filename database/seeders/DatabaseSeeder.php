@@ -6,36 +6,51 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Ordre d'exécution — respecter les chaînes de dépendances :
+     *
+     * Auth          : Permission → Role → (User plus bas)
+     * Structure     : Localite → Administration → Direction → Service → Bureau
+     * Grille        : Grade + Categorie → Classegrillesalariale → Diplome
+     *               (+ Echelon → Parametregrile, cohérence sans FK)
+     * Intégration   : TypeDocument → TypeIntegration → CircuitValidation
+     */
     public function run(): void
     {
         $this->call([
-            // Module 1.3 — Administration système (en premier)
+            // ── 1. Auth Spatie ──────────────────────────────────────────
             PermissionSeeder::class,
             RoleSeeder::class,
-            // Module 1.1 — Structure organisationnelle
+
+            // ── 2. Structure organisationnelle ──────────────────────────
             LocaliteSeeder::class,
             AdministrationSeeder::class,
             DirectionSeeder::class,
             ServiceSeeder::class,
             BureauSeeder::class,
-            // Module 1.2 — Référentiels RH
-            // Ordre grille : Grade + Categorie → Classegrillesalariale → Diplome
+
+            // ── 3. Grille salariale & carrière ──────────────────────────
             GradeSeeder::class,
             CategorieSeeder::class,
             EchelonSeeder::class,
-            ClassegrillesalarialeSeeder::class,
-            DiplomeSeeder::class,
-            ParametregrileSeeder::class,
+            ClassegrillesalarialeSeeder::class, // depends: Grade, Categorie
+            DiplomeSeeder::class,               // depends: Classegrillesalariale
+            ParametregrileSeeder::class,        // cohérent avec Echelon (1–12)
+
+            // ── 4. Référentiels RH indépendants ─────────────────────────
             FonctionSeeder::class,
             TypeContratSeeder::class,
-            TypeDocumentSeeder::class,
-            TypeIntegrationSeeder::class,
-            CircuitValidationSeeder::class,
             TypeAbsenceSeeder::class,
             TypeCongeSeeder::class,
             MotifAdministratifSeeder::class,
-            // Module 1.3 — Utilisateurs & paramètres
-            UserSeeder::class,
+
+            // ── 5. Recrutement / intégration ────────────────────────────
+            TypeDocumentSeeder::class,
+            TypeIntegrationSeeder::class,  // depends: TypeDocument
+            CircuitValidationSeeder::class, // depends: TypeIntegration
+
+            // ── 6. Utilisateurs & paramètres applicatifs ────────────────
+            UserSeeder::class,                  // depends: Role
             ParametreApplicationSeeder::class,
         ]);
     }
