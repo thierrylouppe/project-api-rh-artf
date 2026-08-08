@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Requests\TypeDocument\CreateRequest;
 use App\Http\Requests\TypeDocument\UpdateRequest;
+use App\Http\Resources\TypeDocumentListResource;
 use App\Http\Resources\TypeDocumentResource;
 use App\Services\TypeDocumentService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,11 @@ class TypeDocumentController extends BaseController
     protected function resource(): string
     {
         return TypeDocumentResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return TypeDocumentListResource::class;
     }
 
     public function store(CreateRequest $request): JsonResponse

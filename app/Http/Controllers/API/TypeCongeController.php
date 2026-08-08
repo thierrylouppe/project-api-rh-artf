@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Requests\TypeConge\CreateRequest;
 use App\Http\Requests\TypeConge\UpdateRequest;
+use App\Http\Resources\TypeCongeListResource;
 use App\Http\Resources\TypeCongeResource;
 use App\Services\TypeCongeService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,11 @@ class TypeCongeController extends BaseController
     protected function resource(): string
     {
         return TypeCongeResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return TypeCongeListResource::class;
     }
 
     public function store(CreateRequest $request): JsonResponse

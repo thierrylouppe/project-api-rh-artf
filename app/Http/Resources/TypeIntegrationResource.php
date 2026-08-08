@@ -19,7 +19,7 @@ class TypeIntegrationResource extends JsonResource
             'necessite_compte_utilisateur' => $this->necessite_compte_utilisateur,
             'prefixe_matricule'            => $this->prefixe_matricule,
             'duree_max_mois'               => $this->duree_max_mois,
-            'documents_obligatoires'       => TypeDocumentResource::collection(
+            'documents_obligatoires'       => TypeDocumentListResource::collection(
                 $this->whenLoaded('documentsObligatoires')
             ),
             'created_at'                   => $this->created_at,

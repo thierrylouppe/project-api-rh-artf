@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Requests\MotifAdministratif\CreateRequest;
 use App\Http\Requests\MotifAdministratif\UpdateRequest;
+use App\Http\Resources\MotifAdministratifListResource;
 use App\Http\Resources\MotifAdministratifResource;
 use App\Services\MotifAdministratifService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,11 @@ class MotifAdministratifController extends BaseController
     protected function resource(): string
     {
         return MotifAdministratifResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return MotifAdministratifListResource::class;
     }
 
     public function store(CreateRequest $request): JsonResponse

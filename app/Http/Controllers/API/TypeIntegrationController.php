@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Requests\TypeIntegration\CreateRequest;
 use App\Http\Requests\TypeIntegration\UpdateRequest;
+use App\Http\Resources\TypeIntegrationListResource;
 use App\Http\Resources\TypeIntegrationResource;
 use App\Services\TypeIntegrationService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,11 @@ class TypeIntegrationController extends BaseController
     protected function resource(): string
     {
         return TypeIntegrationResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return TypeIntegrationListResource::class;
     }
 
     protected function showRelations(): array

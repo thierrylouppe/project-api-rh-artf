@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Requests\TypeContrat\CreateRequest;
 use App\Http\Requests\TypeContrat\UpdateRequest;
+use App\Http\Resources\ReferentielRhListResource;
 use App\Http\Resources\TypeContratResource;
 use App\Services\TypeContratService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,11 @@ class TypeContratController extends BaseController
     protected function resource(): string
     {
         return TypeContratResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return ReferentielRhListResource::class;
     }
 
     public function store(CreateRequest $request): JsonResponse

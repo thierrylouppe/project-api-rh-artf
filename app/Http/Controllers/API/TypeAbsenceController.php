@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Requests\TypeAbsence\CreateRequest;
 use App\Http\Requests\TypeAbsence\UpdateRequest;
+use App\Http\Resources\TypeAbsenceListResource;
 use App\Http\Resources\TypeAbsenceResource;
 use App\Services\TypeAbsenceService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,11 @@ class TypeAbsenceController extends BaseController
     protected function resource(): string
     {
         return TypeAbsenceResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return TypeAbsenceListResource::class;
     }
 
     public function store(CreateRequest $request): JsonResponse

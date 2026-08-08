@@ -15,7 +15,7 @@ class TypeIntegrationRepository extends BaseRepository implements TypeIntegratio
 
     public function getAll(array $filters = []): Collection
     {
-        $query = TypeIntegration::with('documentsObligatoires');
+        $query = TypeIntegration::query();
 
         if (method_exists(TypeIntegration::class, 'scopeFilter')) {
             $query->filter($filters);
