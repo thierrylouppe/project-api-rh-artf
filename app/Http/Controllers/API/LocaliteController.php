@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\Localite\CreateRequest;
 use App\Http\Requests\Localite\UpdateRequest;
 use App\Http\Resources\LocaliteResource;
+use App\Http\Resources\StructureOrganisationnelleListResource;
 use App\Services\LocaliteService;
 use Illuminate\Http\JsonResponse;
 
@@ -18,6 +19,11 @@ class LocaliteController extends BaseController
     protected function resource(): string
     {
         return LocaliteResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return StructureOrganisationnelleListResource::class;
     }
 
     protected function showRelations(): array

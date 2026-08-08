@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\ServiceRH\CreateRequest;
 use App\Http\Requests\ServiceRH\UpdateRequest;
 use App\Http\Resources\ServiceResource;
+use App\Http\Resources\StructureOrganisationnelleListResource;
 use App\Services\ServiceService;
 use Illuminate\Http\JsonResponse;
 
@@ -18,6 +19,11 @@ class ServiceController extends BaseController
     protected function resource(): string
     {
         return ServiceResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return StructureOrganisationnelleListResource::class;
     }
 
     protected function showRelations(): array
@@ -39,6 +45,6 @@ class ServiceController extends BaseController
     {
         $items = $this->service->getByDirection($directionId);
 
-        return response()->json(['data' => ServiceResource::collection($items)]);
+        return $this->collectionResponse(StructureOrganisationnelleListResource::collection($items));
     }
 }

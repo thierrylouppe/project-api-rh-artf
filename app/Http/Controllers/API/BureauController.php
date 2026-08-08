@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\Bureau\CreateRequest;
 use App\Http\Requests\Bureau\UpdateRequest;
 use App\Http\Resources\BureauResource;
+use App\Http\Resources\StructureOrganisationnelleListResource;
 use App\Services\BureauService;
 use Illuminate\Http\JsonResponse;
 
@@ -18,6 +19,11 @@ class BureauController extends BaseController
     protected function resource(): string
     {
         return BureauResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return StructureOrganisationnelleListResource::class;
     }
 
     protected function showRelations(): array
@@ -39,6 +45,6 @@ class BureauController extends BaseController
     {
         $items = $this->service->getByService($serviceId);
 
-        return response()->json(['data' => BureauResource::collection($items)]);
+        return $this->collectionResponse(StructureOrganisationnelleListResource::collection($items));
     }
 }

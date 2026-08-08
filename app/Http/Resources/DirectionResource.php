@@ -16,7 +16,7 @@ class DirectionResource extends JsonResource
             'description' => $this->description,
             'administration_id' => $this->when(! $this->relationLoaded('administration'), $this->administration_id),
             'administration' => new AdministrationResource($this->whenLoaded('administration')),
-            'services' => ServiceResource::collection($this->whenLoaded('services')),
+            'services' => StructureOrganisationnelleListResource::collection($this->whenLoaded('services')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

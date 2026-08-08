@@ -16,11 +16,17 @@ abstract class BaseController extends Controller
 
     abstract protected function resource(): string;
 
+    /** Resource utilisée pour les listes (index). Par défaut = resource de détail. */
+    protected function listResource(): string
+    {
+        return $this->resource();
+    }
+
     public function index(Request $request): JsonResponse
     {
         $items = $this->service->getAll($request->query());
 
-        return $this->collectionResponse($this->resource()::collection($items));
+        return $this->collectionResponse($this->listResource()::collection($items));
     }
 
     public function show(Request $request): JsonResponse
