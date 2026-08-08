@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\Grade\CreateRequest;
 use App\Http\Requests\Grade\UpdateRequest;
 use App\Http\Resources\GradeResource;
+use App\Http\Resources\ReferentielRhListResource;
 use App\Services\GradeService;
 use Illuminate\Http\JsonResponse;
 
@@ -18,6 +19,11 @@ class GradeController extends BaseController
     protected function resource(): string
     {
         return GradeResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return ReferentielRhListResource::class;
     }
 
     public function store(CreateRequest $request): JsonResponse

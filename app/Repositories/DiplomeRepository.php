@@ -16,7 +16,7 @@ class DiplomeRepository extends BaseRepository implements DiplomeInterface
 
     public function getAll(array $filters = []): Collection
     {
-        $query = Diplome::with(['classeGrille.categorie', 'classeGrille.grade']);
+        $query = Diplome::query();
 
         if (method_exists(Diplome::class, 'scopeFilter')) {
             $query->filter($filters);
