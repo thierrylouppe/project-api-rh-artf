@@ -20,18 +20,21 @@ class RoleSeeder extends Seeder
                 'consulter-agents', 'creer-agents', 'modifier-agents',
                 'consulter-recrutement', 'creer-recrutement', 'valider-recrutement',
                 'consulter-contrats', 'creer-contrats', 'modifier-contrats',
+                'consulter-salaires', 'gerer-salaires',
                 'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
                 'consulter-evaluations', 'consulter-reporting',
             ],
             'directeur' => [
                 'consulter-utilisateurs', 'consulter-structure', 'consulter-referentiels',
                 'consulter-agents', 'consulter-recrutement', 'valider-recrutement',
-                'consulter-contrats', 'consulter-conges', 'valider-conges',
+                'consulter-contrats', 'consulter-salaires',
+                'consulter-conges', 'valider-conges',
                 'consulter-absences', 'valider-absences', 'consulter-evaluations', 'valider-evaluations',
                 'consulter-reporting',
             ],
             'chef-service' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
+                'consulter-salaires',
                 'consulter-conges', 'valider-conges', 'consulter-absences',
             ],
             'agent' => [

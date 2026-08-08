@@ -134,4 +134,14 @@ class Agent extends Model
     {
         return $this->hasOne(Contrat::class)->where('statut', 'actif')->latest();
     }
+
+    public function salairesAgents(): HasMany
+    {
+        return $this->hasMany(SalaireAgent::class);
+    }
+
+    public function salaireActuel(): HasOne
+    {
+        return $this->hasOne(SalaireAgent::class)->where('statut', 'actif')->latest('date_debut');
+    }
 }

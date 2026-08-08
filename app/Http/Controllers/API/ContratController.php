@@ -5,15 +5,12 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\Contrat\CreateRequest;
 use App\Http\Resources\ContratResource;
 use App\Services\ContratService;
-use App\Services\DossierIntegrationService;
 use Illuminate\Http\JsonResponse;
 
 class ContratController extends BaseController
 {
-    public function __construct(
-        ContratService $service,
-        private readonly DossierIntegrationService $dossierService,
-    ) {
+    public function __construct(ContratService $service)
+    {
         parent::__construct($service);
     }
 
@@ -31,9 +28,9 @@ class ContratController extends BaseController
     {
         $contrat = $this->service->create($request->validated());
 
-        if ($request->filled('dossier_integration_id')) {
-            $this->dossierService->marquerContratSigne($request->input('dossier_integration_id'));
-        }
+        // La signature du contrat est une étape post-validation (ACTE_GENERE → CONTRAT_SIGNE),
+        // pas un effet de bord de la création initiale (souvent en BROUILLON).
+        // Endpoint dédié : POST /integration/dossiers/{id}/marquer-contrat-signe
 
         return $this->respond($contrat, 'Contrat créé avec succès', 201);
     }

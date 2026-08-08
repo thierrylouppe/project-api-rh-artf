@@ -74,8 +74,8 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 5.1 Grilles & barèmes | ✅ | Tables `classegrillesalariales` (FK vers `categories` + `grades`), `parametregrilles`, `salaires` — CRUD classes, paramètres singleton, génération automatique 120 lignes (10 classes × 12 échelons), bulk insert, formule validée (spec : Classe I ech.1 → 147 000 FCFA). Routes : `GET/POST/PUT/DELETE /api/grille-classes`, `GET/PUT /api/grille-parametres`, `GET /api/salaires`, `POST /api/salaires/generation` |
-| 5.2 Bulletins & historique | ⬜ | — |
+| 5.1 Grilles & barèmes | ✅ | Tables `classegrillesalariales`, `parametregrilles`, `salaires` — génération (plage `echelon_depart`→`echelon_fin`), formule validée (Classe I éch.1 → 147 000). Routes protégées (`auth:sanctum` + `consulter-salaires` / `gerer-salaires`). |
+| 5.2 Bulletins & historique | ✅ | `salaires_agents` (auto CDI/CDD), clôture, avancement, historique chronologique, bulletin PDF DomPDF. Routes : `.../salaires/historique`, `.../salaires/bulletin`, `salaires-agents/{id}/bulletin`. |
 
 **Référence :** [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md)
 

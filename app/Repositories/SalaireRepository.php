@@ -33,4 +33,11 @@ class SalaireRepository extends BaseRepository implements SalaireInterface
             ->orderBy('echelon')
             ->get();
     }
+
+    public function findByClasseAndEchelon(int $classeId, int $echelon): ?Salaire
+    {
+        return Salaire::where('classegrillesalariale_id', $classeId)
+            ->where('echelon', $echelon)
+            ->first();
+    }
 }

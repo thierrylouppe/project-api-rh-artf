@@ -36,6 +36,8 @@ class DatabaseSeeder extends Seeder
             ClassegrillesalarialeSeeder::class, // depends: Grade, Categorie
             DiplomeSeeder::class,               // depends: Classegrillesalariale
             ParametregrileSeeder::class,        // cohérent avec Echelon (1–12)
+            // SalaireAgentSeeder : backfill optionnel (agents CDI/CDD déjà présents)
+            // → php artisan db:seed --class=SalaireAgentSeeder
 
             // ── 4. Référentiels RH indépendants ─────────────────────────
             FonctionSeeder::class,

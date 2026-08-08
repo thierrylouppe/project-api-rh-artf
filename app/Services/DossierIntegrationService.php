@@ -163,8 +163,9 @@ class DossierIntegrationService extends BaseService
             $this->agentRepository->assignerMatricule($dossier->agent_id, $matricule);
 
             // Statut déjà MATRICULE_CREE (acte généré sans contrat) : pas de transition à refaire
-            if ($dossier->statut === StatutDossier::MATRICULE_CREE) {
-                return $dossier->fresh();
+            // Statut INTEGRE : mode post-intégration — on assigne le matricule sans rejouer le workflow
+            if (in_array($dossier->statut, [StatutDossier::MATRICULE_CREE, StatutDossier::INTEGRE], true)) {
+                return $dossier->fresh(['agent']);
             }
 
             return $this->transitionner($id, StatutDossier::MATRICULE_CREE, "Matricule {$matricule} assigné (source : système externe)");
@@ -235,9 +236,12 @@ class DossierIntegrationService extends BaseService
                 $this->creerConventionStage($dossier);
             }
 
+            // Recharger l'agent (ex. statut stagiaire) après les automatismes post-intégration
+            $dossier->load('typeIntegration', 'agent.contratActif');
+
             return [
-                'dossier'                => $dossier,
-                'compte'                 => $compte,
+                'dossier'                 => $dossier,
+                'compte'                  => $compte,
                 'taches_post_integration' => $this->tachesPostIntegration($id),
             ];
         });
@@ -252,7 +256,14 @@ class DossierIntegrationService extends BaseService
     public function tachesPostIntegration(int $id): array
     {
         $dossier = $this->repository->findById($id);
-        $dossier->load('agent.affectations', 'agent.nominations', 'agent.remisesMateriel', 'priseDeService', 'actes');
+        $dossier->load(
+            'agent.affectations',
+            'agent.nominations',
+            'agent.remisesMateriel',
+            'agent.salaireActuel',
+            'priseDeService',
+            'actes'
+        );
 
         $agent             = $dossier->agent;
         $necessite_contrat = (bool) $dossier->typeIntegration?->necessite_contrat;
@@ -273,6 +284,14 @@ class DossierIntegrationService extends BaseService
                 'label'       => 'Marquer le contrat signé',
                 'endpoint'    => "POST /integration/dossiers/{$id}/marquer-contrat-signe",
                 'statut'      => $agent?->contratActif ? 'fait' : 'non_fait',
+                'obligatoire' => false,
+            ];
+
+            $taches[] = [
+                'etape'       => 12,
+                'label'       => 'Salaire initial (auto à la création du contrat CDI/CDD)',
+                'endpoint'    => "GET /integration/agents/{$agent?->id}/salaires/actuel",
+                'statut'      => $agent?->salaireActuel ? 'fait' : 'non_fait',
                 'obligatoire' => false,
             ];
         }

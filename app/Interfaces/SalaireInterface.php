@@ -2,6 +2,7 @@
 
 namespace App\Interfaces;
 
+use App\Models\Salaire;
 use Illuminate\Support\Collection;
 
 interface SalaireInterface extends BaseInterface
@@ -11,4 +12,6 @@ interface SalaireInterface extends BaseInterface
 
     /** Liste complète avec eager-loading classe → categorie + grade. */
     public function getAllWithClasse(): Collection;
+
+    public function findByClasseAndEchelon(int $classeId, int $echelon): ?Salaire;
 }

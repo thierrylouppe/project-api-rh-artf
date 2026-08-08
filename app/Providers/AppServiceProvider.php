@@ -17,6 +17,7 @@ use App\Interfaces\RemiseMaterielInterface;
 use App\Interfaces\ValidationWorkflowInterface;
 use App\Interfaces\ClassegrillesalarialeInterface;
 use App\Interfaces\ParametregrileInterface;
+use App\Interfaces\SalaireAgentInterface;
 use App\Interfaces\SalaireInterface;
 use App\Interfaces\AdministrationInterface;
 use App\Interfaces\AuditLogInterface;
@@ -55,6 +56,7 @@ use App\Repositories\RemiseMaterielRepository;
 use App\Repositories\ValidationWorkflowRepository;
 use App\Repositories\ClassegrillesalarialeRepository;
 use App\Repositories\ParametregrileRepository;
+use App\Repositories\SalaireAgentRepository;
 use App\Repositories\SalaireRepository;
 use App\Repositories\AdministrationRepository;
 use App\Repositories\AuditLogRepository;
@@ -123,6 +125,7 @@ class AppServiceProvider extends ServiceProvider
         ClassegrillesalarialeInterface::class => ClassegrillesalarialeRepository::class,
         ParametregrileInterface::class        => ParametregrileRepository::class,
         SalaireInterface::class               => SalaireRepository::class,
+        SalaireAgentInterface::class          => SalaireAgentRepository::class,
         // Module 1.3 — Administration système
         UserInterface::class                => UserRepository::class,
         RoleInterface::class                => RoleRepository::class,

@@ -29,16 +29,20 @@ class SalaireController extends Controller
      */
     public function generate(GenerateRequest $request): JsonResponse
     {
-        $total = $this->service->generateGrille(
-            $request->validated('valeur_point_indice')
-                ? (float) $request->validated('valeur_point_indice')
-                : null
-        );
+        $point = $request->validated('valeur_point_indice')
+            ? (float) $request->validated('valeur_point_indice')
+            : null;
+
+        $result = $this->service->generateGrille($point);
 
         return response()->json([
-            'success' => true,
-            'message' => "Grille générée avec succès ({$total} lignes).",
-            'data'    => null,
+            'success'             => true,
+            'message'             => "Grille générée avec succès ({$result['total']} lignes).",
+            'data'                => null,
+            'total'               => $result['total'],
+            'valeur_point_indice' => $result['valeur_point_indice'],
+            'echelon_depart'      => $result['echelon_depart'],
+            'echelon_fin'         => $result['echelon_fin'],
         ]);
     }
 }

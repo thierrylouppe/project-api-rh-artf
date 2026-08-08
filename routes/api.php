@@ -14,6 +14,7 @@ use App\Http\Controllers\API\RemiseMaterielController;
 use App\Http\Controllers\API\ValidationWorkflowController;
 use App\Http\Controllers\API\ClassegrillesalarialeController;
 use App\Http\Controllers\API\ParametregrileController;
+use App\Http\Controllers\API\SalaireAgentController;
 use App\Http\Controllers\API\SalaireController;
 use App\Http\Controllers\API\AdministrationController;
 use App\Http\Controllers\API\AuditLogController;
@@ -55,6 +56,16 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () {
     Route::get('agents/{agent}/nominations', [NominationController::class, 'byAgent']);
     Route::get('agents/{agent}/remises-materiel', [RemiseMaterielController::class, 'byAgent']);
     Route::get('agents/{agent}/compte', [CompteIntegrationController::class, 'byAgent']);
+    Route::get('agents/{agent}/salaires/actuel', [SalaireAgentController::class, 'actuel'])
+        ->middleware('permission:consulter-salaires');
+    Route::get('agents/{agent}/salaires/historique', [SalaireAgentController::class, 'historique'])
+        ->middleware('permission:consulter-salaires');
+    Route::get('agents/{agent}/salaires/bulletin', [SalaireAgentController::class, 'bulletin'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('agents/{agent}/salaires/avancer-echelon', [SalaireAgentController::class, 'avancerEchelon'])
+        ->middleware('permission:gerer-salaires');
+    Route::get('agents/{agent}/salaires', [SalaireAgentController::class, 'byAgent'])
+        ->middleware('permission:consulter-salaires');
 
     // — Dossiers d'intégration ————————————————————————————
     Route::apiResource('dossiers', DossierIntegrationController::class);
@@ -169,16 +180,40 @@ Route::apiResource('types-conges', TypeCongeController::class);
 Route::apiResource('motifs-administratifs', MotifAdministratifController::class);
 
 // ============================================================
-// MODULE GRILLE SALARIALE
+// MODULE GRILLE SALARIALE & SALAIRES AGENTS
 // ============================================================
-Route::apiResource('grille-classes', ClassegrillesalarialeController::class)
-    ->parameters(['grille-classes' => 'classegrillesalariale']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('grille-classes', ClassegrillesalarialeController::class)
+        ->parameters(['grille-classes' => 'classegrillesalariale'])
+        ->middleware([
+            'index'   => 'permission:consulter-salaires',
+            'show'    => 'permission:consulter-salaires',
+            'store'   => 'permission:gerer-salaires',
+            'update'  => 'permission:gerer-salaires',
+            'destroy' => 'permission:gerer-salaires',
+        ]);
 
-Route::get('grille-parametres/current', [ParametregrileController::class, 'current']);
-Route::put('grille-parametres/{parametregrile}', [ParametregrileController::class, 'update']);
+    Route::get('grille-parametres/current', [ParametregrileController::class, 'current'])
+        ->middleware('permission:consulter-salaires');
+    Route::put('grille-parametres/{parametregrile}', [ParametregrileController::class, 'update'])
+        ->middleware('permission:gerer-salaires');
 
-Route::get('salaires', [SalaireController::class, 'index']);
-Route::post('salaires/generation', [SalaireController::class, 'generate']);
+    Route::get('salaires', [SalaireController::class, 'index'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('salaires/generation', [SalaireController::class, 'generate'])
+        ->middleware('permission:gerer-salaires');
+
+    Route::get('salaires-agents', [SalaireAgentController::class, 'index'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('salaires-agents', [SalaireAgentController::class, 'store'])
+        ->middleware('permission:gerer-salaires');
+    Route::get('salaires-agents/{id}', [SalaireAgentController::class, 'show'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('salaires-agents/{id}/cloturer', [SalaireAgentController::class, 'cloturer'])
+        ->middleware('permission:gerer-salaires');
+    Route::get('salaires-agents/{id}/bulletin', [SalaireAgentController::class, 'bulletinById'])
+        ->middleware('permission:consulter-salaires');
+});
 
 // ============================================================
 // MODULE 1.3 — AUTH & ADMINISTRATION SYSTÈME
