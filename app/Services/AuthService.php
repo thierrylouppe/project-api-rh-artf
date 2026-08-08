@@ -25,7 +25,7 @@ class AuthService
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-        return ['user' => $user->load('roles.permissions'), 'token' => $token];
+        return ['user' => $user, 'token' => $token];
     }
 
     public function logout(User $user): void
