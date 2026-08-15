@@ -193,7 +193,7 @@ Suivre le même enchaînement que [`guide-test-integration.md`](./guide-test-int
 | Générer l'acte | `POST /integration/dossiers/8/generer-acte` | `ACTE_GENERE` |
 | Contrat signé | `POST /integration/dossiers/8/marquer-contrat-signe` | `CONTRAT_SIGNE` |
 | Matricule STG | `POST /integration/dossiers/8/assigner-matricule` | `MATRICULE_CREE` |
-| Affectation | `POST /integration/affectations` + `/activer` | `AFFECTE` |
+| Affectation | `POST /carriere/affectations` + `/activer` (alias `/integration/…`) | n’écrit plus le dossier |
 | Prise de service | `POST /integration/prises-de-service` | `PRISE_DE_SERVICE` |
 | Intégrer | `POST /integration/dossiers/8/integrer` | `INTEGRE` |
 
@@ -265,7 +265,7 @@ POST /integration/dossiers/8/integrer
       { "etape": 11, "label": "Générer l'acte administratif", "statut": "non_fait", "obligatoire": true },
       { "etape": 12, "label": "Marquer le contrat signé", "statut": "fait", "obligatoire": false },
       { "etape": 13, "label": "Assigner le matricule", "statut": "non_fait", "obligatoire": true },
-      { "etape": 14, "label": "Affecter l'agent", "statut": "non_fait", "obligatoire": true },
+      { "etape": 14, "label": "Affecter l'agent (module carrière)", "endpoint": "POST /carriere/affectations", "statut": "non_fait", "obligatoire": false },
       { "etape": 17, "label": "Remettre le matériel", "statut": "non_fait", "obligatoire": false },
       { "etape": 18, "label": "Confirmer la prise de service", "statut": "non_fait", "obligatoire": false }
     ]

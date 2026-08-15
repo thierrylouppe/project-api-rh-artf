@@ -25,7 +25,7 @@ Spec JSON : **`/docs?api-docs.json`** (ou fichier généré `storage/api-docs/ap
 | 5. Soumettre → étude RH → valider RH | transitions sous tag **Intégration — Dossiers** |
 | 6. Circuit hiérarchique | `GET .../circuit` + `POST .../validations/{id}/approuver` |
 | 7. Acte / contrat / matricule | `generer-acte`, contrats, `assigner-matricule` |
-| 8. Affectation / nomination / prise de service | tags dédiés |
+| 8. Affectation / nomination | tags **Carrière — …** (`/api/carriere/…`, alias `/api/integration/…`) |
 | 9. Finaliser | `POST /api/integration/dossiers/{id}/integrer` |
 
 ## Convention JSON

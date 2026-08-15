@@ -146,16 +146,11 @@ Cœur de `feature/affectation`. Pas de nouvelle feature métier (pas d’auto-DR
 
 **Hors lot 1 :** seeder dédié, `listResource`, notifications, renvoyer-pour-correction, déplacement des classes PHP.
 
-### Lot 2 — Checklist intégration
+### Lot 2 — Checklist intégration — ✅
 
-Dans `DossierIntegrationService::tachesPostIntegration()` :
-
-- Étape 14 : `obligatoire: false`, endpoint `POST /carriere/affectations`, label clarifié.
-- Étape 15 : retirer **ou** `obligatoire: false` + endpoint `POST /carriere/nominations` (si le FE casse sans la clé 15, garder la ligne optionnelle).
-
-Mettre à jour `workflow-integration-par-type.md` §5 et les guides de test.
-
-**Coordonner le FE** si on retire une clé `etape`.
+- Étape 14 : `obligatoire: false`, `POST /carriere/affectations`, label clarifié (clé `etape` conservée).
+- Étape 15 : conservée, `POST /carriere/nominations`, toujours optionnelle.
+- Docs + note FE : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md).
 
 ### Lot 3 — Nominations & contrats (même schéma, autre branche possible)
 

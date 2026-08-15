@@ -94,8 +94,8 @@ Sur le chemin B, `generer-acte`, `assigner-matricule` et `marquer-contrat-signe`
 | 12 | Contrat signé | — | ✓ optionnel | ✓ optionnel |
 | 12 | Salaire initial | — | ✓ optionnel | — |
 | 13 | Matricule | ✓ obligatoire | ✓ | ✓ |
-| 14 | Affectation | ✓ obligatoire | ✓ | ✓ |
-| 15 | Nomination | ✓ optionnel | ✓ optionnel | — |
+| 14 | Affectation (`POST /carriere/affectations`) | ✓ optionnel | ✓ optionnel | ✓ optionnel |
+| 15 | Nomination (`POST /carriere/nominations`) | ✓ optionnel | ✓ optionnel | — |
 | 16 | Compte utilisateur | ✓ (souvent déjà `fait`) | ✓ | — |
 | 17 | Matériel | ✓ optionnel | ✓ | ✓ |
 | 18 | Prise de service | ✓ optionnel | ✓ | ✓ |

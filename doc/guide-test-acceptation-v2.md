@@ -515,7 +515,7 @@ POST /integration/dossiers/{dossier_id_c}/integrer
 
 ```
 POST /integration/dossiers/{dossier_id_c}/assigner-matricule
-POST /integration/affectations
+POST /carriere/affectations
 GET /integration/dossiers/{dossier_id_c}/taches-post-integration
 ```
 

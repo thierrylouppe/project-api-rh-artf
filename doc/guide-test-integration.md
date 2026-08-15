@@ -526,8 +526,8 @@ POST /integration/dossiers/7/integrer
     "taches_post_integration": [
       { "etape": 11, "label": "Générer l'acte administratif",        "endpoint": "POST /integration/dossiers/7/generer-acte",    "statut": "non_fait", "obligatoire": true  },
       { "etape": 13, "label": "Assigner le matricule",               "endpoint": "POST /integration/dossiers/7/assigner-matricule","statut": "non_fait", "obligatoire": true  },
-      { "etape": 14, "label": "Affecter l'agent",                    "endpoint": "POST /integration/affectations",               "statut": "non_fait", "obligatoire": true  },
-      { "etape": 15, "label": "Nommer l'agent (poste de responsabilité)", "endpoint": "POST /integration/nominations",           "statut": "non_fait", "obligatoire": false },
+      { "etape": 14, "label": "Affecter l'agent (module carrière)",  "endpoint": "POST /carriere/affectations",                  "statut": "non_fait", "obligatoire": false },
+      { "etape": 15, "label": "Nommer l'agent (module carrière)",    "endpoint": "POST /carriere/nominations",                   "statut": "non_fait", "obligatoire": false },
       { "etape": 16, "label": "Compte utilisateur",                  "endpoint": "POST /integration/comptes/provisionner",       "statut": "fait",     "obligatoire": true  },
       { "etape": 17, "label": "Remettre le matériel",                "endpoint": "POST /integration/remises-materiel",           "statut": "non_fait", "obligatoire": false },
       { "etape": 18, "label": "Confirmer la prise de service",       "endpoint": "POST /integration/prises-de-service",          "statut": "non_fait", "obligatoire": false }
@@ -558,8 +558,8 @@ GET /integration/dossiers/7/taches-post-integration
   "data": [
     { "etape": 11, "label": "Générer l'acte administratif",    "endpoint": "POST /integration/dossiers/7/generer-acte",     "statut": "fait",     "obligatoire": true  },
     { "etape": 13, "label": "Assigner le matricule",           "endpoint": "POST /integration/dossiers/7/assigner-matricule","statut": "non_fait", "obligatoire": true  },
-    { "etape": 14, "label": "Affecter l'agent",                "endpoint": "POST /integration/affectations",                "statut": "non_fait", "obligatoire": true  },
-    { "etape": 15, "label": "Nommer l'agent (responsabilité)", "endpoint": "POST /integration/nominations",                 "statut": "non_fait", "obligatoire": false },
+    { "etape": 14, "label": "Affecter l'agent (module carrière)", "endpoint": "POST /carriere/affectations",               "statut": "non_fait", "obligatoire": false },
+    { "etape": 15, "label": "Nommer l'agent (module carrière)",   "endpoint": "POST /carriere/nominations",                 "statut": "non_fait", "obligatoire": false },
     { "etape": 17, "label": "Remettre le matériel",            "endpoint": "POST /integration/remises-materiel",            "statut": "non_fait", "obligatoire": false },
     { "etape": 18, "label": "Confirmer la prise de service",   "endpoint": "POST /integration/prises-de-service",           "statut": "non_fait", "obligatoire": false }
   ],

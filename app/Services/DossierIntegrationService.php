@@ -335,17 +335,17 @@ class DossierIntegrationService extends BaseService
 
         $taches[] = [
             'etape'       => 14,
-            'label'       => 'Affecter l\'agent',
-            'endpoint'    => 'POST /integration/affectations',
+            'label'       => 'Affecter l\'agent (module carrière)',
+            'endpoint'    => 'POST /carriere/affectations',
             'statut'      => $agent?->affectations?->isNotEmpty() ? 'fait' : 'non_fait',
-            'obligatoire' => true,
+            'obligatoire' => false,
         ];
 
         if (! $estStage) {
             $taches[] = [
                 'etape'       => 15,
-                'label'       => 'Nommer l\'agent (poste de responsabilité)',
-                'endpoint'    => 'POST /integration/nominations',
+                'label'       => 'Nommer l\'agent (module carrière)',
+                'endpoint'    => 'POST /carriere/nominations',
                 'statut'      => $agent?->nominations?->isNotEmpty() ? 'fait' : 'non_fait',
                 'obligatoire' => false,
             ];
