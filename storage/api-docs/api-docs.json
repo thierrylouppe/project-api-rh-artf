@@ -1,0 +1,4551 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Gestion RH API — ARTF",
+        "description": "API REST de gestion RH (intégration administrative des agents).\n\n## Authentification\n\n1. Appeler `POST /api/login` avec email / mot de passe\n2. Copier le `token` retourné\n3. Cliquer **Authorize** en haut à droite\n4. Saisir : `Bearer {token}` (ou uniquement le token selon le client)\n\nComptes de test (seeders) :\n- `admin@arft.cg` / `Admin@2026`\n- `rh@arft.cg` / `Rh@2026`\n\n## Convention de réponse\n\n```json\n{ \"data\": {}, \"message\": \"...\" }\n```\n\nErreurs : `{ \"success\": false, \"message\": \"...\", \"errors\": {} }`",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Serveur API (variable L5_SWAGGER_CONST_HOST)"
+        }
+    ],
+    "paths": {
+        "/api/integration/dossiers/{dossier}/actes": {
+            "get": {
+                "tags": [
+                    "Intégration — Actes"
+                ],
+                "summary": "Lister les actes d'un dossier",
+                "operationId": "listActesDossier",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ActeAdministratif"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Intégration — Actes"
+                ],
+                "summary": "Générer un acte administratif (manuel)",
+                "operationId": "genererActeAdministratif",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type_acte"
+                                ],
+                                "properties": {
+                                    "type_acte": {
+                                        "type": "string",
+                                        "example": "decision_recrutement"
+                                    },
+                                    "contenu": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Créé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ActeAdministratifResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/actes/{acte}/signer": {
+            "post": {
+                "tags": [
+                    "Intégration — Actes"
+                ],
+                "summary": "Signer un acte administratif",
+                "operationId": "signerActeAdministratif",
+                "parameters": [
+                    {
+                        "name": "acte",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ActeAdministratifResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/affectations": {
+            "get": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Liste des affectations",
+                "operationId": "listAffectations",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Créer une affectation",
+                "description": "Accepte JSON ou multipart (note_service fichier PDF/image).",
+                "operationId": "storeAffectation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "agent_id",
+                                    "structurable_type",
+                                    "structurable_id",
+                                    "date_affectation"
+                                ],
+                                "properties": {
+                                    "agent_id": {
+                                        "type": "integer"
+                                    },
+                                    "structurable_type": {
+                                        "type": "string",
+                                        "example": "App\\Models\\Direction"
+                                    },
+                                    "structurable_id": {
+                                        "type": "integer"
+                                    },
+                                    "motif": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "note_service": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "nullable": true
+                                    },
+                                    "superieur_hierarchique_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "date_affectation": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Créée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AffectationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/affectations/{id}": {
+            "get": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Détail d'une affectation",
+                "operationId": "showAffectation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AffectationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/affectations/groupee": {
+            "post": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Affectation groupée",
+                "operationId": "storeAffectationGroupee",
+                "responses": {
+                    "201": {
+                        "description": "Créées"
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/affectations/{affectation}/activer": {
+            "post": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Activer une affectation",
+                "operationId": "activerAffectation",
+                "parameters": [
+                    {
+                        "name": "affectation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "dossier_integration_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Activée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AffectationResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/affectations/{affectation}/rejeter": {
+            "post": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Rejeter une affectation",
+                "operationId": "rejeterAffectation",
+                "parameters": [
+                    {
+                        "name": "affectation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rejetée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AffectationResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/affectations/{affectation}/terminer": {
+            "post": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Terminer une affectation",
+                "operationId": "terminerAffectation",
+                "parameters": [
+                    {
+                        "name": "affectation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "date_fin": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Terminée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AffectationResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/affectations/{affectation}/note-service": {
+            "get": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Télécharger la note de service (PDF)",
+                "operationId": "noteServiceAffectation",
+                "parameters": [
+                    {
+                        "name": "affectation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/agents/{agent}/affectations": {
+            "get": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Affectations d'un agent",
+                "operationId": "listAffectationsByAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/agents": {
+            "get": {
+                "tags": [
+                    "Intégration — Agents"
+                ],
+                "summary": "Liste des agents",
+                "operationId": "listAgents",
+                "responses": {
+                    "200": {
+                        "description": "Liste",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AgentListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Intégration — Agents"
+                ],
+                "summary": "Créer un agent (+ dossier d'intégration auto)",
+                "description": "Crée la fiche agent et initialise automatiquement un dossier d'intégration.",
+                "operationId": "storeAgent",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AgentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Créé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AgentCreateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/agents/{id}": {
+            "get": {
+                "tags": [
+                    "Intégration — Agents"
+                ],
+                "summary": "Détail d'un agent",
+                "operationId": "showAgent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AgentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Intégration — Agents"
+                ],
+                "summary": "Mettre à jour un agent",
+                "operationId": "updateAgent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AgentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AgentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/agents/{id}/matricule": {
+            "patch": {
+                "tags": [
+                    "Intégration — Agents"
+                ],
+                "summary": "Modifier le matricule d'un agent",
+                "operationId": "modifierMatriculeAgent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AssignerMatriculeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AgentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Connexion",
+                "description": "Retourne un token Sanctum. Utiliser ensuite Authorize → Bearer {token}.",
+                "operationId": "login",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Données invalides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Déconnexion",
+                "description": "Révoque le token Sanctum courant.",
+                "operationId": "logout",
+                "responses": {
+                    "200": {
+                        "description": "Déconnexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/user": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Profil utilisateur connecté",
+                "operationId": "me",
+                "responses": {
+                    "200": {
+                        "description": "Profil",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/contrats": {
+            "get": {
+                "tags": [
+                    "Intégration — Contrats"
+                ],
+                "summary": "Liste des contrats",
+                "operationId": "listContrats",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Intégration — Contrats"
+                ],
+                "summary": "Créer un contrat",
+                "description": "La signature (transition dossier) se fait via `POST /api/integration/dossiers/{id}/marquer-contrat-signe`.",
+                "operationId": "storeContrat",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ContratRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Créé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ContratResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/contrats/{id}": {
+            "get": {
+                "tags": [
+                    "Intégration — Contrats"
+                ],
+                "summary": "Détail d'un contrat",
+                "operationId": "showContrat",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ContratResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/agents/{agent}/contrats": {
+            "get": {
+                "tags": [
+                    "Intégration — Contrats"
+                ],
+                "summary": "Contrats d'un agent",
+                "operationId": "listContratsByAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/contrats/{contrat}/resilier": {
+            "post": {
+                "tags": [
+                    "Intégration — Contrats"
+                ],
+                "summary": "Résilier un contrat",
+                "operationId": "resilierContrat",
+                "parameters": [
+                    {
+                        "name": "contrat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Résilié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ContratResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{dossier}/documents": {
+            "get": {
+                "tags": [
+                    "Intégration — Documents"
+                ],
+                "summary": "État des documents d'un dossier",
+                "description": "Retourne les documents déposés, les manquants et un résumé.",
+                "operationId": "listDocumentsDossier",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "État",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DocumentsEtatResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Intégration — Documents"
+                ],
+                "summary": "Déposer un document sur un dossier",
+                "description": "Multipart/form-data : `type_document_id`, `fichier` (pdf/jpg/png, max 10 Mo), `est_obligatoire` optionnel.",
+                "operationId": "storeDocumentDossier",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "type_document_id",
+                                    "fichier"
+                                ],
+                                "properties": {
+                                    "type_document_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "fichier": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "est_obligatoire": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Document ajouté",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DocumentDossierResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/documents/{document}/valider": {
+            "post": {
+                "tags": [
+                    "Intégration — Documents"
+                ],
+                "summary": "Valider un document déposé",
+                "operationId": "validerDocumentDossier",
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DecisionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Validé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DocumentDossierResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/documents/{document}": {
+            "delete": {
+                "tags": [
+                    "Intégration — Documents"
+                ],
+                "summary": "Supprimer un document",
+                "operationId": "deleteDocumentDossier",
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers": {
+            "get": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Liste des dossiers d'intégration",
+                "operationId": "listDossiersIntegration",
+                "parameters": [
+                    {
+                        "name": "statut",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BROUILLON"
+                    },
+                    {
+                        "name": "type_integration_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Créer un dossier d'intégration",
+                "operationId": "storeDossierIntegration",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DossierIntegrationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Créé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}": {
+            "get": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Détail d'un dossier (avec relations)",
+                "operationId": "showDossierIntegration",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Mettre à jour un dossier",
+                "operationId": "updateDossierIntegration",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DossierIntegrationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/soumettre": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Soumettre le dossier pour étude RH",
+                "operationId": "soumettreDossierIntegration",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Soumis",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/passer-en-etude-rh": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Prendre en charge le dossier (RH)",
+                "operationId": "passerEnEtudeRHDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "En étude RH",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/marquer-incomplet": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Marquer le dossier incomplet",
+                "operationId": "marquerIncompletDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Marqué incomplet",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/marquer-complet": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Marquer le dossier complet",
+                "operationId": "marquerCompletDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/valider-rh": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Valider le dossier (RH) — initialise le circuit hiérarchique",
+                "operationId": "validerRHDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/rejeter-rh": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Rejeter le dossier (RH)",
+                "operationId": "rejeterRHDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/valider-dg": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Valider le dossier (DG)",
+                "operationId": "validerDGDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/marquer-acte-genere": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Marquer l'acte comme généré (transition manuelle)",
+                "operationId": "marquerActeGenereDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/marquer-contrat-signe": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Marquer le contrat comme signé",
+                "operationId": "marquerContratSigneDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/suspendre": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Suspendre le dossier",
+                "operationId": "suspendreDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/annuler": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Annuler le dossier",
+                "operationId": "annulerDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/assigner-matricule": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Assigner un matricule à l'agent du dossier",
+                "operationId": "assignerMatriculeDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AssignerMatriculeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DossierIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/generer-acte": {
+            "post": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Générer l'acte administratif du dossier",
+                "description": "Retourne l'acte, le dossier mis à jour, et la prochaine étape (`contrat_signe`, `matricule_cree` ou `taches_post_integration`).",
+                "operationId": "genererActeDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Acte généré",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenererActeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/taches-post-integration": {
+            "get": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Checklist des tâches post-intégration",
+                "operationId": "tachesPostIntegrationDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{id}/historique": {
+            "get": {
+                "tags": [
+                    "Intégration — Dossiers"
+                ],
+                "summary": "Historique des transitions du dossier",
+                "operationId": "historiqueDossier",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/nominations": {
+            "get": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Liste des nominations",
+                "operationId": "listNominations",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Créer une nomination",
+                "operationId": "storeNomination",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "agent_id",
+                                    "poste",
+                                    "structurable_type",
+                                    "structurable_id",
+                                    "date_debut"
+                                ],
+                                "properties": {
+                                    "agent_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "poste": {
+                                        "type": "string",
+                                        "example": "Chef de Service",
+                                        "enum": [
+                                            "Directeur Général",
+                                            "Directeur Central",
+                                            "Directeur Départemental",
+                                            "Chef de Service",
+                                            "Chef de Bureau"
+                                        ]
+                                    },
+                                    "structurable_type": {
+                                        "type": "string",
+                                        "example": "App\\Models\\Service"
+                                    },
+                                    "structurable_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "date_debut": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-09-01"
+                                    },
+                                    "type_acte": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "enum": [
+                                            "arrete",
+                                            "decision",
+                                            "note_service"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Créée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NominationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/nominations/{id}": {
+            "get": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Détail d'une nomination",
+                "operationId": "showNomination",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NominationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/nominations/{nomination}/activer": {
+            "post": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Activer une nomination",
+                "operationId": "activerNomination",
+                "parameters": [
+                    {
+                        "name": "nomination",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "dossier_integration_id": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Activée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NominationResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/nominations/{nomination}/cloturer": {
+            "post": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Clôturer une nomination",
+                "operationId": "cloturerNomination",
+                "parameters": [
+                    {
+                        "name": "nomination",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "date_fin": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Clôturée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NominationResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/nominations/{nomination}/rejeter": {
+            "post": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Rejeter une nomination",
+                "operationId": "rejeterNomination",
+                "parameters": [
+                    {
+                        "name": "nomination",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rejetée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NominationResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/agents/{agent}/nominations": {
+            "get": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Nominations d'un agent",
+                "operationId": "listNominationsByAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/prises-de-service": {
+            "post": {
+                "tags": [
+                    "Intégration — Prise de service"
+                ],
+                "summary": "Confirmer une prise de service",
+                "operationId": "storePriseDeService",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PriseDeServiceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Confirmée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PriseDeService"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{dossier}/integrer": {
+            "post": {
+                "tags": [
+                    "Intégration — Prise de service"
+                ],
+                "summary": "Finaliser l'intégration administrative",
+                "description": "Clôture le workflow : dossier INTEGRE, compte éventuel, checklist post-intégration.",
+                "operationId": "integrerDossier",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Intégration finalisée"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/types-integrations": {
+            "get": {
+                "tags": [
+                    "Référentiels — Types d'intégration"
+                ],
+                "summary": "Liste des types d'intégration",
+                "description": "Référentiel public utile pour peupler les selects du front (création de dossier).",
+                "operationId": "listTypesIntegrations",
+                "responses": {
+                    "200": {
+                        "description": "Liste",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TypeIntegrationListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Référentiels — Types d'intégration"
+                ],
+                "summary": "Créer un type d'intégration",
+                "operationId": "storeTypeIntegration",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nom"
+                                ],
+                                "properties": {
+                                    "nom": {
+                                        "type": "string",
+                                        "example": "Recrutement externe"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "type_acte_administratif": {
+                                        "type": "string",
+                                        "example": "decision_recrutement"
+                                    },
+                                    "necessite_contrat": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "necessite_validation_dg": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "necessite_compte_utilisateur": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "prefixe_matricule": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "duree_max_mois": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Créé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TypeIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/types-integrations/{id}": {
+            "get": {
+                "tags": [
+                    "Référentiels — Types d'intégration"
+                ],
+                "summary": "Détail d'un type d'intégration",
+                "operationId": "showTypeIntegration",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TypeIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Référentiels — Types d'intégration"
+                ],
+                "summary": "Mettre à jour un type d'intégration",
+                "operationId": "updateTypeIntegration",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "nom": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "type_acte_administratif": {
+                                        "type": "string"
+                                    },
+                                    "necessite_contrat": {
+                                        "type": "boolean"
+                                    },
+                                    "necessite_validation_dg": {
+                                        "type": "boolean"
+                                    },
+                                    "necessite_compte_utilisateur": {
+                                        "type": "boolean"
+                                    },
+                                    "prefixe_matricule": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "duree_max_mois": {
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TypeIntegrationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/integration/validations/{validation}/approuver": {
+            "post": {
+                "tags": [
+                    "Intégration — Validations"
+                ],
+                "summary": "Approuver une étape du circuit",
+                "description": "Si le circuit dossier est terminé, déclenche automatiquement `validerDG`.",
+                "operationId": "approuverValidation",
+                "parameters": [
+                    {
+                        "name": "validation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DecisionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Approuvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationWorkflowResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/validations/{validation}/rejeter": {
+            "post": {
+                "tags": [
+                    "Intégration — Validations"
+                ],
+                "summary": "Rejeter une étape du circuit",
+                "operationId": "rejeterValidation",
+                "parameters": [
+                    {
+                        "name": "validation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rejetée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationWorkflowResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/validations/{validation}/renvoyer": {
+            "post": {
+                "tags": [
+                    "Intégration — Validations"
+                ],
+                "summary": "Renvoyer pour correction",
+                "operationId": "renvoyerValidation",
+                "parameters": [
+                    {
+                        "name": "validation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TransitionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Renvoyé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationWorkflowResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/dossiers/{dossier}/circuit": {
+            "get": {
+                "tags": [
+                    "Intégration — Validations"
+                ],
+                "summary": "Circuit de validation d'un dossier",
+                "operationId": "circuitValidationDossier",
+                "parameters": [
+                    {
+                        "name": "dossier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Circuit",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationCircuitResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "LoginRequest": {
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "admin@arft.cg"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "Admin@2026"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginResponse": {
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "name": {
+                                "type": "string",
+                                "example": "Administrateur"
+                            },
+                            "email": {
+                                "type": "string",
+                                "example": "admin@arft.cg"
+                            },
+                            "agent_id": {
+                                "type": "integer",
+                                "example": null,
+                                "nullable": true
+                            },
+                            "is_active": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "token": {
+                                "type": "string",
+                                "example": "1|xxxxxxxxxxxxxxxx"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Connexion réussie"
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Administrateur"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "admin@arft.cg"
+                    },
+                    "agent_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "UserResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/User"
+                    }
+                },
+                "type": "object"
+            },
+            "Error401": {
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Non authentifié. Veuillez vous connecter."
+                    }
+                },
+                "type": "object"
+            },
+            "Error403": {
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Action non autorisée."
+                    }
+                },
+                "type": "object"
+            },
+            "Error404": {
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Ressource introuvable."
+                    }
+                },
+                "type": "object"
+            },
+            "Error422": {
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Les données fournies sont invalides."
+                    },
+                    "errors": {
+                        "type": "object",
+                        "example": {
+                            "email": [
+                                "Le champ email est obligatoire."
+                            ]
+                        },
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "MessageResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Opération réussie"
+                    }
+                },
+                "type": "object"
+            },
+            "ActeAdministratif": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "dossier_integration_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type_acte": {
+                        "type": "string",
+                        "example": "decision_recrutement"
+                    },
+                    "type_acte_label": {
+                        "type": "string",
+                        "example": "Décision de recrutement"
+                    },
+                    "numero": {
+                        "type": "string",
+                        "example": "ACTE-2026-0001"
+                    },
+                    "contenu": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "fichier_path": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "signe": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "date_signature": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "ActeAdministratifResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/ActeAdministratif"
+                    },
+                    "message": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Affectation": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "agent_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "structurable_type": {
+                        "type": "string",
+                        "example": "App\\Models\\Direction"
+                    },
+                    "structurable_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "motif": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "date_affectation": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "date_fin": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "statut": {
+                        "type": "string",
+                        "example": "EN_ATTENTE"
+                    },
+                    "statut_label": {
+                        "type": "string",
+                        "example": "En attente"
+                    },
+                    "superieur_hierarchique_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "AffectationResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/Affectation"
+                    },
+                    "message": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Agent": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "matricule": {
+                        "type": "string",
+                        "example": "ARTF-2026-001",
+                        "nullable": true
+                    },
+                    "nom": {
+                        "type": "string",
+                        "example": "MOUKOKO"
+                    },
+                    "prenom": {
+                        "type": "string",
+                        "example": "Jean"
+                    },
+                    "nom_complet": {
+                        "type": "string",
+                        "example": "Jean MOUKOKO"
+                    },
+                    "date_naissance": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "1990-05-12"
+                    },
+                    "lieu_naissance": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "nationalite": {
+                        "type": "string",
+                        "example": "Congolaise",
+                        "nullable": true
+                    },
+                    "genre": {
+                        "type": "string",
+                        "example": "M",
+                        "enum": [
+                            "M",
+                            "F"
+                        ]
+                    },
+                    "telephone": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email_personnel": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email_professionnel": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "statut": {
+                        "type": "string",
+                        "example": "EN_COURS_INTEGRATION"
+                    },
+                    "type_integration_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "grade_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "categorie_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "echelon_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "fonction_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "date_prise_service": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "AgentCreateResponse": {
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "agent": {
+                                "$ref": "#/components/schemas/Agent"
+                            },
+                            "dossier": {
+                                "$ref": "#/components/schemas/DossierIntegration"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "AgentListResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Agent"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "AgentRequest": {
+                "required": [
+                    "nom",
+                    "prenom",
+                    "date_naissance",
+                    "genre",
+                    "type_integration_id"
+                ],
+                "properties": {
+                    "nom": {
+                        "type": "string",
+                        "example": "MOUKOKO"
+                    },
+                    "prenom": {
+                        "type": "string",
+                        "example": "Jean"
+                    },
+                    "date_naissance": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "1990-05-12"
+                    },
+                    "lieu_naissance": {
+                        "type": "string",
+                        "example": "Brazzaville",
+                        "nullable": true
+                    },
+                    "nationalite": {
+                        "type": "string",
+                        "example": "Congolaise",
+                        "nullable": true
+                    },
+                    "genre": {
+                        "type": "string",
+                        "example": "M",
+                        "enum": [
+                            "M",
+                            "F"
+                        ]
+                    },
+                    "telephone": {
+                        "type": "string",
+                        "example": "+242066123456",
+                        "nullable": true
+                    },
+                    "email_personnel": {
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true
+                    },
+                    "numero_cnss": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "rib_bancaire": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "diplome_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "grade_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "categorie_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "echelon_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "fonction_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "type_integration_id": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            },
+            "AgentResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/Agent"
+                    },
+                    "message": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "AssignerMatriculeRequest": {
+                "required": [
+                    "matricule"
+                ],
+                "properties": {
+                    "matricule": {
+                        "type": "string",
+                        "example": "ARTF-2026-001"
+                    }
+                },
+                "type": "object"
+            },
+            "Contrat": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "agent_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type_contrat_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "fonction_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "dossier_integration_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "date_debut": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-09-01"
+                    },
+                    "date_fin": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "remuneration": {
+                        "type": "number",
+                        "example": 350000,
+                        "nullable": true
+                    },
+                    "statut": {
+                        "type": "string",
+                        "example": "BROUILLON"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "ContratRequest": {
+                "required": [
+                    "agent_id",
+                    "type_contrat_id",
+                    "date_debut"
+                ],
+                "properties": {
+                    "agent_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type_contrat_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "dossier_integration_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "fonction_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "date_debut": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-09-01"
+                    },
+                    "date_fin": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "remuneration": {
+                        "type": "number",
+                        "example": 350000,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ContratResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/Contrat"
+                    },
+                    "message": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "DecisionRequest": {
+                "properties": {
+                    "commentaire": {
+                        "type": "string",
+                        "example": "Avis favorable",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "DocumentDossier": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "dossier_integration_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type_document_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "nom_original": {
+                        "type": "string",
+                        "example": "cv.pdf"
+                    },
+                    "chemin_fichier": {
+                        "type": "string"
+                    },
+                    "est_obligatoire": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "est_valide": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "date_validation": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "commentaire": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "DocumentDossierResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/DocumentDossier"
+                    },
+                    "message": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "DocumentsEtatResponse": {
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "deposes": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/DocumentDossier"
+                                }
+                            },
+                            "manquants": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "est_obligatoire": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "resume": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "DossierIntegration": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "reference": {
+                        "type": "string",
+                        "example": "INT-2026-0001"
+                    },
+                    "statut": {
+                        "type": "string",
+                        "example": "BROUILLON"
+                    },
+                    "statut_label": {
+                        "type": "string",
+                        "example": "Brouillon"
+                    },
+                    "date_demande": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-08-10",
+                        "nullable": true
+                    },
+                    "poste_demande": {
+                        "type": "string",
+                        "example": "Chargé de mission",
+                        "nullable": true
+                    },
+                    "nombre_postes": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "motif": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "type_integration_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "demandeur_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "agent_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "DossierIntegrationListResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DossierIntegration"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "DossierIntegrationRequest": {
+                "required": [
+                    "type_integration_id"
+                ],
+                "properties": {
+                    "type_integration_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "demandeur_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "structurable_type": {
+                        "type": "string",
+                        "example": "App\\Models\\Direction",
+                        "nullable": true,
+                        "enum": [
+                            "App\\Models\\Direction",
+                            "App\\Models\\Service",
+                            "App\\Models\\Bureau"
+                        ]
+                    },
+                    "structurable_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "poste_demande": {
+                        "type": "string",
+                        "example": "Chargé de mission",
+                        "nullable": true
+                    },
+                    "nombre_postes": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "date_demande": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-08-10",
+                        "nullable": true
+                    },
+                    "motif": {
+                        "type": "string",
+                        "example": "Besoin de renfort",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "DossierIntegrationResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/DossierIntegration"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Dossier d'intégration créé",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "GenererActeResponse": {
+                "properties": {
+                    "data": {
+                        "properties": {
+                            "acte": {
+                                "$ref": "#/components/schemas/ActeAdministratif"
+                            },
+                            "dossier": {
+                                "$ref": "#/components/schemas/DossierIntegration"
+                            },
+                            "necessite_contrat": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "prochaine_etape": {
+                                "type": "string",
+                                "example": "contrat_signe"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Nomination": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "agent_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "poste": {
+                        "type": "string",
+                        "example": "Chef de Service"
+                    },
+                    "structurable_type": {
+                        "type": "string",
+                        "example": "App\\Models\\Service"
+                    },
+                    "structurable_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "date_debut": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "date_fin": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "type_acte": {
+                        "type": "string",
+                        "example": "decision",
+                        "nullable": true
+                    },
+                    "statut": {
+                        "type": "string",
+                        "example": "EN_ATTENTE"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "NominationResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/Nomination"
+                    },
+                    "message": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PriseDeService": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "agent_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "dossier_integration_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "responsable_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "date_prise_service": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "confirmation_presence": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "confirmation_installation": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "confirmation_equipements": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "observations": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PriseDeServiceRequest": {
+                "required": [
+                    "agent_id",
+                    "responsable_id",
+                    "date_prise_service"
+                ],
+                "properties": {
+                    "agent_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "dossier_integration_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "responsable_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "date_prise_service": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-09-15"
+                    },
+                    "confirmation_presence": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "confirmation_installation": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "confirmation_equipements": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "observations": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "TransitionRequest": {
+                "properties": {
+                    "commentaire": {
+                        "type": "string",
+                        "example": "Pièces manquantes : CV et diplôme",
+                        "nullable": true,
+                        "maxLength": 1000
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationCircuitResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationWorkflow"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationWorkflow": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "niveau": {
+                        "type": "string",
+                        "example": "CHEF_SERVICE"
+                    },
+                    "niveau_label": {
+                        "type": "string",
+                        "example": "Chef de service"
+                    },
+                    "ordre": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "statut": {
+                        "type": "string",
+                        "example": "EN_ATTENTE"
+                    },
+                    "commentaire": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "date_decision": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationWorkflowResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/ValidationWorkflow"
+                    },
+                    "message": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "TypeIntegration": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nom": {
+                        "type": "string",
+                        "example": "Recrutement externe"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "type_acte_administratif": {
+                        "type": "string",
+                        "example": "decision_recrutement"
+                    },
+                    "necessite_contrat": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "necessite_validation_dg": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "necessite_compte_utilisateur": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "prefixe_matricule": {
+                        "type": "string",
+                        "example": "ARTF",
+                        "nullable": true
+                    },
+                    "duree_max_mois": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "TypeIntegrationList": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "nom": {
+                        "type": "string",
+                        "example": "Recrutement externe"
+                    },
+                    "necessite_contrat": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "necessite_validation_dg": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "necessite_compte_utilisateur": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "prefixe_matricule": {
+                        "type": "string",
+                        "example": "ARTF",
+                        "nullable": true
+                    },
+                    "type_acte_administratif": {
+                        "type": "string",
+                        "example": "decision_recrutement"
+                    }
+                },
+                "type": "object"
+            },
+            "TypeIntegrationListResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TypeIntegrationList"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "TypeIntegrationResponse": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/TypeIntegration"
+                    },
+                    "message": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Token Sanctum obtenu via POST /api/login",
+                "bearerFormat": "Sanctum",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Connexion, déconnexion, profil"
+        },
+        {
+            "name": "Référentiels — Types d'intégration",
+            "description": "Types d'entrée administrative"
+        },
+        {
+            "name": "Intégration — Agents",
+            "description": "Fiches agents et matricules"
+        },
+        {
+            "name": "Intégration — Dossiers",
+            "description": "Dossiers d'intégration et transitions de workflow"
+        },
+        {
+            "name": "Intégration — Documents",
+            "description": "Dépôt et validation des pièces"
+        },
+        {
+            "name": "Intégration — Validations",
+            "description": "Circuit hiérarchique"
+        },
+        {
+            "name": "Intégration — Actes",
+            "description": "Actes administratifs"
+        },
+        {
+            "name": "Intégration — Contrats",
+            "description": "Contrats agents"
+        },
+        {
+            "name": "Intégration — Affectations",
+            "description": "Affectations et notes de service"
+        },
+        {
+            "name": "Intégration — Nominations",
+            "description": "Nominations"
+        },
+        {
+            "name": "Intégration — Prise de service",
+            "description": "Prise de service et finalisation"
+        }
+    ]
+}

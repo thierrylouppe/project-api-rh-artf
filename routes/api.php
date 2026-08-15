@@ -29,6 +29,7 @@ use App\Http\Controllers\API\GradeController;
 use App\Http\Controllers\API\LocaliteController;
 use App\Http\Controllers\API\MotifAdministratifController;
 use App\Http\Controllers\API\ParametreApplicationController;
+use App\Http\Controllers\API\PersonnelController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\ServiceController;
@@ -140,6 +141,14 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () {
     Route::patch('stages/{stage}/prolonger',                      [ConventionStageController::class, 'prolonger']);
     Route::post('stages/{stage}/cloturer',                        [ConventionStageController::class, 'cloturer']);
     Route::get('stages/{stage}/attestation',                      [ConventionStageController::class, 'attestation']);
+});
+
+// ============================================================
+// MODULE PERSONNEL — AGENTS INTÉGRÉS & STAGIAIRES
+// ============================================================
+Route::prefix('personnel')->middleware('auth:sanctum')->group(function () {
+    Route::get('agents', [PersonnelController::class, 'agents']);
+    Route::get('stagiaires', [PersonnelController::class, 'stagiaires']);
 });
 
 // ============================================================

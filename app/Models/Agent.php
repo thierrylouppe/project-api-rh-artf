@@ -43,7 +43,7 @@ class Agent extends Model
         'date_prise_service' => 'date',
     ];
 
-    protected array $filterable = ['nom', 'prenom', 'matricule', 'statut', 'genre'];
+    protected array $filterable = ['nom', 'prenom', 'matricule', 'statut', 'genre', 'type_integration_id'];
 
     public function getNomCompletAttribute(): string
     {

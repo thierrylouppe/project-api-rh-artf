@@ -125,6 +125,16 @@ class AgentService extends BaseService
         return $this->repository->getByStatut($statut);
     }
 
+    public function listerIntegres(array $filters = [])
+    {
+        return $this->repository->getIntegres($filters);
+    }
+
+    public function listerStagiaires(array $filters = [])
+    {
+        return $this->repository->getStagiaires($filters);
+    }
+
     public function findByMatricule(string $matricule): ?Agent
     {
         return $this->repository->findByMatricule($matricule);

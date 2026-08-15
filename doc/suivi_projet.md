@@ -14,7 +14,7 @@
 | # | Tâche | Statut | Résumé |
 |---|-------|--------|--------|
 | 0.1 | Dépendances Sanctum, Spatie, DomPDF | ✅ | Packages installés et publiés |
-| 0.1 | Dépendances Swagger (l5-swagger) | ⏸ | Incompatible Laravel 13 — à réinstaller plus tard |
+| 0.1 | Dépendances Swagger (l5-swagger) | ✅ | `darkaonline/l5-swagger` 11.1 — UI `/api/documentation` |
 | 0.1 | Dépendances Pest | ⏸ | Incompatible Laravel 13 / PHPUnit 12 — PHPUnit conservé |
 | 0.1 | Config `.env` (queue, cache, session) | ✅ | Queue, cache et session configurés en `database` |
 | 0.1 | Config `sanctum.php` et `permission.php` | ✅ | Guard `api`, expiration token 480 min, cache Spatie actif |

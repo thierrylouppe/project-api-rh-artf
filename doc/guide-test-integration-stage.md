@@ -219,12 +219,17 @@ Répéter pour : CV, Lettre de recommandation, Convention de stage (+ pièces co
 
 ### Particularités stage
 
-| Sujet | Comportement MVP |
-|-------|------------------|
-| Validation DG | Désactivée en config pour pro / académique ; **le circuit actuel exige tout de même `VALIDE_DG`** avant `generer-acte` |
-| Compte utilisateur | `necessite_compte_utilisateur = false` → **étape compte optionnelle / à sauter** |
-| Nomination | Optionnelle (fonction Stagiaire déjà sur le contrat) |
+| Sujet | Comportement |
+|-------|--------------|
+| Validation DG | `necessite_validation_dg = false` (pro / académique) → niveau DG **retiré** du circuit ; le statut `VALIDE_DG` reste le jalon avant `/integrer` (auto en fin de circuit) |
+| Stage qualification | `necessite_validation_dg = true` → DG conservé dans le circuit |
+| Compte utilisateur | `necessite_compte_utilisateur = false` → **aucun** compte créé à `/integrer` ; tâche 16 absente |
+| Nomination | Absente des tâches post-intégration (fonction Stagiaire sur le contrat) |
+| Salaire grille | Absent des tâches (gratification via convention) |
 | Remise matériel | Optionnelle selon le service d'accueil |
+| Acte post-intégration | `POST …/generer-acte` accepté depuis `INTEGRE` sans changer le statut |
+
+> Matrice complète : [`workflow-integration-par-type.md`](./workflow-integration-par-type.md)
 
 ---
 
@@ -242,22 +247,34 @@ POST /integration/dossiers/8/integrer
    - `date_debut` / `date_fin` depuis le contrat actif
    - `etablissement` depuis `dossier.notes`
    - `statut_stage` → `EN_COURS`
+3. **Pas** de provisionnement de compte (`necessite_compte_utilisateur = false`)
 
 **Réponse `200` (extrait)**
 ```json
 {
   "data": {
-    "statut": "INTEGRE",
-    "agent": {
-      "matricule": "STG-2026-000001",
-      "statut": "stagiaire",
-      "nom_complet": "Jean MOBILA"
-    }
+    "dossier": {
+      "statut": "INTEGRE",
+      "agent": {
+        "matricule": "STG-2026-000001",
+        "statut": "stagiaire",
+        "nom_complet": "Jean MOBILA"
+      }
+    },
+    "taches_post_integration": [
+      { "etape": 11, "label": "Générer l'acte administratif", "statut": "non_fait", "obligatoire": true },
+      { "etape": 12, "label": "Marquer le contrat signé", "statut": "fait", "obligatoire": false },
+      { "etape": 13, "label": "Assigner le matricule", "statut": "non_fait", "obligatoire": true },
+      { "etape": 14, "label": "Affecter l'agent", "statut": "non_fait", "obligatoire": true },
+      { "etape": 17, "label": "Remettre le matériel", "statut": "non_fait", "obligatoire": false },
+      { "etape": 18, "label": "Confirmer la prise de service", "statut": "non_fait", "obligatoire": false }
+    ]
   },
   "message": "Intégration administrative finalisée avec succès"
 }
 ```
 
+> Pas de clé `compte`, pas de tâches 15 (nomination) ni 16 (compte).  
 > Passer à la **Partie B** pour vérifier et gérer la convention.
 
 ---

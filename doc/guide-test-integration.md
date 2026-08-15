@@ -37,22 +37,24 @@ POST /login
 
 ---
 
-## Vue d'ensemble — flux simplifié
+## Vue d'ensemble — flux simplifié (chemin B, FE actuel)
 
 ```
-Étapes 1 → 10  (obligatoires, inchangées)
+Étapes 1 → 10  (obligatoires)
       │
-      └─► Étape 11 — Intégration + Création du compte  POST /dossiers/7/integrer
+      └─► Étape 11 — Intégration  POST /dossiers/{id}/integrer
                      Statut : INTEGRE ✓
-                     → réponse inclut la liste des tâches post-intégration restantes
+                     → compte auto si necessite_compte_utilisateur
+                     → réponse inclut les tâches post-intégration filtrées par type
 ```
 
-**Les étapes 12 à 18 sont post-intégration : elles peuvent être réalisées dans n'importe quel ordre, après l'intégration.**
+**Les tâches 11 à 18 sont post-intégration : ordre libre après `INTEGRE`.**
 
-> **Tâche 14 — Affectation :** supporte l'affectation unitaire et groupée (plusieurs agents → chacun vers sa propre structure, note de service commune), la résolution automatique du supérieur hiérarchique par structure, l'upload de la note de service, la génération PDF à la demande et la génération en lot (ZIP).
+> Doc détaillée par type + chemin A (séquentiel) : [`workflow-integration-par-type.md`](./workflow-integration-par-type.md)
 
+> **Tâche 14 — Affectation :** unitaire / groupée, supérieur hiérarchique auto, note de service, PDF / ZIP.
 
-Un endpoint dédié permet de consulter leur avancement à tout moment :
+Avancement :
 ```
 GET /integration/dossiers/7/taches-post-integration
 ```
@@ -68,22 +70,42 @@ Consulter les types disponibles. Le champ `necessite_contrat` conditionne l'affi
 GET /types-integrations
 ```
 
-**Réponse**
+**Réponse (extrait — flags utiles au FE)**
 ```json
 {
   "data": [
-    { "id": 1, "nom": "Recrutement externe",  "type_acte_administratif": "decision_recrutement", "necessite_contrat": false },
-    { "id": 2, "nom": "Mutation",             "type_acte_administratif": "decision_mutation",     "necessite_contrat": false },
-    { "id": 3, "nom": "Détachement",          "type_acte_administratif": "arrete_detachement",    "necessite_contrat": false },
-    { "id": 4, "nom": "Mise à disposition",   "type_acte_administratif": "note_de_service",       "necessite_contrat": false },
-    { "id": 5, "nom": "Réintégration",        "type_acte_administratif": "decision_recrutement",  "necessite_contrat": false },
-    { "id": 6, "nom": "Contractuel",          "type_acte_administratif": "contrat",               "necessite_contrat": true  },
-    { "id": 7, "nom": "Stage professionnel",  "type_acte_administratif": "contrat",               "necessite_contrat": true  }
+    {
+      "id": 1,
+      "nom": "Recrutement externe",
+      "type_acte_administratif": "decision_recrutement",
+      "necessite_contrat": false,
+      "necessite_validation_dg": true,
+      "necessite_compte_utilisateur": true,
+      "prefixe_matricule": null
+    },
+    {
+      "id": 6,
+      "nom": "Contractuel",
+      "type_acte_administratif": "contrat",
+      "necessite_contrat": true,
+      "necessite_validation_dg": true,
+      "necessite_compte_utilisateur": true
+    },
+    {
+      "id": 7,
+      "nom": "Stage professionnel",
+      "type_acte_administratif": "contrat",
+      "necessite_contrat": true,
+      "necessite_validation_dg": false,
+      "necessite_compte_utilisateur": false,
+      "prefixe_matricule": "STG"
+    }
   ]
 }
 ```
 
-> Retenir l'`id` du type choisi — il sera utilisé aux étapes 2 et 2-bis.
+> Retenir l'`id` du type choisi — il sera utilisé aux étapes 2 et 2-bis.  
+> `necessite_contrat` → étape 3 ; `necessite_validation_dg` → présence du DG dans le circuit ; `necessite_compte_utilisateur` → compte à `/integrer`.
 
 ---
 
@@ -402,7 +424,10 @@ POST /integration/dossiers/7/marquer-incomplet
 ## Étape 9 — Validation RH + initialisation du circuit hiérarchique
 
 L'agent RH valide formellement le dossier complet. Statut → **`VALIDE_RH`**  
-**Le circuit de validation à 5 niveaux est automatiquement créé.**
+Le circuit est créé selon la config du type (`GET /types-integrations/{id}/circuit`), sinon circuit complet (5 niveaux).
+
+> Si `necessite_validation_dg = false`, le niveau `directeur_general` est **retiré**.  
+> Si aucun niveau ne reste, le dossier passe directement à **`VALIDE_DG`**.
 
 **Requête**
 ```
@@ -414,7 +439,7 @@ Consulter le circuit créé :
 GET /integration/dossiers/7/circuit
 ```
 
-**Réponse**
+**Réponse (type permanent — DG requis)**
 ```json
 {
   "data": [
@@ -463,15 +488,15 @@ POST /integration/validations/11/renvoyer
 
 ---
 
-## Étape 11 — Intégration + Création du compte utilisateur ✅
+## Étape 11 — Intégration (+ compte si requis) ✅
 
-> **Étape finale du flux obligatoire.**  
+> **Étape finale du flux obligatoire (chemin B).**  
 > Le dossier doit être en statut **`VALIDE_DG`**.
 
 Un seul appel suffit pour :
 1. Clôturer le dossier → statut **`INTEGRE`**
-2. Créer automatiquement le compte applicatif de l'agent (login, email professionnel, badge)
-3. Retourner la liste des **tâches post-intégration** restantes à réaliser
+2. Créer le compte applicatif **uniquement si** `necessite_compte_utilisateur = true`
+3. Retourner la liste des **tâches post-intégration** filtrées selon le type
 
 **Requête**
 ```
@@ -479,7 +504,7 @@ POST /integration/dossiers/7/integrer
 ```
 *(body vide)*
 
-**Réponse `200`**
+**Réponse `200` — recrutement externe / contractuel**
 ```json
 {
   "data": {
@@ -502,17 +527,19 @@ POST /integration/dossiers/7/integrer
       { "etape": 11, "label": "Générer l'acte administratif",        "endpoint": "POST /integration/dossiers/7/generer-acte",    "statut": "non_fait", "obligatoire": true  },
       { "etape": 13, "label": "Assigner le matricule",               "endpoint": "POST /integration/dossiers/7/assigner-matricule","statut": "non_fait", "obligatoire": true  },
       { "etape": 14, "label": "Affecter l'agent",                    "endpoint": "POST /integration/affectations",               "statut": "non_fait", "obligatoire": true  },
-      { "etape": 15, "label": "Nommer l'agent (responsabilité)",     "endpoint": "POST /integration/nominations",                "statut": "non_fait", "obligatoire": false },
+      { "etape": 15, "label": "Nommer l'agent (poste de responsabilité)", "endpoint": "POST /integration/nominations",           "statut": "non_fait", "obligatoire": false },
+      { "etape": 16, "label": "Compte utilisateur",                  "endpoint": "POST /integration/comptes/provisionner",       "statut": "fait",     "obligatoire": true  },
       { "etape": 17, "label": "Remettre le matériel",                "endpoint": "POST /integration/remises-materiel",           "statut": "non_fait", "obligatoire": false },
       { "etape": 18, "label": "Confirmer la prise de service",       "endpoint": "POST /integration/prises-de-service",          "statut": "non_fait", "obligatoire": false }
     ],
-    "rappel": "6 tâche(s) post-intégration en attente — consultez taches_post_integration."
+    "rappel": "5 tâche(s) post-intégration en attente — consultez taches_post_integration."
   },
   "message": "Intégration administrative finalisée avec succès"
 }
 ```
 
-> Pour les types **Contractuel** et **Stage professionnel** (`necessite_contrat = true`), la tâche 12 (signature du contrat) apparaît également dans la liste.
+> - `necessite_contrat = true` → tâche 12 (contrat / salaire) ajoutée.  
+> - Stage (`necessite_compte_utilisateur = false`) → pas de clé `compte`, pas de tâche 16, pas de nomination.
 
 ---
 
@@ -554,13 +581,16 @@ Ces actions peuvent être réalisées dans n'importe quel ordre, après que le d
 
 Le type d'acte est **déterminé automatiquement** depuis le type d'intégration du dossier — aucun champ à saisir.
 
+> Accepté depuis **`VALIDE_DG`** (chemin A) **ou** **`INTEGRE`** (chemin B).  
+> En chemin B, le statut du dossier **reste `INTEGRE`**.
+
 **Requête**
 ```
 POST /integration/dossiers/7/generer-acte
 ```
 *(body vide)*
 
-**Réponse `201` — exemple pour Recrutement externe (`necessite_contrat = false`)**
+**Réponse `201` — exemple pour Recrutement externe (`necessite_contrat = false`, chemin B)**
 ```json
 {
   "data": {
@@ -571,9 +601,10 @@ POST /integration/dossiers/7/generer-acte
       "signe": false
     },
     "dossier": { "id": 7, "statut": "INTEGRE" },
-    "necessite_contrat": false
+    "necessite_contrat": false,
+    "prochaine_etape": "taches_post_integration"
   },
-  "message": "Acte généré"
+  "message": "Acte généré en post-intégration"
 }
 ```
 
@@ -1036,17 +1067,18 @@ BROUILLON
                 │       └─► EN_ETUDE_RH (correction)
                 └─► DOSSIER_COMPLET    POST /dossiers/7/marquer-complet
                           └─► VALIDE_RH  POST /dossiers/7/valider-rh
-                                └─► (circuit 5 validations)
-                                      └─► VALIDE_DG  (auto après DG)
+                                └─► (circuit selon type ; DG filtré si necessite_validation_dg=false)
+                                      └─► VALIDE_DG  (auto fin de circuit, ou immédiat si circuit vide)
                                             │
                                             └─► INTEGRE ✓  POST /dossiers/7/integrer
-                                                            (compte créé automatiquement)
-                                                            └─► taches_post_integration:
+                                                            (compte auto si necessite_compte_utilisateur)
+                                                            └─► taches_post_integration (filtrées) :
                                                                   ├─ [11] Générer l'acte
-                                                                  ├─ [12] Contrat signé (si necessite_contrat)
+                                                                  ├─ [12] Contrat / salaire (si necessite_contrat)
                                                                   ├─ [13] Assigner le matricule
                                                                   ├─ [14] Affecter l'agent
-                                                                  ├─ [15] Nomination (optionnel)
+                                                                  ├─ [15] Nomination (hors stage)
+                                                                  ├─ [16] Compte (si necessite_compte_utilisateur)
                                                                   ├─ [17] Remise matériel (optionnel)
                                                                   └─ [18] Prise de service (optionnel)
 
@@ -1096,6 +1128,9 @@ Génération PDF (disponible sur n'importe quel statut) :
 | `401 Unauthorized` | Token absent ou expiré | Refaire `/login` et mettre à jour le token |
 | `422 Unprocessable` sur transition | Transition de statut invalide | Respecter l'ordre des étapes ci-dessus |
 | `422` sur `/integrer` | Dossier pas à `VALIDE_DG` | Compléter le circuit hiérarchique d'abord (étapes 1-10) |
+| `422` sur `/generer-acte` | Statut hors `VALIDE_DG` / `INTEGRE`, ou acte déjà existant | Intégrer d'abord (chemin B) ou attendre `VALIDE_DG` (chemin A) |
+| Compte créé pour un stage | Ancien comportement | Vérifier `necessite_compte_utilisateur = false` sur le type + re-seed |
+| Niveau DG présent pour stage pro | Circuit non filtré | Vérifier `necessite_validation_dg` + re-tester `valider-rh` |
 | `422` sur `/assigner-matricule` | Matricule déjà attribué | Vérifier via `GET /integration/agents?matricule=...` |
 | `422` sur `/assigner-matricule` | Pas d'agent lié au dossier | Créer l'agent à l'étape 2 |
 | `422` sur création dossier | `type_integration_id` inexistant | Vérifier via `GET /types-integrations` |

@@ -88,16 +88,17 @@ Le frontend consomme déjà les endpoints et formes de réponse des modules livr
 
 **Objectif :** parcours production-ready, conforme à `integration.md` (hors SMS), **sans régression frontend**.
 
-### 1.A — Cohérence du workflow (1–2 j)
+### 1.A — Cohérence du workflow ✅ (2026-08-10)
 
 > **Contrainte FE :** le frontend suit déjà un parcours (guides + écrans). On **étend** les règles (ex. autoriser la génération d’acte aussi depuis `INTEGRE`) plutôt que d’interdire un chemin déjà utilisé.
 
-| # | Tâche | Détail |
+| # | Tâche | Statut |
 |---|---|---|
-| 1.1 | Aligner **génération d’acte** avec post-intégration | **Assouplir** : accepter `VALIDE_DG` **et** `INTEGRE` — ne pas bloquer le shortcut FE existant sans accord FE |
-| 1.2 | Recaler `tachesPostIntegration` | Ajouter des tâches / métadonnées si besoin ; **ne pas retirer ni renommer** les clés déjà lues par le FE (`etape`, `label`, `endpoint`, `statut`, `obligatoire`) |
-| 1.3 | Documenter les 2 chemins | Chemin A (séquentiel) et Chemin B (post-`integrer`) — tous deux supportés tant que le FE les utilise ; viser une doc unique |
-| 1.4 | Mettre à jour `guide-test-integration.md` | Refléter le modèle réel + impacts FE |
+| 1.1 | Aligner **génération d’acte** avec post-intégration (`VALIDE_DG` **et** `INTEGRE`) | ✅ |
+| 1.2 | Recaler `tachesPostIntegration` selon flags type (contrat / compte / stage) | ✅ |
+| 1.3 | Documenter les 2 chemins — [`workflow-integration-par-type.md`](./workflow-integration-par-type.md) | ✅ |
+| 1.4 | Mettre à jour `guide-test-integration.md` + stage | ✅ |
+| 1.4b | `necessite_compte_utilisateur` dans `integrer()` + `necessite_validation_dg` dans le circuit | ✅ |
 
 ### 1.B — Documents & PDF — **REPORTÉ**
 
