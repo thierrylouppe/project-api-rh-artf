@@ -11,11 +11,13 @@ use App\Models\Bureau;
 use App\Models\Direction;
 use App\Models\Service;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use ZipArchive;
 
 /** @property AffectationInterface $repository */
 class AffectationService extends BaseService
@@ -172,6 +174,17 @@ class AffectationService extends BaseService
         return $this->repository->getActive($agentId);
     }
 
+    public function creerUnitaire(array $data, ?UploadedFile $noteService = null): Affectation
+    {
+        if ($noteService !== null) {
+            $agentId                           = $data['agent_id'];
+            $data['note_service']              = $noteService->store("affectations/{$agentId}/notes-service", 'local');
+            $data['note_service_nom_original'] = $noteService->getClientOriginalName();
+        }
+
+        return $this->create($data);
+    }
+
     /**
      * Crée une affectation par agent, chacun vers sa propre structure et son propre supérieur
      * hiérarchique. Seuls date_affectation, motif et note_service sont communs au lot.
@@ -190,8 +203,13 @@ class AffectationService extends BaseService
      * } $data
      * @return Collection<Affectation>
      */
-    public function affecterGroupe(array $data): Collection
+    public function affecterGroupe(array $data, ?UploadedFile $noteService = null): Collection
     {
+        if ($noteService !== null) {
+            $data['note_service']              = $noteService->store('affectations/groupees/notes-service', 'local');
+            $data['note_service_nom_original'] = $noteService->getClientOriginalName();
+        }
+
         return DB::transaction(function () use ($data) {
             $commonData = Arr::except($data, ['agents']);
 
@@ -240,7 +258,7 @@ class AffectationService extends BaseService
         $path = "affectations/{$affectation->agent_id}/notes-service/generated/note-service-{$id}.pdf";
         Storage::disk('local')->put($path, $pdf->output());
 
-        $nomOriginal = "NS-AFF-" . date('Y') . "-" . str_pad($id, 4, '0', STR_PAD_LEFT) . ".pdf";
+        $nomOriginal = $this->nomFichierNoteService($id);
 
         $affectation->update([
             'note_service'               => $path,
@@ -248,5 +266,44 @@ class AffectationService extends BaseService
         ]);
 
         return $path;
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return array{path: string, filename: string}
+     */
+    public function genererNotesServiceZip(array $ids): array
+    {
+        $tempDir = storage_path('app/temp');
+
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zipPath = $tempDir . '/notes-service-lot-' . time() . '.zip';
+        $zip     = new ZipArchive();
+        $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+        foreach ($ids as $id) {
+            try {
+                $path     = $this->genererNoteServicePdf((int) $id);
+                $fullPath = Storage::disk('local')->path($path);
+                $zip->addFile($fullPath, $this->nomFichierNoteService((int) $id));
+            } catch (\Throwable) {
+                // Les affectations introuvables ou en erreur sont ignorées.
+            }
+        }
+
+        $zip->close();
+
+        return [
+            'path'     => $zipPath,
+            'filename' => 'notes-service-affectations-' . date('Y-m-d') . '.zip',
+        ];
+    }
+
+    public function nomFichierNoteService(int $id): string
+    {
+        return 'NS-AFF-' . date('Y') . '-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT) . '.pdf';
     }
 }

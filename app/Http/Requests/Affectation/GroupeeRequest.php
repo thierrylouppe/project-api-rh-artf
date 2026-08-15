@@ -2,10 +2,14 @@
 
 namespace App\Http\Requests\Affectation;
 
+use App\Http\Requests\Concerns\ValideStructurable;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class GroupeeRequest extends FormRequest
 {
+    use ValideStructurable;
+
     public function authorize(): bool
     {
         return true;
@@ -26,6 +30,20 @@ class GroupeeRequest extends FormRequest
             'agents.*.structurable_id'                => ['required', 'integer'],
             'agents.*.superieur_hierarchique_id'      => ['nullable', 'integer', 'exists:agents,id'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            foreach ($this->input('agents', []) as $index => $agent) {
+                $this->validerStructure(
+                    $validator,
+                    $agent['structurable_type'] ?? null,
+                    $agent['structurable_id'] ?? null,
+                    "agents.{$index}.structurable_id"
+                );
+            }
+        });
     }
 
     public function messages(): array

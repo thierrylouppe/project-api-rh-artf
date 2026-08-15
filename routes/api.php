@@ -45,18 +45,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', fn () => response()->json(['status' => 'ok']));
 
 // ============================================================
-// MODULE 2 — INTÉGRATION ADMINISTRATIVE DES AGENTS
+// MODULE CARRIÈRE — situation administrative vivante
+// (alias identiques sous /integration pour compatibilité FE)
 // ============================================================
-Route::prefix('integration')->middleware('auth:sanctum')->group(function () {
-
-    // — Agents ————————————————————————————————————————————
-    Route::apiResource('agents', AgentController::class);
-    Route::patch('agents/{agent}/matricule', [AgentController::class, 'modifierMatricule']);
+$routesCarriere = function (): void {
     Route::get('agents/{agent}/contrats', [ContratController::class, 'byAgent']);
     Route::get('agents/{agent}/affectations', [AffectationController::class, 'byAgent']);
     Route::get('agents/{agent}/nominations', [NominationController::class, 'byAgent']);
-    Route::get('agents/{agent}/remises-materiel', [RemiseMaterielController::class, 'byAgent']);
-    Route::get('agents/{agent}/compte', [CompteIntegrationController::class, 'byAgent']);
     Route::get('agents/{agent}/salaires/actuel', [SalaireAgentController::class, 'actuel'])
         ->middleware('permission:consulter-salaires');
     Route::get('agents/{agent}/salaires/historique', [SalaireAgentController::class, 'historique'])
@@ -67,6 +62,36 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () {
         ->middleware('permission:gerer-salaires');
     Route::get('agents/{agent}/salaires', [SalaireAgentController::class, 'byAgent'])
         ->middleware('permission:consulter-salaires');
+
+    Route::apiResource('contrats', ContratController::class)->only(['index', 'store', 'show']);
+    Route::post('contrats/{contrat}/resilier', [ContratController::class, 'resilier']);
+
+    Route::post('affectations/groupee',               [AffectationController::class, 'groupee']);
+    Route::post('affectations/notes-service/lot',     [AffectationController::class, 'noteServiceLot']);
+    Route::apiResource('affectations', AffectationController::class)->only(['index', 'store', 'show']);
+    Route::post('affectations/{affectation}/activer',     [AffectationController::class, 'activer']);
+    Route::post('affectations/{affectation}/rejeter',     [AffectationController::class, 'rejeter']);
+    Route::post('affectations/{affectation}/terminer',    [AffectationController::class, 'terminer']);
+    Route::get('affectations/{affectation}/note-service', [AffectationController::class, 'noteService']);
+
+    Route::apiResource('nominations', NominationController::class)->only(['index', 'store', 'show']);
+    Route::post('nominations/{nomination}/activer',       [NominationController::class, 'activer']);
+    Route::post('nominations/{nomination}/cloturer',      [NominationController::class, 'cloturer']);
+    Route::post('nominations/{nomination}/rejeter',       [NominationController::class, 'rejeter']);
+};
+
+Route::prefix('carriere')->middleware('auth:sanctum')->group($routesCarriere);
+
+// ============================================================
+// MODULE 2 — INTÉGRATION ADMINISTRATIVE DES AGENTS
+// ============================================================
+Route::prefix('integration')->middleware('auth:sanctum')->group(function () use ($routesCarriere) {
+
+    // — Agents ————————————————————————————————————————————
+    Route::apiResource('agents', AgentController::class);
+    Route::patch('agents/{agent}/matricule', [AgentController::class, 'modifierMatricule']);
+    Route::get('agents/{agent}/remises-materiel', [RemiseMaterielController::class, 'byAgent']);
+    Route::get('agents/{agent}/compte', [CompteIntegrationController::class, 'byAgent']);
 
     // — Dossiers d'intégration ————————————————————————————
     Route::apiResource('dossiers', DossierIntegrationController::class);
@@ -103,25 +128,8 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () {
     Route::post('dossiers/{dossier}/actes',               [ActeAdministratifController::class, 'generer']);
     Route::post('actes/{acte}/signer',                    [ActeAdministratifController::class, 'signer']);
 
-    // — Contrats ——————————————————————————————————————————
-    Route::apiResource('contrats', ContratController::class)->only(['index', 'store', 'show']);
-    Route::post('contrats/{contrat}/resilier',            [ContratController::class, 'resilier']);
-
-    // — Affectations ——————————————————————————————————————
-    // Routes littérales AVANT apiResource pour éviter toute ambiguïté de paramètre
-    Route::post('affectations/groupee',               [AffectationController::class, 'groupee']);
-    Route::post('affectations/notes-service/lot',     [AffectationController::class, 'noteServiceLot']);
-    Route::apiResource('affectations', AffectationController::class)->only(['index', 'store', 'show']);
-    Route::post('affectations/{affectation}/activer',     [AffectationController::class, 'activer']);
-    Route::post('affectations/{affectation}/rejeter',     [AffectationController::class, 'rejeter']);
-    Route::post('affectations/{affectation}/terminer',    [AffectationController::class, 'terminer']);
-    Route::get('affectations/{affectation}/note-service', [AffectationController::class, 'noteService']);
-
-    // — Nominations ———————————————————————————————————————
-    Route::apiResource('nominations', NominationController::class)->only(['index', 'store', 'show']);
-    Route::post('nominations/{nomination}/activer',       [NominationController::class, 'activer']);
-    Route::post('nominations/{nomination}/cloturer',      [NominationController::class, 'cloturer']);
-    Route::post('nominations/{nomination}/rejeter',       [NominationController::class, 'rejeter']);
+    // Alias carrière (contrats, affectations, nominations, salaires agent)
+    $routesCarriere();
 
     // — Comptes utilisateurs ——————————————————————————————
     Route::post('comptes/provisionner',                   [CompteIntegrationController::class, 'provisionner']);

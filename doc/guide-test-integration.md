@@ -52,7 +52,7 @@ POST /login
 
 > Doc détaillée par type + chemin A (séquentiel) : [`workflow-integration-par-type.md`](./workflow-integration-par-type.md)
 
-> **Tâche 14 — Affectation :** unitaire / groupée, supérieur hiérarchique auto, note de service, PDF / ZIP.
+> **Tâche 14 — Affectation (module carrière) :** préfixe canonique `/carriere/affectations`. Les routes `/integration/affectations` restent des **alias** (compatibilité FE). L’activation **ne change plus** le statut du dossier.
 
 Avancement :
 ```
@@ -676,9 +676,10 @@ La requête utilise `multipart/form-data` car la note de service est un fichier.
 
 **Requête**
 ```
-POST /integration/affectations
+POST /carriere/affectations
 Content-Type: multipart/form-data
 ```
+> Alias FE : `POST /integration/affectations` (même body, même réponse).
 
 | Champ | Type | Requis | Description |
 |-------|------|--------|-------------|
@@ -758,7 +759,7 @@ Les validations suivent le même circuit que les dossiers (5 niveaux hiérarchiq
 Consulter les validations de l'affectation (le tableau `validations` est inclus dans la réponse `show`) :
 
 ```
-GET /integration/affectations/1
+GET /carriere/affectations/1
 ```
 
 Récupérer les IDs de validation depuis le champ `validations[]` de la réponse, puis approuver chaque niveau dans l'ordre :
@@ -785,18 +786,19 @@ POST /integration/validations/{validation_id}/rejeter
 
 #### Étape 14b — Activer l'affectation
 
-Une fois le statut `approuvee`, activer l'affectation et mettre à jour le dossier :
+Une fois le statut `approuvee`, activer l'affectation :
 
 ```
-POST /integration/affectations/1/activer
+POST /carriere/affectations/1/activer
 ```
 ```json
 { "dossier_integration_id": 7 }
 ```
 
 > - Clôture automatiquement l'affectation active précédente de l'agent si elle existe.
-> - Met à jour le statut du dossier d'intégration à `AFFECTE` si `dossier_integration_id` est fourni.
+> - `dossier_integration_id` est **accepté puis ignoré** (compatibilité FE). Le dossier **ne passe plus** à `AFFECTE`.
 > - **Erreur `422`** si l'affectation n'est pas en statut `approuvee`.
+> - Alias : `POST /integration/affectations/1/activer`.
 
 ---
 
@@ -804,7 +806,7 @@ POST /integration/affectations/1/activer
 
 **Rejeter manuellement** (commentaire obligatoire) :
 ```
-POST /integration/affectations/1/rejeter
+POST /carriere/affectations/1/rejeter
 ```
 ```json
 { "commentaire": "Structure inexistante à la date indiquée" }
@@ -812,7 +814,7 @@ POST /integration/affectations/1/rejeter
 
 **Terminer une affectation active** :
 ```
-POST /integration/affectations/1/terminer
+POST /carriere/affectations/1/terminer
 ```
 ```json
 { "date_fin": "2026-12-31" }
@@ -821,7 +823,7 @@ POST /integration/affectations/1/terminer
 
 **Consulter toutes les affectations d'un agent** :
 ```
-GET /integration/agents/42/affectations
+GET /carriere/agents/42/affectations
 ```
 
 ---
@@ -831,7 +833,7 @@ GET /integration/agents/42/affectations
 Crée une affectation distincte par agent. Chaque agent est affecté à **sa propre structure** avec **son propre supérieur hiérarchique** (résolu automatiquement si absent). Seuls `date_affectation`, `motif` et `note_service` sont communs à l'ensemble du lot.
 
 ```
-POST /integration/affectations/groupee
+POST /carriere/affectations/groupee
 Content-Type: multipart/form-data
 ```
 
@@ -898,7 +900,7 @@ agents[2][superieur_hierarchique_id]= (vide — résolution automatique)
 Génère le PDF officiel de la note de service pour une affectation, le stocke sur le serveur et le retourne en téléchargement direct. La référence est automatique : `NS-AFF-{année}-{id:04d}`.
 
 ```
-GET /integration/affectations/1/note-service
+GET /carriere/affectations/1/note-service
 ```
 *(body vide — retourne le fichier PDF)*
 
@@ -920,7 +922,7 @@ GET /integration/affectations/1/note-service
 Génère les PDFs pour une liste d'affectations et les archive dans un fichier ZIP retourné en téléchargement. Maximum 50 affectations par lot.
 
 ```
-POST /integration/affectations/notes-service/lot
+POST /carriere/affectations/notes-service/lot
 Content-Type: application/json
 ```
 ```json
@@ -940,20 +942,20 @@ Content-Type: application/json
 
 #### Récapitulatif — tous les endpoints affectation
 
-| Méthode | Endpoint | Action | Body |
-|---------|----------|--------|------|
-| `POST` | `/integration/affectations` | Créer une affectation (unitaire) | `multipart/form-data` |
-| `POST` | `/integration/affectations/groupee` | Créer plusieurs affectations (structure propre par agent, note de service commune) | `multipart/form-data` |
-| `GET` | `/integration/affectations` | Lister toutes les affectations | — |
-| `GET` | `/integration/affectations/{id}` | Détail + validations d'une affectation | — |
-| `GET` | `/integration/agents/{id}/affectations` | Affectations d'un agent | — |
-| `POST` | `/integration/affectations/{id}/activer` | Activer (requiert statut `approuvee`) | `{ dossier_integration_id? }` |
-| `POST` | `/integration/affectations/{id}/rejeter` | Rejeter manuellement | `{ commentaire }` |
-| `POST` | `/integration/affectations/{id}/terminer` | Terminer une affectation active | `{ date_fin? }` |
-| `GET` | `/integration/affectations/{id}/note-service` | Générer et télécharger le PDF | — |
-| `POST` | `/integration/affectations/notes-service/lot` | Générer un ZIP de PDFs | `{ affectation_ids[] }` |
-| `POST` | `/integration/validations/{id}/approuver` | Approuver un niveau de validation | `{ commentaire? }` |
-| `POST` | `/integration/validations/{id}/rejeter` | Rejeter un niveau (→ affectation `rejetee`) | `{ commentaire }` |
+| Méthode | Endpoint canonique | Alias FE | Action | Body |
+|---------|-------------------|----------|--------|------|
+| `POST` | `/carriere/affectations` | `/integration/affectations` | Créer (unitaire) | `multipart/form-data` |
+| `POST` | `/carriere/affectations/groupee` | `/integration/affectations/groupee` | Créer (groupée) | `multipart/form-data` |
+| `GET` | `/carriere/affectations` | `/integration/affectations` | Lister | — |
+| `GET` | `/carriere/affectations/{id}` | `/integration/affectations/{id}` | Détail + validations | — |
+| `GET` | `/carriere/agents/{id}/affectations` | `/integration/agents/{id}/affectations` | Par agent | — |
+| `POST` | `/carriere/affectations/{id}/activer` | `/integration/affectations/{id}/activer` | Activer (`approuvee`) | `{ dossier_integration_id? }` ignoré |
+| `POST` | `/carriere/affectations/{id}/rejeter` | `/integration/affectations/{id}/rejeter` | Rejeter | `{ commentaire }` |
+| `POST` | `/carriere/affectations/{id}/terminer` | `/integration/affectations/{id}/terminer` | Terminer | `{ date_fin? }` |
+| `GET` | `/carriere/affectations/{id}/note-service` | `/integration/affectations/{id}/note-service` | PDF | — |
+| `POST` | `/carriere/affectations/notes-service/lot` | `/integration/affectations/notes-service/lot` | ZIP | `{ affectation_ids[] }` |
+| `POST` | `/integration/validations/{id}/approuver` | — | Approuver un niveau | `{ commentaire? }` |
+| `POST` | `/integration/validations/{id}/rejeter` | — | Rejeter un niveau | `{ commentaire }` |
 
 ---
 

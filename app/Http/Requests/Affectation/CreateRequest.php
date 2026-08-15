@@ -2,10 +2,14 @@
 
 namespace App\Http\Requests\Affectation;
 
+use App\Http\Requests\Concerns\ValideStructurable;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class CreateRequest extends FormRequest
 {
+    use ValideStructurable;
+
     public function authorize(): bool
     {
         return true;
@@ -22,6 +26,18 @@ class CreateRequest extends FormRequest
             'superieur_hierarchique_id' => ['nullable', 'integer', 'exists:agents,id'],
             'date_affectation'          => ['required', 'date'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $this->validerStructure(
+                $validator,
+                $this->input('structurable_type'),
+                $this->input('structurable_id'),
+                'structurable_id'
+            );
+        });
     }
 
     public function messages(): array

@@ -61,9 +61,11 @@ VALIDE_DG
   → POST …/generer-acte          → ACTE_GENERE
   → [marquer-contrat-signe]      → CONTRAT_SIGNE   (si necessite_contrat)
   → assigner-matricule           → MATRICULE_CREE  (auto si pas de contrat après acte)
-  → affectation / nomination / compte / matériel / prise de service
+  → [carrière : affectation / nomination] / compte / matériel / prise de service
   → POST …/integrer              → INTEGRE
 ```
+
+> Affectation et nomination sont des actes de **carrière** (`/api/carriere/…`). Elles ne font plus évoluer le statut du dossier (`AFFECTE` / `NOMME` ne sont plus ciblés).
 
 > Peu utilisé par le FE actuel ; conservé pour compatibilité et parcours métier strict.
 
@@ -75,8 +77,9 @@ VALIDE_DG
        ├─ compte auto si necessite_compte_utilisateur
        └─ ConventionStage + statut stagiaire si stage
   → tâches post-intégration (ordre libre) :
-       generer-acte | contrat signé | matricule | affectation |
-       [nomination] | [compte] | matériel | prise de service
+       generer-acte | contrat signé | matricule |
+       [affectation via /carriere] | [nomination via /carriere] |
+       [compte] | matériel | prise de service
 ```
 
 Sur le chemin B, `generer-acte`, `assigner-matricule` et `marquer-contrat-signe` **ne changent pas** le statut du dossier (reste `INTEGRE`).
