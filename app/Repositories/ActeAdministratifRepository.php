@@ -33,23 +33,32 @@ class ActeAdministratifRepository extends BaseRepository implements ActeAdminist
 
     public function acteExistePourType(int $dossierId, string $typeActe): bool
     {
+        return $this->trouverPourDossierEtType($dossierId, $typeActe) !== null;
+    }
+
+    public function trouverPourDossierEtType(int $dossierId, string $typeActe): ?ActeAdministratif
+    {
         return ActeAdministratif::where('dossier_integration_id', $dossierId)
             ->where('type_acte', $typeActe)
-            ->exists();
+            ->first();
     }
 
     public function genererNumero(TypeActeAdministratif $type): string
     {
-        $annee = now()->year;
+        $annee   = now()->year;
         $prefixe = $type->prefixeNumero();
 
-        $dernier = ActeAdministratif::where('type_acte', $type->value)
+        $dernierNumero = ActeAdministratif::where('type_acte', $type->value)
             ->whereYear('created_at', $annee)
             ->lockForUpdate()
-            ->count();
+            ->orderByDesc('id')
+            ->value('numero');
 
-        $sequence = str_pad($dernier + 1, 4, '0', STR_PAD_LEFT);
+        $sequence = 1;
+        if (is_string($dernierNumero) && preg_match('/(\d+)$/', $dernierNumero, $matches)) {
+            $sequence = (int) $matches[1] + 1;
+        }
 
-        return "ARTF-{$prefixe}-{$annee}-{$sequence}";
+        return sprintf('ARTF-%s-%d-%s', $prefixe, $annee, str_pad((string) $sequence, 4, '0', STR_PAD_LEFT));
     }
 }

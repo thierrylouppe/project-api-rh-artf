@@ -49,10 +49,25 @@ class ActeAdministratifController extends BaseController
     )]
     public function generer(GenererRequest $request, int $dossierId): JsonResponse
     {
-        $typeActe = TypeActeAdministratif::from($request->input('type_acte'));
-        $acte     = $this->service->generer($dossierId, $typeActe, $request->input('contenu'));
+        $typeActe = $request->filled('type_acte')
+            ? TypeActeAdministratif::from($request->input('type_acte'))
+            : null;
 
-        return $this->respond($acte, "Acte {$typeActe->label()} généré avec le numéro {$acte->numero}", 201);
+        $result = $this->service->enregistrerPourDossier(
+            $dossierId,
+            $typeActe,
+            $request->input('contenu')
+        );
+
+        $acte = $result['acte'];
+
+        return $this->respond(
+            $acte,
+            $result['cree']
+                ? "Acte {$acte->type_acte->label()} enregistré (n° {$acte->numero})"
+                : "Acte déjà enregistré (n° {$acte->numero})",
+            $result['cree'] ? 201 : 200
+        );
     }
 
     #[OA\Post(

@@ -213,18 +213,17 @@ class DossierIntegrationController extends BaseController
     #[OA\Post(path: '/api/integration/dossiers/{id}/generer-acte', operationId: 'genererActeDossier', tags: ['Intégration — Dossiers'], summary: 'Générer l\'acte administratif du dossier', description: 'Retourne l\'acte, le dossier mis à jour, et la prochaine étape (`contrat_signe`, `matricule_cree` ou `taches_post_integration`).', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 201, description: 'Acte généré', content: new OA\JsonContent(ref: '#/components/schemas/GenererActeResponse')), new OA\Response(response: 401, description: 'Non authentifié', content: new OA\JsonContent(ref: '#/components/schemas/Error401'))])]
     public function genererActe(int $id): JsonResponse
     {
-        $result = $this->service->genererActeAdministratif($id);
+        $result        = $this->service->genererActeAdministratif($id);
         $depuisIntegre = $result['dossier']->statut->value === 'INTEGRE';
+        $numero        = $result['acte']->numero;
 
         $prochaine = $depuisIntegre
             ? 'taches_post_integration'
             : ($result['necessite_contrat'] ? 'contrat_signe' : 'matricule_cree');
 
-        $message = match (true) {
-            $depuisIntegre => 'Acte généré en post-intégration',
-            $result['necessite_contrat'] => 'Acte généré — veuillez enregistrer la signature du contrat avant de créer le matricule',
-            default => 'Acte généré — passage direct à la création du matricule (pas de contrat requis)',
-        };
+        $message = $result['cree']
+            ? "Acte enregistré (n° {$numero})"
+            : "Acte déjà enregistré (n° {$numero})";
 
         return response()->json([
             'data' => [
@@ -234,7 +233,7 @@ class DossierIntegrationController extends BaseController
                 'prochaine_etape'   => $prochaine,
             ],
             'message' => $message,
-        ], 201);
+        ], $result['cree'] ? 201 : 200);
     }
 
     #[OA\Get(path: '/api/integration/dossiers/{id}/taches-post-integration', operationId: 'tachesPostIntegrationDossier', tags: ['Intégration — Dossiers'], summary: 'Checklist des tâches post-intégration', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK'), new OA\Response(response: 401, description: 'Non authentifié', content: new OA\JsonContent(ref: '#/components/schemas/Error401'))])]

@@ -16,7 +16,7 @@ class GenererRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type_acte' => ['required', new Enum(TypeActeAdministratif::class)],
+            'type_acte' => ['nullable', new Enum(TypeActeAdministratif::class)],
             'contenu'   => ['nullable', 'string'],
         ];
     }

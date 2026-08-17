@@ -236,7 +236,7 @@ POST /salaires/generation
 
 ### B5 — Permission lecture
 
-User avec `consulter-salaires` (rh / directeur / chef-service) :
+User avec `consulter-salaires` (admin / rh uniquement) :
 
 ```
 GET /salaires

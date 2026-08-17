@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\NiveauValidation;
 use App\Enums\StatutDossier;
 use App\Enums\TypeStage;
-use App\Interfaces\ActeAdministratifInterface;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\CircuitValidationInterface;
 use App\Interfaces\CompteIntegrationInterface;
@@ -26,7 +25,7 @@ class DossierIntegrationService extends BaseService
         private readonly ValidationWorkflowInterface $workflowRepository,
         private readonly CircuitValidationInterface $circuitValidationRepository,
         private readonly HistoriqueIntegrationInterface $historiqueRepository,
-        private readonly ActeAdministratifInterface $acteRepository,
+        private readonly ActeAdministratifService $acteService,
         private readonly AgentInterface $agentRepository,
         private readonly ConventionStageInterface $conventionStageRepository,
         private readonly CompteIntegrationInterface $compteRepository,
@@ -416,80 +415,44 @@ class DossierIntegrationService extends BaseService
     }
 
     /**
-     * Génère automatiquement l'acte administratif correspondant au type d'intégration du dossier.
+     * Enregistre l'acte d'entrée (délègue au service actes). Idempotent.
+     * Chemin A (VALIDE_DG, premier enregistrement) : transition ACTE_GENERE / MATRICULE_CREE.
+     * Chemin B (INTEGRE) : le dossier ne change pas de statut.
      *
-     * Accepté depuis :
-     * - VALIDE_DG (chemin séquentiel) → transitionne vers ACTE_GENERE / MATRICULE_CREE
-     * - INTEGRE (chemin post-intégration FE) → crée l'acte sans rejouer le workflow de statuts
-     *
-     * @return array{acte: ActeAdministratif, dossier: DossierIntegration, necessite_contrat: bool}
+     * @return array{acte: ActeAdministratif, dossier: DossierIntegration, necessite_contrat: bool, cree: bool}
      */
     public function genererActeAdministratif(int $id): array
     {
         return DB::transaction(function () use ($id) {
-            $dossier = $this->repository->findById($id);
-            $dossier->load('typeIntegration', 'actes');
+            $result            = $this->acteService->enregistrerPourDossier($id);
+            $dossier           = $result['dossier'];
+            $necessite_contrat = (bool) $dossier->typeIntegration?->necessite_contrat;
 
-            $statutsAutorises = [StatutDossier::VALIDE_DG, StatutDossier::INTEGRE];
-
-            abort_unless(
-                in_array($dossier->statut, $statutsAutorises, true),
-                422,
-                "L'acte ne peut être généré qu'après validation DG ou en post-intégration (statut actuel : {$dossier->statut->label()})"
-            );
-
-            abort_if(
-                $dossier->actes->isNotEmpty(),
-                422,
-                'Un acte administratif a déjà été généré pour ce dossier'
-            );
-
-            $typeIntegration = $dossier->typeIntegration;
-            $typeActe = $typeIntegration->acteAdministratifEnum();
-
-            abort_if(
-                $typeActe === null,
-                422,
-                "Aucun acte administratif configuré pour le type d'intégration « {$typeIntegration->nom} »"
-            );
-
-            $numero = $this->acteRepository->genererNumero($typeActe);
-            $acte   = $this->acteRepository->create([
-                'dossier_integration_id' => $id,
-                'type_acte'              => $typeActe->value,
-                'numero'                 => $numero,
-            ]);
-
-            $necessite_contrat = (bool) $typeIntegration->necessite_contrat;
-            $depuisIntegre     = $dossier->statut === StatutDossier::INTEGRE;
-
-            if ($depuisIntegre) {
-                // Chemin B (post-intégration) : le dossier reste INTEGRE.
-                $this->historiqueRepository->enregistrer(
-                    DossierIntegration::class,
+            if (
+                $result['cree']
+                && $dossier->statut === StatutDossier::VALIDE_DG
+            ) {
+                $dossier = $this->transitionner(
                     $id,
-                    Auth::id() ?? 1,
-                    'acte_genere',
-                    null,
-                    ['acte_id' => $acte->id, 'numero' => $numero, 'type_acte' => $typeActe->value],
-                    "Acte {$typeActe->label()} généré en post-intégration (n° {$numero})"
+                    StatutDossier::ACTE_GENERE,
+                    "Acte {$result['acte']->type_acte->label()} enregistré (n° {$result['acte']->numero})"
                 );
 
-                return [
-                    'acte'              => $acte,
-                    'dossier'           => $dossier->fresh(['typeIntegration', 'actes', 'agent']),
-                    'necessite_contrat' => $necessite_contrat,
-                ];
+                if (! $necessite_contrat) {
+                    $dossier = $this->transitionner(
+                        $id,
+                        StatutDossier::MATRICULE_CREE,
+                        'Pas de contrat requis — passage direct à la création du matricule'
+                    );
+                }
             }
 
-            // Chemin A (séquentiel) : transitions de statut classiques.
-            $dossier = $this->transitionner($id, StatutDossier::ACTE_GENERE, "Acte {$typeActe->label()} généré automatiquement (n° {$numero})");
-
-            if (! $necessite_contrat) {
-                $dossier = $this->transitionner($id, StatutDossier::MATRICULE_CREE, 'Pas de contrat requis — passage direct à la création du matricule');
-            }
-
-            return compact('acte', 'dossier', 'necessite_contrat');
+            return [
+                'acte'              => $result['acte'],
+                'dossier'           => $dossier->fresh(['typeIntegration', 'actes', 'agent']),
+                'necessite_contrat' => $necessite_contrat,
+                'cree'              => $result['cree'],
+            ];
         });
     }
 

@@ -577,12 +577,13 @@ Ces actions peuvent être réalisées dans n'importe quel ordre, après que le d
 
 ---
 
-### Tâche 11 — Générer l'acte administratif
+### Tâche 11 — Enregistrer l'acte administratif
 
-Le type d'acte est **déterminé automatiquement** depuis le type d'intégration du dossier — aucun champ à saisir.
+Un clic, body vide. Le type et le numéro sont **automatiques**. Pas de PDF à cette étape (enregistrement + référence officielle).
 
 > Accepté depuis **`VALIDE_DG`** (chemin A) **ou** **`INTEGRE`** (chemin B).  
-> En chemin B, le statut du dossier **reste `INTEGRE`**.
+> En chemin B, le statut du dossier **reste `INTEGRE`**.  
+> **Idempotent** : un second appel renvoie le même acte (`200`) au lieu d’un `422`.
 
 **Requête**
 ```
@@ -590,7 +591,7 @@ POST /integration/dossiers/7/generer-acte
 ```
 *(body vide)*
 
-**Réponse `201` — exemple pour Recrutement externe (`necessite_contrat = false`, chemin B)**
+**Réponse `201` (création) / `200` (déjà enregistré)**
 ```json
 {
   "data": {
@@ -604,7 +605,7 @@ POST /integration/dossiers/7/generer-acte
     "necessite_contrat": false,
     "prochaine_etape": "taches_post_integration"
   },
-  "message": "Acte généré en post-intégration"
+  "message": "Acte enregistré (n° ARTF-REC-2026-0001)"
 }
 ```
 
@@ -1130,7 +1131,7 @@ Génération PDF (disponible sur n'importe quel statut) :
 | `401 Unauthorized` | Token absent ou expiré | Refaire `/login` et mettre à jour le token |
 | `422 Unprocessable` sur transition | Transition de statut invalide | Respecter l'ordre des étapes ci-dessus |
 | `422` sur `/integrer` | Dossier pas à `VALIDE_DG` | Compléter le circuit hiérarchique d'abord (étapes 1-10) |
-| `422` sur `/generer-acte` | Statut hors `VALIDE_DG` / `INTEGRE`, ou acte déjà existant | Intégrer d'abord (chemin B) ou attendre `VALIDE_DG` (chemin A) |
+| `422` sur `/generer-acte` | Statut hors `VALIDE_DG` / `INTEGRE` | Intégrer d'abord (chemin B) ou attendre `VALIDE_DG` (chemin A). Un acte déjà présent renvoie `200`. |
 | Compte créé pour un stage | Ancien comportement | Vérifier `necessite_compte_utilisateur = false` sur le type + re-seed |
 | Niveau DG présent pour stage pro | Circuit non filtré | Vérifier `necessite_validation_dg` + re-tester `valider-rh` |
 | `422` sur `/assigner-matricule` | Matricule déjà attribué | Vérifier via `GET /integration/agents?matricule=...` |
