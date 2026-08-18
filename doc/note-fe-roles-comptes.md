@@ -21,17 +21,16 @@ Le périmètre « uniquement ma structure » n’est **pas encore** filtré côt
 
 ## 2. Auth — comment récupérer le rôle
 
-`POST /login` ne renvoie **pas** les rôles (payload minimal + `token`).
-
-Après login, appeler :
+`POST /login` renvoie `data.user` (via `UserResource`, avec `roles.permissions`) et `data.token`.
 
 ```
-GET /user
-Authorization: Bearer {token}
+data.user.roles[].name
+data.user.roles[].permissions[].name
 ```
 
-`data.roles[].name` = rôle à utiliser pour les menus.  
-`data.roles[].permissions[].name` = droits fins (préférer les permissions plutôt que le nom du rôle pour afficher/masquer un bouton).
+`GET /user` produit la même structure utilisateur (`data` = user, sans token). Utile pour rafraîchir le profil, pas obligatoire juste après le login.
+
+Préférer les **permissions** plutôt que le nom du rôle pour afficher/masquer un bouton.
 
 Un `403` = permission manquante : masquer l’action, ne pas la proposer.
 
@@ -94,6 +93,6 @@ Mot de passe : respecter la casse.
 ## 6. À faire côté FE
 
 1. Ne plus afficher salaires / contrats / recrutement / reporting / gestion utilisateurs aux rôles hiérarchiques.
-2. Après `POST /login`, charger `GET /user` pour menus et guards.
+2. Après `POST /login`, utiliser `data.user.roles[].permissions[].name` pour menus et guards (`GET /user` seulement pour rafraîchir).
 3. Tester les 7 comptes ci-dessus (un par profil).
 4. Un compte créé à l’intégration (email agent) n’a **pas** automatiquement un rôle Spatie tant que RH / admin ne l’assigne pas.

@@ -25,6 +25,8 @@ class AuthService
 
         $token = $user->createToken('api-token')->plainTextToken;
 
+        $user->load('roles.permissions');
+
         return ['user' => $user, 'token' => $token];
     }
 

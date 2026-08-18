@@ -189,13 +189,13 @@
                 ]
             }
         },
-        "/api/integration/affectations": {
+        "/api/carriere/affectations": {
             "get": {
                 "tags": [
-                    "Intégration — Affectations"
+                    "Carrière — Affectations"
                 ],
                 "summary": "Liste des affectations",
-                "operationId": "listAffectations",
+                "operationId": "listAffectationsCarriere",
                 "responses": {
                     "200": {
                         "description": "Liste"
@@ -219,11 +219,11 @@
             },
             "post": {
                 "tags": [
-                    "Intégration — Affectations"
+                    "Carrière — Affectations"
                 ],
                 "summary": "Créer une affectation",
                 "description": "Accepte JSON ou multipart (note_service fichier PDF/image).",
-                "operationId": "storeAffectation",
+                "operationId": "storeAffectationCarriere",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -298,13 +298,61 @@
                 ]
             }
         },
-        "/api/integration/affectations/{id}": {
+        "/api/integration/affectations": {
             "get": {
                 "tags": [
                     "Intégration — Affectations"
                 ],
+                "summary": "Liste des affectations (alias)",
+                "operationId": "listAffectations",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Créer une affectation (alias)",
+                "operationId": "storeAffectation",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/{id}": {
+            "get": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
                 "summary": "Détail d'une affectation",
-                "operationId": "showAffectation",
+                "operationId": "showAffectationCarriere",
                 "parameters": [
                     {
                         "name": "id",
@@ -344,13 +392,60 @@
                 ]
             }
         },
-        "/api/integration/affectations/groupee": {
-            "post": {
+        "/api/integration/affectations/{id}": {
+            "get": {
                 "tags": [
                     "Intégration — Affectations"
                 ],
+                "summary": "Détail d'une affectation (alias)",
+                "operationId": "showAffectation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AffectationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/groupee": {
+            "post": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
                 "summary": "Affectation groupée",
-                "operationId": "storeAffectationGroupee",
+                "operationId": "storeAffectationGroupeeCarriere",
                 "responses": {
                     "201": {
                         "description": "Créées"
@@ -373,13 +468,33 @@
                 ]
             }
         },
-        "/api/integration/affectations/{affectation}/activer": {
+        "/api/integration/affectations/groupee": {
             "post": {
                 "tags": [
                     "Intégration — Affectations"
                 ],
+                "summary": "Affectation groupée (alias)",
+                "operationId": "storeAffectationGroupee",
+                "responses": {
+                    "201": {
+                        "description": "Créées"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/{affectation}/activer": {
+            "post": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
                 "summary": "Activer une affectation",
-                "operationId": "activerAffectation",
+                "operationId": "activerAffectationCarriere",
                 "parameters": [
                     {
                         "name": "affectation",
@@ -396,6 +511,7 @@
                             "schema": {
                                 "properties": {
                                     "dossier_integration_id": {
+                                        "description": "Ignoré — conservé pour compatibilité FE",
                                         "type": "integer",
                                         "nullable": true
                                     }
@@ -424,13 +540,43 @@
                 ]
             }
         },
-        "/api/integration/affectations/{affectation}/rejeter": {
+        "/api/integration/affectations/{affectation}/activer": {
             "post": {
                 "tags": [
                     "Intégration — Affectations"
                 ],
+                "summary": "Activer une affectation (alias)",
+                "operationId": "activerAffectation",
+                "parameters": [
+                    {
+                        "name": "affectation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Activée"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/{affectation}/rejeter": {
+            "post": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
                 "summary": "Rejeter une affectation",
-                "operationId": "rejeterAffectation",
+                "operationId": "rejeterAffectationCarriere",
                 "parameters": [
                     {
                         "name": "affectation",
@@ -469,13 +615,43 @@
                 ]
             }
         },
-        "/api/integration/affectations/{affectation}/terminer": {
+        "/api/integration/affectations/{affectation}/rejeter": {
             "post": {
                 "tags": [
                     "Intégration — Affectations"
                 ],
+                "summary": "Rejeter une affectation (alias)",
+                "operationId": "rejeterAffectation",
+                "parameters": [
+                    {
+                        "name": "affectation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rejetée"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/{affectation}/terminer": {
+            "post": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
                 "summary": "Terminer une affectation",
-                "operationId": "terminerAffectation",
+                "operationId": "terminerAffectationCarriere",
                 "parameters": [
                     {
                         "name": "affectation",
@@ -520,13 +696,43 @@
                 ]
             }
         },
-        "/api/integration/affectations/{affectation}/note-service": {
-            "get": {
+        "/api/integration/affectations/{affectation}/terminer": {
+            "post": {
                 "tags": [
                     "Intégration — Affectations"
                 ],
+                "summary": "Terminer une affectation (alias)",
+                "operationId": "terminerAffectation",
+                "parameters": [
+                    {
+                        "name": "affectation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Terminée"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/{affectation}/note-service": {
+            "get": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
                 "summary": "Télécharger la note de service (PDF)",
-                "operationId": "noteServiceAffectation",
+                "operationId": "noteServiceAffectationCarriere",
                 "parameters": [
                     {
                         "name": "affectation",
@@ -549,12 +755,110 @@
                 ]
             }
         },
+        "/api/integration/affectations/{affectation}/note-service": {
+            "get": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Télécharger la note de service (alias)",
+                "operationId": "noteServiceAffectation",
+                "parameters": [
+                    {
+                        "name": "affectation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier PDF"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/notes-service/lot": {
+            "post": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
+                "summary": "ZIP de notes de service",
+                "operationId": "noteServiceLotAffectationCarriere",
+                "responses": {
+                    "200": {
+                        "description": "Fichier ZIP"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/affectations/notes-service/lot": {
+            "post": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "ZIP de notes de service (alias)",
+                "operationId": "noteServiceLotAffectation",
+                "responses": {
+                    "200": {
+                        "description": "Fichier ZIP"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/agents/{agent}/affectations": {
+            "get": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
+                "summary": "Affectations d'un agent",
+                "operationId": "listAffectationsByAgentCarriere",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/integration/agents/{agent}/affectations": {
             "get": {
                 "tags": [
                     "Intégration — Affectations"
                 ],
-                "summary": "Affectations d'un agent",
+                "summary": "Affectations d'un agent (alias)",
                 "operationId": "listAffectationsByAgent",
                 "parameters": [
                     {
@@ -571,6 +875,7 @@
                         "description": "Liste"
                     }
                 },
+                "deprecated": true,
                 "security": [
                     {
                         "bearerAuth": []
@@ -2717,6 +3022,157 @@
                 ]
             }
         },
+        "/api/personnel/agents": {
+            "get": {
+                "tags": [
+                    "Personnel"
+                ],
+                "summary": "Liste des agents déjà intégrés",
+                "description": "Agents dont le dossier est INTEGRE, hors stagiaires.",
+                "operationId": "listPersonnelAgents",
+                "parameters": [
+                    {
+                        "name": "nom",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "prenom",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "matricule",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "statut",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "actif"
+                        }
+                    },
+                    {
+                        "name": "type_integration_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AgentListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/personnel/stagiaires": {
+            "get": {
+                "tags": [
+                    "Personnel"
+                ],
+                "summary": "Liste des stagiaires",
+                "description": "Agents au statut stagiaire (convention de stage en cours).",
+                "operationId": "listPersonnelStagiaires",
+                "parameters": [
+                    {
+                        "name": "nom",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "prenom",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "matricule",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type_integration_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AgentListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/integration/prises-de-service": {
             "post": {
                 "tags": [
@@ -3277,26 +3733,8 @@
                 "properties": {
                     "data": {
                         "properties": {
-                            "id": {
-                                "type": "integer",
-                                "example": 1
-                            },
-                            "name": {
-                                "type": "string",
-                                "example": "Administrateur"
-                            },
-                            "email": {
-                                "type": "string",
-                                "example": "admin@arft.cg"
-                            },
-                            "agent_id": {
-                                "type": "integer",
-                                "example": null,
-                                "nullable": true
-                            },
-                            "is_active": {
-                                "type": "boolean",
-                                "example": true
+                            "user": {
+                                "$ref": "#/components/schemas/User"
                             },
                             "token": {
                                 "type": "string",
@@ -3308,6 +3746,46 @@
                     "message": {
                         "type": "string",
                         "example": "Connexion réussie"
+                    }
+                },
+                "type": "object"
+            },
+            "Permission": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "consulter-agents"
+                    }
+                },
+                "type": "object"
+            },
+            "Role": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "rh"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Permission"
+                        }
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 },
                 "type": "object"
@@ -3334,6 +3812,12 @@
                     "is_active": {
                         "type": "boolean",
                         "example": true
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Role"
+                        }
                     },
                     "created_at": {
                         "type": "string",
@@ -4512,6 +4996,10 @@
             "description": "Types d'entrée administrative"
         },
         {
+            "name": "Personnel",
+            "description": "Agents intégrés et stagiaires"
+        },
+        {
             "name": "Intégration — Agents",
             "description": "Fiches agents et matricules"
         },
@@ -4546,6 +5034,10 @@
         {
             "name": "Intégration — Prise de service",
             "description": "Prise de service et finalisation"
+        },
+        {
+            "name": "Carrière — Affectations",
+            "description": "Carrière — Affectations"
         }
     ]
 }

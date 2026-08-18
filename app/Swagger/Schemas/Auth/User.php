@@ -12,6 +12,11 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'email', type: 'string', example: 'admin@arft.cg'),
         new OA\Property(property: 'agent_id', type: 'integer', nullable: true, example: null),
         new OA\Property(property: 'is_active', type: 'boolean', example: true),
+        new OA\Property(
+            property: 'roles',
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Role')
+        ),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
         new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
     ]
