@@ -154,30 +154,30 @@ Cohérence poste / structure proposée :
 
 #### 2.1 Lectures métier
 
-- [ ] `GET /carriere/nominations/postes-vacants` — structures sans nomination `active`
-- [ ] `GET /carriere/nominations/chefs/{id}/agents-sous-autorite` — agents dont le supérieur vient de cette nomination (déjà utilisé côté affectation)
-- [ ] `GET /carriere/agents/{id}/nominations/historique` — actives exclues ou filtre `statut` (ne pas casser `GET …/nominations` existant)
+- [x] `GET /carriere/nominations/postes-vacants` — structures sans nomination `active`
+- [x] `GET /carriere/nominations/chefs/{id}/agents-sous-autorite` — agents dont le supérieur vient de cette nomination (déjà utilisé côté affectation)
+- [x] `GET /carriere/agents/{id}/nominations/historique` — actives exclues ou filtre `statut` (ne pas casser `GET …/nominations` existant)
 
 #### 2.2 Mise à jour avant activation
 
-- [ ] `PUT /carriere/nominations/{id}` — uniquement si `en_attente` (poste, structure, dates, `type_acte`)
+- [x] `PUT /carriere/nominations/{id}` — uniquement si `en_attente` (poste, structure, dates, `type_acte`)
 
 #### 2.3 Acte administratif
 
-- [ ] Génération PDF selon `type_acte` (`arrete` / `decision` / `note_service`)
-- [ ] Aligner le vocabulaire avec `TypeActeAdministratif` (éviter deux enums divergents)
-- [ ] Route de téléchargement (même schéma que la note de service affectation, si besoin)
+- [x] Génération PDF selon `type_acte` (`arrete` / `decision` / `note_service`)
+- [x] Aligner le vocabulaire avec `TypeActeAdministratif` (éviter deux enums divergents)
+- [x] Route de téléchargement (même schéma que la note de service affectation, si besoin)
 
 #### 2.4 Contrôle d’intégrité données
 
-- [ ] Index `agent_id + statut` pour `getActive` / `nominationActive`
-- [ ] Garde applicative (ou contrainte) : une seule `active` par agent et par structure
-- [ ] `ClotureStageService` : clôturer via `NominationService` (date_fin + historique), plus de `update` Eloquent direct
+- [x] Index `agent_id + statut` pour `getActive` / `nominationActive`
+- [x] Garde applicative (ou contrainte) : une seule `active` par agent et par structure
+- [x] `ClotureStageService` : clôturer via `NominationService` (date_fin + historique), plus de `update` Eloquent direct
 
 #### 2.5 Tests & docs phase 2
 
-- [ ] Tests postes vacants, sous-autorité, PUT 422 si déjà `active`
-- [ ] Note FE + OpenAPI
+- [x] Tests postes vacants, sous-autorité, PUT 422 si déjà `active`
+- [x] Note FE + OpenAPI
 - [ ] Maquette `doc/maquettes/maquette-nomination-fe.canvas.tsx` (optionnel)
 
 **Done quand :** le FE peut lister les postes à pourvoir, voir la ligne hiérarchique, et télécharger l’acte.

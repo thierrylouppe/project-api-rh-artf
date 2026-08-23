@@ -32,10 +32,15 @@ Préfixe API Laravel : toutes les routes ci-dessous sont sous `/api`.
 | `GET /carriere/affectations/{id}/note-service` | `GET /integration/affectations/{id}/note-service` |
 | `POST /carriere/affectations/notes-service/lot` | `POST /integration/affectations/notes-service/lot` |
 | `GET/POST /carriere/nominations` | `GET/POST /integration/nominations` |
+| `PUT /carriere/nominations/{id}` | `PUT /integration/nominations/{id}` |
 | `POST /carriere/nominations/{id}/activer` | `POST /integration/nominations/{id}/activer` |
 | `POST /carriere/nominations/{id}/cloturer` | `POST /integration/nominations/{id}/cloturer` |
 | `POST /carriere/nominations/{id}/rejeter` | `POST /integration/nominations/{id}/rejeter` |
+| `GET /carriere/nominations/{id}/acte` | `GET /integration/nominations/{id}/acte` |
+| `GET /carriere/nominations/postes-vacants` | `GET /integration/nominations/postes-vacants` |
+| `GET /carriere/nominations/chefs/{id}/agents-sous-autorite` | `GET /integration/nominations/chefs/{id}/agents-sous-autorite` |
 | `GET /carriere/agents/{id}/nominations` | `GET /integration/agents/{id}/nominations` |
+| `GET /carriere/agents/{id}/nominations/historique` | `GET /integration/agents/{id}/nominations/historique` |
 | `GET/POST /carriere/contrats` | `GET/POST /integration/contrats` |
 | `POST /carriere/contrats/{id}/resilier` | `POST /integration/contrats/{id}/resilier` |
 | `GET /carriere/agents/{id}/contrats` | `GET /integration/agents/{id}/contrats` |
@@ -79,12 +84,20 @@ Les clés `etape` **14** et **15** sont **conservées** (pas de suppression).
 
 Ne plus attendre un changement de statut dossier après activation.
 
-## 5. Validation structure
+## 5. Nominations — lectures et acte (phase 2)
+
+- `GET /carriere/nominations/postes-vacants` : structures (Direction / Service / Bureau) **sans** nomination `active`, avec `postes_possibles`.
+- `GET /carriere/nominations/chefs/{id}/agents-sous-autorite` : `{id}` = **agent** chef. Réponse : `chef`, `nomination_active`, `agents[]` (`agent` + `affectation` active dont il est supérieur).
+- `GET /carriere/agents/{id}/nominations/historique` : toutes les nominations **sauf** `active` (ne remplace pas `GET …/nominations`).
+- `PUT /carriere/nominations/{id}` : uniquement si `en_attente` — sinon `422`.
+- `GET /carriere/nominations/{id}/acte` : PDF (`type_acte` : `arrete` | `decision` | `note_service`). Champ `type_acte_label` dans le JSON.
+
+## 6. Validation structure
 
 `structurable_id` doit exister pour le `structurable_type` envoyé (`Direction` / `Service` / `Bureau`).  
 Sinon `422` sur `structurable_id` : « La structure indiquée n'existe pas. »
 
-## 6. Reco de bascule
+## 7. Reco de bascule
 
 1. Pointer les appels affectation / nomination / contrats / salaires-agent vers `/api/carriere/…`.
 2. Adapter la checklist (14/15 optionnelles + nouveaux endpoints).

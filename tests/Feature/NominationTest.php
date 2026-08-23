@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Enums\StatutAffectation;
 use App\Enums\StatutDossier;
 use App\Enums\StatutNomination;
 use App\Models\Administration;
+use App\Models\Affectation;
 use App\Models\Agent;
 use App\Models\Bureau;
 use App\Models\Direction;
@@ -185,6 +187,92 @@ class NominationTest extends TestCase
         $this->getJson("/api/carriere/agents/{$this->agent->id}/nominations")
             ->assertOk()
             ->assertJsonCount(1, 'data');
+    }
+
+    public function test_postes_vacants_exclut_la_structure_occupee(): void
+    {
+        $this->creerNomination($this->agent, StatutNomination::ACTIVE);
+
+        $response = $this->getJson('/api/carriere/nominations/postes-vacants')
+            ->assertOk();
+
+        $idsService = collect($response->json('data'))
+            ->where('structurable_type', Service::class)
+            ->pluck('structurable_id');
+
+        $this->assertFalse($idsService->contains($this->service->id));
+        $this->assertTrue(
+            collect($response->json('data'))
+                ->contains(fn (array $poste) => $poste['structurable_type'] === Bureau::class
+                    && $poste['structurable_id'] === $this->bureau->id)
+        );
+    }
+
+    public function test_agents_sous_autorite(): void
+    {
+        $chef = $this->creerAgent('Paul', 'Chef');
+        $this->creerNomination($chef, StatutNomination::ACTIVE);
+
+        Affectation::create([
+            'agent_id'                  => $this->agent->id,
+            'structurable_type'         => Service::class,
+            'structurable_id'           => $this->service->id,
+            'superieur_hierarchique_id' => $chef->id,
+            'date_affectation'          => '2026-07-01',
+            'statut'                    => StatutAffectation::ACTIVE,
+            'created_by'                => $this->user->id,
+        ]);
+
+        $this->getJson("/api/carriere/nominations/chefs/{$chef->id}/agents-sous-autorite")
+            ->assertOk()
+            ->assertJsonPath('data.chef.id', $chef->id)
+            ->assertJsonPath('data.agents.0.agent.id', $this->agent->id);
+    }
+
+    public function test_historique_exclut_la_nomination_active(): void
+    {
+        $this->creerNomination($this->agent, StatutNomination::ACTIVE);
+        $this->creerNomination(
+            $this->agent,
+            StatutNomination::CLOTUREE,
+            'Chef de Bureau',
+            Bureau::class,
+            $this->bureau->id
+        );
+
+        $this->getJson("/api/carriere/agents/{$this->agent->id}/nominations/historique")
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.statut', StatutNomination::CLOTUREE->value);
+    }
+
+    public function test_update_uniquement_si_en_attente(): void
+    {
+        $enAttente = $this->creerNomination($this->agent);
+        $this->putJson("/api/carriere/nominations/{$enAttente->id}", [
+            ...$this->payloadNomination($this->agent),
+            'date_debut' => '2026-10-01',
+            'type_acte'  => 'arrete',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.date_debut', '2026-10-01')
+            ->assertJsonPath('data.type_acte', 'arrete');
+
+        $active = $this->creerNomination(
+            $this->creerAgent('Luc', 'Actif'),
+            StatutNomination::ACTIVE
+        );
+        $this->putJson("/api/carriere/nominations/{$active->id}", $this->payloadNomination($active->agent))
+            ->assertStatus(422);
+    }
+
+    public function test_telecharger_acte_pdf(): void
+    {
+        $nomination = $this->creerNomination($this->agent);
+
+        $this->get("/api/carriere/nominations/{$nomination->id}/acte")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
     }
 
     private function payloadNomination(

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StatutNomination;
+use App\Enums\TypeActeNomination;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,6 +32,7 @@ class Nomination extends Model
         'date_debut' => 'date',
         'date_fin'   => 'date',
         'statut'     => StatutNomination::class,
+        'type_acte'  => TypeActeNomination::class,
     ];
 
     protected array $filterable = ['agent_id', 'statut', 'poste'];

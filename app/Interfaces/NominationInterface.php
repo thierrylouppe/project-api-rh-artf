@@ -16,4 +16,8 @@ interface NominationInterface extends BaseInterface
     public function cloturerActivesPourStructure(string $structurableType, int $structurableId, ?int $saufId = null): void;
 
     public function cloturerActivePourAgent(int $agentId, ?int $saufId = null): void;
+
+    public function getHistoriqueByAgent(int $agentId): Collection;
+
+    public function postesVacants(): Collection;
 }

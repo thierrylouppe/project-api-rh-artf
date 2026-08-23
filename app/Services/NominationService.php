@@ -3,13 +3,21 @@
 namespace App\Services;
 
 use App\Enums\StatutNomination;
+use App\Enums\TypeActeNomination;
+use App\Interfaces\AffectationInterface;
+use App\Interfaces\AgentInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
 use App\Interfaces\NominationInterface;
 use App\Interfaces\ValidationWorkflowInterface;
+use App\Models\Bureau;
+use App\Models\Direction;
 use App\Models\Nomination;
+use App\Models\Service;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /** @property NominationInterface $repository */
 class NominationService extends BaseService
@@ -18,6 +26,8 @@ class NominationService extends BaseService
         NominationInterface $repository,
         private readonly ValidationWorkflowInterface $workflowRepository,
         private readonly HistoriqueIntegrationInterface $historiqueRepository,
+        private readonly AffectationInterface $affectationRepository,
+        private readonly AgentInterface $agentRepository,
     ) {
         parent::__construct($repository);
     }
@@ -26,6 +36,21 @@ class NominationService extends BaseService
     {
         $data['created_by'] = $data['created_by'] ?? Auth::id();
         $data['statut']     = StatutNomination::EN_ATTENTE;
+
+        return $data;
+    }
+
+    protected function beforeUpdate(int $id, array $data): array
+    {
+        $nomination = $this->repository->findById($id);
+
+        abort_unless(
+            $nomination->statut === StatutNomination::EN_ATTENTE,
+            422,
+            'Seule une nomination en attente de validation peut être modifiée.'
+        );
+
+        unset($data['statut'], $data['created_by']);
 
         return $data;
     }
@@ -92,6 +117,12 @@ class NominationService extends BaseService
                 $id
             );
             $this->repository->cloturerActivePourAgent($nomination->agent_id, $id);
+
+            abort_if(
+                $this->repository->getActive($nomination->agent_id) !== null,
+                422,
+                'Cet agent a déjà une nomination active.'
+            );
 
             $nomination->update([
                 'statut'     => StatutNomination::ACTIVE,
@@ -175,5 +206,73 @@ class NominationService extends BaseService
     public function getActive(int $agentId): ?Nomination
     {
         return $this->repository->getActive($agentId);
+    }
+
+    public function getHistoriqueByAgent(int $agentId): Collection
+    {
+        return $this->repository->getHistoriqueByAgent($agentId);
+    }
+
+    public function postesVacants(): Collection
+    {
+        return $this->repository->postesVacants();
+    }
+
+    /**
+     * @return array{chef: \App\Models\Agent, nomination_active: ?Nomination, affectations: Collection}
+     */
+    public function agentsSousAutorite(int $chefId): array
+    {
+        $chef = $this->agentRepository->findById($chefId);
+
+        return [
+            'chef'              => $chef,
+            'nomination_active' => $this->repository->getActive($chefId),
+            'affectations'      => $this->affectationRepository->getActivesParSuperieur($chefId),
+        ];
+    }
+
+    /** @return string Chemin du PDF sur le disque local */
+    public function genererActePdf(int $id): string
+    {
+        $nomination = $this->repository->findById($id);
+        $nomination->load(['agent.grade', 'agent.categorie', 'agent.echelon', 'structure']);
+
+        $structure = $nomination->structure;
+        if ($structure) {
+            match ($nomination->structurable_type) {
+                Bureau::class    => $structure->loadMissing('service.direction'),
+                Service::class   => $structure->loadMissing('direction'),
+                Direction::class => null,
+                default          => null,
+            };
+        }
+
+        $typeActe = $nomination->type_acte ?? TypeActeNomination::DECISION;
+
+        $pdf = Pdf::loadView('pdf.acte-nomination', [
+            'nomination' => $nomination,
+            'structure'  => $structure,
+            'typeActe'   => $typeActe,
+            'reference'  => $this->referenceActe($id, $typeActe),
+        ])->setPaper('a4');
+
+        $path = "nominations/{$nomination->agent_id}/actes/{$this->nomFichierActe($id)}";
+        Storage::disk('local')->put($path, $pdf->output());
+
+        return $path;
+    }
+
+    public function nomFichierActe(int $id): string
+    {
+        $nomination = $this->repository->findById($id);
+        $typeActe   = $nomination->type_acte ?? TypeActeNomination::DECISION;
+
+        return $this->referenceActe($id, $typeActe).'.pdf';
+    }
+
+    private function referenceActe(int $id, TypeActeNomination $typeActe): string
+    {
+        return $typeActe->prefixeNumero().'-NOM-'.date('Y').'-'.str_pad((string) $id, 4, '0', STR_PAD_LEFT);
     }
 }

@@ -32,6 +32,16 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
             ->first();
     }
 
+    public function getActivesParSuperieur(int $superieurId): Collection
+    {
+        return Affectation::query()
+            ->where('superieur_hierarchique_id', $superieurId)
+            ->where('statut', StatutAffectation::ACTIVE)
+            ->with(['agent', 'structure'])
+            ->orderByDesc('date_affectation')
+            ->get();
+    }
+
     public function terminer(int $id, ?string $dateFin): Affectation
     {
         $affectation = $this->findById($id);

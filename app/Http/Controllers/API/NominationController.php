@@ -6,11 +6,16 @@ use App\Http\Requests\Nomination\ActiverRequest;
 use App\Http\Requests\Nomination\CloturerRequest;
 use App\Http\Requests\Nomination\CreateRequest;
 use App\Http\Requests\Nomination\RejeterRequest;
+use App\Http\Requests\Nomination\UpdateRequest;
+use App\Http\Resources\AffectationResource;
+use App\Http\Resources\AgentResource;
 use App\Http\Resources\NominationResource;
 use App\Services\NominationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /** @property NominationService $service */
 class NominationController extends BaseController
@@ -77,6 +82,16 @@ class NominationController extends BaseController
         return $this->respond($nomination, 'Nomination créée — circuit de validation initialisé', 201);
     }
 
+    #[OA\Put(path: '/api/carriere/nominations/{id}', operationId: 'updateNominationCarriere', tags: ['Carrière — Nominations'], summary: 'Modifier une nomination en attente', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Modifiée', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse')), new OA\Response(response: 422, description: 'Validation')])]
+    #[OA\Put(path: '/api/integration/nominations/{id}', operationId: 'updateNomination', tags: ['Intégration — Nominations'], summary: 'Modifier une nomination (alias)', deprecated: true, security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Modifiée')])]
+    public function update(UpdateRequest $request, int $id): JsonResponse
+    {
+        return $this->respond(
+            $this->service->update($id, $request->validated()),
+            'Nomination mise à jour'
+        );
+    }
+
     #[OA\Post(path: '/api/carriere/nominations/{nomination}/activer', operationId: 'activerNominationCarriere', tags: ['Carrière — Nominations'], summary: 'Activer une nomination', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [new OA\Property(property: 'dossier_integration_id', type: 'integer', nullable: true, description: 'Ignoré — conservé pour compatibilité FE')])), responses: [new OA\Response(response: 200, description: 'Activée', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse'))])]
     #[OA\Post(path: '/api/integration/nominations/{nomination}/activer', operationId: 'activerNomination', tags: ['Intégration — Nominations'], summary: 'Activer une nomination (alias)', deprecated: true, security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Activée')])]
     public function activer(ActiverRequest $request, int $id): JsonResponse
@@ -114,5 +129,53 @@ class NominationController extends BaseController
         $nominations = $this->service->getByAgent($agentId);
 
         return response()->json(['data' => NominationResource::collection($nominations)]);
+    }
+
+    #[OA\Get(path: '/api/carriere/agents/{agent}/nominations/historique', operationId: 'historiqueNominationsByAgentCarriere', tags: ['Carrière — Nominations'], summary: 'Historique des nominations (hors active)', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'agent', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Liste')])]
+    #[OA\Get(path: '/api/integration/agents/{agent}/nominations/historique', operationId: 'historiqueNominationsByAgent', tags: ['Intégration — Nominations'], summary: 'Historique des nominations (alias)', deprecated: true, security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'agent', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Liste')])]
+    public function historique(int $agentId): JsonResponse
+    {
+        return response()->json([
+            'data' => NominationResource::collection($this->service->getHistoriqueByAgent($agentId)),
+        ]);
+    }
+
+    #[OA\Get(path: '/api/carriere/nominations/postes-vacants', operationId: 'postesVacantsNominationsCarriere', tags: ['Carrière — Nominations'], summary: 'Structures sans responsable actif', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Liste')])]
+    #[OA\Get(path: '/api/integration/nominations/postes-vacants', operationId: 'postesVacantsNominations', tags: ['Intégration — Nominations'], summary: 'Postes vacants (alias)', deprecated: true, security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Liste')])]
+    public function postesVacants(): JsonResponse
+    {
+        return response()->json(['data' => $this->service->postesVacants()]);
+    }
+
+    #[OA\Get(path: '/api/carriere/nominations/chefs/{chef}/agents-sous-autorite', operationId: 'agentsSousAutoriteCarriere', tags: ['Carrière — Nominations'], summary: 'Agents sous l\'autorité d\'un chef', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'chef', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Liste')])]
+    #[OA\Get(path: '/api/integration/nominations/chefs/{chef}/agents-sous-autorite', operationId: 'agentsSousAutorite', tags: ['Intégration — Nominations'], summary: 'Agents sous autorité (alias)', deprecated: true, security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'chef', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Liste')])]
+    public function agentsSousAutorite(int $chefId): JsonResponse
+    {
+        $result = $this->service->agentsSousAutorite($chefId);
+
+        return response()->json([
+            'data' => [
+                'chef'              => new AgentResource($result['chef']),
+                'nomination_active' => $result['nomination_active']
+                    ? new NominationResource($result['nomination_active'])
+                    : null,
+                'agents'            => $result['affectations']->map(fn ($affectation) => [
+                    'agent'       => new AgentResource($affectation->agent),
+                    'affectation' => new AffectationResource($affectation),
+                ]),
+            ],
+        ]);
+    }
+
+    #[OA\Get(path: '/api/carriere/nominations/{nomination}/acte', operationId: 'acteNominationCarriere', tags: ['Carrière — Nominations'], summary: 'Télécharger l\'acte de nomination (PDF)', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Fichier PDF')])]
+    #[OA\Get(path: '/api/integration/nominations/{nomination}/acte', operationId: 'acteNomination', tags: ['Intégration — Nominations'], summary: 'Télécharger l\'acte (alias)', deprecated: true, security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Fichier PDF')])]
+    public function acte(int $id): SymfonyResponse
+    {
+        $path     = $this->service->genererActePdf($id);
+        $fileName = $this->service->nomFichierActe($id);
+
+        return response()->download(Storage::disk('local')->path($path), $fileName, [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 }

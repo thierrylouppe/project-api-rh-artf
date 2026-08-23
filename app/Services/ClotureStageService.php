@@ -15,6 +15,7 @@ class ClotureStageService
     public function __construct(
         private readonly ConventionStageInterface $conventionRepository,
         private readonly AgentInterface $agentRepository,
+        private readonly NominationService $nominationService,
     ) {}
 
     /**
@@ -49,7 +50,7 @@ class ClotureStageService
 
             // 2. Clôture de la nomination active
             if ($nomination = $agent->nominationActive) {
-                $nomination->update(['statut' => 'cloturee']);
+                $this->nominationService->cloturer($nomination->id);
             }
 
             // 3. Fin de l'affectation active

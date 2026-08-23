@@ -2,11 +2,13 @@
 
 namespace App\Http\Requests\Nomination;
 
+use App\Enums\TypeActeNomination;
 use App\Http\Requests\Concerns\ValideStructurable;
 use App\Models\Bureau;
 use App\Models\Direction;
 use App\Models\Service;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
 
 class CreateRequest extends FormRequest
@@ -33,7 +35,7 @@ class CreateRequest extends FormRequest
             'structurable_type' => ['required', 'string', 'in:App\\Models\\Direction,App\\Models\\Service,App\\Models\\Bureau'],
             'structurable_id'   => ['required', 'integer'],
             'date_debut'        => ['required', 'date'],
-            'type_acte'         => ['nullable', 'in:arrete,decision,note_service'],
+            'type_acte'         => ['nullable', new Enum(TypeActeNomination::class)],
         ];
     }
 
@@ -56,7 +58,7 @@ class CreateRequest extends FormRequest
         return [
             'poste.in'               => 'Le poste doit être un des postes de responsabilité reconnus.',
             'structurable_type.in'   => 'La structure doit être une Direction, un Service ou un Bureau.',
-            'type_acte.in'           => 'Le type d\'acte doit être arrêté, décision ou note de service.',
+            'type_acte.Illuminate\\Validation\\Rules\\Enum' => 'Le type d\'acte doit être arrêté, décision ou note de service.',
         ];
     }
 

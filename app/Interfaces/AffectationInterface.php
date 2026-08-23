@@ -15,4 +15,7 @@ interface AffectationInterface extends BaseInterface
 
     /** Remonte la hiérarchie (Bureau → Service → Direction) pour trouver l'agent_id du responsable actif. */
     public function resoudreSuperiorParStructure(string $structurableType, int $structurableId): ?int;
+
+    /** Agents dont l'affectation active désigne ce supérieur. */
+    public function getActivesParSuperieur(int $superieurId): Collection;
 }

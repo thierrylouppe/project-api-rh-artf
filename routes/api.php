@@ -51,6 +51,7 @@ Route::get('/health', fn () => response()->json(['status' => 'ok']));
 $routesCarriere = function (): void {
     Route::get('agents/{agent}/contrats', [ContratController::class, 'byAgent']);
     Route::get('agents/{agent}/affectations', [AffectationController::class, 'byAgent']);
+    Route::get('agents/{agent}/nominations/historique', [NominationController::class, 'historique']);
     Route::get('agents/{agent}/nominations', [NominationController::class, 'byAgent']);
     Route::get('agents/{agent}/salaires/actuel', [SalaireAgentController::class, 'actuel'])
         ->middleware('permission:consulter-salaires');
@@ -74,10 +75,13 @@ $routesCarriere = function (): void {
     Route::post('affectations/{affectation}/terminer',    [AffectationController::class, 'terminer']);
     Route::get('affectations/{affectation}/note-service', [AffectationController::class, 'noteService']);
 
-    Route::apiResource('nominations', NominationController::class)->only(['index', 'store', 'show']);
+    Route::get('nominations/postes-vacants', [NominationController::class, 'postesVacants']);
+    Route::get('nominations/chefs/{chef}/agents-sous-autorite', [NominationController::class, 'agentsSousAutorite']);
+    Route::apiResource('nominations', NominationController::class)->only(['index', 'store', 'show', 'update']);
     Route::post('nominations/{nomination}/activer',       [NominationController::class, 'activer']);
     Route::post('nominations/{nomination}/cloturer',      [NominationController::class, 'cloturer']);
     Route::post('nominations/{nomination}/rejeter',       [NominationController::class, 'rejeter']);
+    Route::get('nominations/{nomination}/acte',           [NominationController::class, 'acte']);
 };
 
 Route::prefix('carriere')->middleware('auth:sanctum')->group($routesCarriere);
