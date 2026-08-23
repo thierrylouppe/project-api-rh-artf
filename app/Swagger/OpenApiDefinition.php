@@ -49,6 +49,7 @@ MD
 #[OA\Tag(name: 'Intégration — Contrats', description: 'Contrats agents')]
 #[OA\Tag(name: 'Carrière — Affectations', description: 'Affectations et notes de service')]
 #[OA\Tag(name: 'Carrière — Nominations', description: 'Nominations à un poste de responsabilité')]
+#[OA\Tag(name: 'Carrière — Synthèse', description: 'Situation carrière d\'un agent')]
 #[OA\Tag(name: 'Intégration — Affectations', description: 'Affectations (alias déprécié)')]
 #[OA\Tag(name: 'Intégration — Nominations', description: 'Nominations (alias déprécié)')]
 #[OA\Tag(name: 'Intégration — Prise de service', description: 'Prise de service et finalisation')]

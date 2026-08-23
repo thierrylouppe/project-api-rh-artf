@@ -41,6 +41,7 @@ Préfixe API Laravel : toutes les routes ci-dessous sont sous `/api`.
 | `GET /carriere/nominations/chefs/{id}/agents-sous-autorite` | `GET /integration/nominations/chefs/{id}/agents-sous-autorite` |
 | `GET /carriere/agents/{id}/nominations` | `GET /integration/agents/{id}/nominations` |
 | `GET /carriere/agents/{id}/nominations/historique` | `GET /integration/agents/{id}/nominations/historique` |
+| `GET /carriere/agents/{id}` (synthèse) | **pas d’alias** (conflit avec `GET /integration/agents/{id}`) |
 | `GET/POST /carriere/contrats` | `GET/POST /integration/contrats` |
 | `POST /carriere/contrats/{id}/resilier` | `POST /integration/contrats/{id}/resilier` |
 | `GET /carriere/agents/{id}/contrats` | `GET /integration/agents/{id}/contrats` |
@@ -91,6 +92,19 @@ Ne plus attendre un changement de statut dossier après activation.
 - `GET /carriere/agents/{id}/nominations/historique` : toutes les nominations **sauf** `active` (ne remplace pas `GET …/nominations`).
 - `PUT /carriere/nominations/{id}` : uniquement si `en_attente` — sinon `422`.
 - `GET /carriere/nominations/{id}/acte` : PDF (`type_acte` : `arrete` | `decision` | `note_service`). Champ `type_acte_label` dans le JSON.
+
+## 5bis. Synthèse carrière (phase 3)
+
+`GET /api/carriere/agents/{id}` — pas d’alias `/integration`.
+
+Réponse `data` :
+
+- identité : `id`, `matricule`, `nom`, `prenom`, `statut`
+- `contrat_actif`, `affectation_active`, `nomination_active`, `salaire_actuel` (objets ou `null`)
+
+Notifications (table Laravel `notifications`, canal `database`) à la création / approbation / activation / rejet : destinataires = auteur (`created_by`) et compte lié à l’agent s’il existe.
+
+Permissions seedées (menus FE, **pas encore** de middleware sur les routes nomination) : `consulter-nominations`, `gerer-nominations`.
 
 ## 6. Validation structure
 

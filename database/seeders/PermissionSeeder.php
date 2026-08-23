@@ -23,6 +23,7 @@ class PermissionSeeder extends Seeder
             'consulter-recrutement', 'creer-recrutement', 'valider-recrutement',
             // Contrats & carrière
             'consulter-contrats', 'creer-contrats', 'modifier-contrats',
+            'consulter-nominations', 'gerer-nominations',
             // Salaires & grille
             'consulter-salaires', 'gerer-salaires',
             // Congés & absences

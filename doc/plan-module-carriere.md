@@ -167,11 +167,11 @@ Détail nominations : [`plan-module-nomination.md`](./plan-module-nomination.md)
 - Garder les alias `integration`.
 - `/salaires-agents` et la grille **restent** à la racine.
 
-### Lot 5 — Synthèse carrière (phase 4.3 du plan global)
+### Lot 5 — Synthèse carrière (phase 4.3 du plan global) — ✅ `feature/nomination`
 
-- `GET /carriere/agents/{id}` : `contratActif`, `affectationActive`, `nominationActive`, `salaireActuel`.
+- `GET /carriere/agents/{id}` : `contrat_actif`, `affectation_active`, `nomination_active`, `salaire_actuel`.
+- Pas d’alias `/integration` (conflit avec la fiche agent).
 - Pas de logique métier nouvelle : agrégation de lectures existantes.
-- Permissions lecture à définir avec le FE.
 
 ---
 

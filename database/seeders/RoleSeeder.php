@@ -21,6 +21,7 @@ class RoleSeeder extends Seeder
                 'consulter-agents', 'creer-agents', 'modifier-agents',
                 'consulter-recrutement', 'creer-recrutement', 'valider-recrutement',
                 'consulter-contrats', 'creer-contrats', 'modifier-contrats',
+                'consulter-nominations', 'gerer-nominations',
                 'consulter-salaires', 'gerer-salaires',
                 'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
                 'consulter-evaluations', 'consulter-reporting',
@@ -28,22 +29,26 @@ class RoleSeeder extends Seeder
             // Hiérarchie : lecture structure / agents + validations d'équipe (pas le métier RH)
             'directeur-general' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
+                'consulter-nominations',
                 'consulter-conges', 'valider-conges',
                 'consulter-absences', 'valider-absences',
                 'consulter-evaluations', 'valider-evaluations',
             ],
             'directeur' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
+                'consulter-nominations',
                 'consulter-conges', 'valider-conges',
                 'consulter-absences', 'valider-absences',
                 'consulter-evaluations', 'valider-evaluations',
             ],
             'chef-service' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
+                'consulter-nominations',
                 'consulter-conges', 'valider-conges', 'consulter-absences',
             ],
             'chef-bureau' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
+                'consulter-nominations',
                 'consulter-conges', 'valider-conges', 'consulter-absences',
             ],
             'agent' => [

@@ -74,12 +74,13 @@ Mot de passe : respecter la casse.
 `creer-agents`, `modifier-agents`  
 `consulter-recrutement`, `creer-recrutement`, `valider-recrutement`  
 `consulter-contrats`, `creer-contrats`, `modifier-contrats`  
+`consulter-nominations`, `gerer-nominations` (menus ; pas encore de `permission:` sur les routes)  
 `consulter-salaires`, `gerer-salaires`  
 `consulter-reporting`
 
 ### Partagés hiérarchie + RH
 
-`consulter-structure`, `consulter-referentiels`, `consulter-agents`  
+`consulter-structure`, `consulter-referentiels`, `consulter-agents`, `consulter-nominations`  
 `consulter-conges`, `valider-conges`  
 `consulter-absences`, `valider-absences`  
 `consulter-evaluations` (`valider-evaluations` : DG / directeur / admin uniquement)

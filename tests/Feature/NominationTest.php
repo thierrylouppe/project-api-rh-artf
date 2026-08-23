@@ -275,6 +275,27 @@ class NominationTest extends TestCase
             ->assertHeader('content-type', 'application/pdf');
     }
 
+    public function test_synthese_carriere_agent(): void
+    {
+        $this->creerNomination($this->agent, StatutNomination::ACTIVE);
+
+        $this->getJson("/api/carriere/agents/{$this->agent->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $this->agent->id)
+            ->assertJsonPath('data.nomination_active.poste', 'Chef de Service')
+            ->assertJsonPath('data.contrat_actif', null)
+            ->assertJsonPath('data.affectation_active', null)
+            ->assertJsonPath('data.salaire_actuel', null);
+    }
+
+    public function test_notification_database_a_la_creation(): void
+    {
+        $this->creerNomination($this->agent);
+
+        $this->assertSame(1, $this->user->notifications()->count());
+        $this->assertSame('creee', $this->user->notifications()->first()->data['action']);
+    }
+
     private function payloadNomination(
         Agent $agent,
         string $poste = 'Chef de Service',

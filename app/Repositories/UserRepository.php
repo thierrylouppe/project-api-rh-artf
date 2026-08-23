@@ -16,4 +16,9 @@ class UserRepository extends BaseRepository implements UserInterface
     {
         return User::where('email', $email)->first();
     }
+
+    public function findByAgentId(int $agentId): ?User
+    {
+        return User::query()->where('agent_id', $agentId)->first();
+    }
 }

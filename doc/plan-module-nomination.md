@@ -178,25 +178,29 @@ Cohérence poste / structure proposée :
 
 - [x] Tests postes vacants, sous-autorité, PUT 422 si déjà `active`
 - [x] Note FE + OpenAPI
-- [ ] Maquette `doc/maquettes/maquette-nomination-fe.canvas.tsx` (optionnel)
+- [x] Maquette `doc/maquettes/maquette-nomination-fe.canvas.tsx` (optionnel)
 
 **Done quand :** le FE peut lister les postes à pourvoir, voir la ligne hiérarchique, et télécharger l’acte.
 
 ---
 
-### Phase 3 — Plus tard (hors cette branche)
+### Phase 3 — Synthèse, notifications, permissions (soft)
 
-Ne pas coder maintenant. Décisions à prendre avec le FE / le plan global.
+#### Fait
 
-| Sujet | Pourquoi plus tard |
-|--------|-------------------|
-| Notifications (création, validation, activation) | Même report que l’affectation |
-| Middleware `permission:` sur routes déjà consommées | Soft launch, contrainte `plan_complet.md` |
+- [x] `GET /carriere/agents/{id}` : `contrat_actif`, `affectation_active`, `nomination_active`, `salaire_actuel` — **sans** alias `/integration`
+- [x] Notifications database : création, approbation, activation, rejet (auteur + compte agent)
+- [x] Permissions `consulter-nominations` / `gerer-nominations` seedées (`rh` + `admin` ; lecture hiérarchie)
+
+#### Toujours plus tard (volontairement)
+
+| Sujet | Pourquoi |
+|--------|----------|
+| Middleware `permission:` sur les routes nomination existantes | Soft launch, contrainte `plan_complet.md` |
 | Suppression des alias `/integration/nominations` | Après bascule FE coordonnée |
-| `nommerAutomatiquement` + seeder contrat | Ancien design recrutement ; incompatible avec le flux actuel |
-| `GET /carriere/agents/{id}` synthèse | Lot 5 du plan carrière (agrégation) |
+| `nommerAutomatiquement` + seeder contrat | Ancien design recrutement |
 | Lien `fonction_id` physique | `poste` string suffit en V1 |
-| Renommage namespaces PHP / tables | Hors V1 (`plan-module-carriere.md`) |
+| Renommage namespaces PHP / tables | Hors V1 |
 
 ---
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\API\CompteIntegrationController;
 use App\Http\Controllers\API\ContratController;
 use App\Http\Controllers\API\DocumentDossierController;
 use App\Http\Controllers\API\DossierIntegrationController;
+use App\Http\Controllers\API\CarriereAgentController;
 use App\Http\Controllers\API\NominationController;
 use App\Http\Controllers\API\PriseDeServiceController;
 use App\Http\Controllers\API\RemiseMaterielController;
@@ -84,7 +85,11 @@ $routesCarriere = function (): void {
     Route::get('nominations/{nomination}/acte',           [NominationController::class, 'acte']);
 };
 
-Route::prefix('carriere')->middleware('auth:sanctum')->group($routesCarriere);
+Route::prefix('carriere')->middleware('auth:sanctum')->group(function () use ($routesCarriere) {
+    $routesCarriere();
+    // Synthèse carrière uniquement ici : pas d'alias /integration (conflit avec GET /integration/agents/{id}).
+    Route::get('agents/{agent}', [CarriereAgentController::class, 'synthese']);
+});
 
 // ============================================================
 // MODULE 2 — INTÉGRATION ADMINISTRATIVE DES AGENTS

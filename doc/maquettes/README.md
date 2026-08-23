@@ -18,3 +18,4 @@ Ne pas committer les `.canvas.data.json` (état de clic local).
 |---------|--------|
 | [maquette-integration-agent.canvas.tsx](./maquette-integration-agent.canvas.tsx) | Wizard d’intégration (types, pièces, circuit, `/integrer`, tâches) |
 | [maquette-affectation-fe.canvas.tsx](./maquette-affectation-fe.canvas.tsx) | Affectations & note de service (checklist → unitaire / groupée → PDF) |
+| [maquette-nomination-fe.canvas.tsx](./maquette-nomination-fe.canvas.tsx) | Nominations carrière (création, circuit, postes vacants, acte, synthèse) |

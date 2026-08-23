@@ -139,4 +139,18 @@ class AgentService extends BaseService
     {
         return $this->repository->findByMatricule($matricule);
     }
+
+    public function syntheseCarriere(int $id): Agent
+    {
+        /** @var Agent $agent */
+        $agent = $this->repository->findById($id);
+        $agent->load([
+            'contratActif.typeContrat',
+            'affectationActive.structure',
+            'nominationActive.structure',
+            'salaireActuel',
+        ]);
+
+        return $agent;
+    }
 }

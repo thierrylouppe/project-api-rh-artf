@@ -7,4 +7,6 @@ use App\Models\User;
 interface UserInterface extends BaseInterface
 {
     public function findByEmail(string $email): ?User;
+
+    public function findByAgentId(int $agentId): ?User;
 }

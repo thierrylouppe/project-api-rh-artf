@@ -8,11 +8,14 @@ use App\Interfaces\AffectationInterface;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
 use App\Interfaces\NominationInterface;
+use App\Interfaces\UserInterface;
 use App\Interfaces\ValidationWorkflowInterface;
 use App\Models\Bureau;
 use App\Models\Direction;
 use App\Models\Nomination;
 use App\Models\Service;
+use App\Models\User;
+use App\Notifications\NominationEvenementNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +31,7 @@ class NominationService extends BaseService
         private readonly HistoriqueIntegrationInterface $historiqueRepository,
         private readonly AffectationInterface $affectationRepository,
         private readonly AgentInterface $agentRepository,
+        private readonly UserInterface $userRepository,
     ) {
         parent::__construct($repository);
     }
@@ -69,6 +73,8 @@ class NominationService extends BaseService
             null
         );
 
+        $this->notifier($model, 'creee');
+
         return $model;
     }
 
@@ -96,7 +102,10 @@ class NominationService extends BaseService
                 null
             );
 
-            return $nomination->fresh();
+            $nomination = $nomination->fresh();
+            $this->notifier($nomination, 'approuvee');
+
+            return $nomination;
         });
     }
 
@@ -139,7 +148,10 @@ class NominationService extends BaseService
                 null
             );
 
-            return $nomination->fresh();
+            $nomination = $nomination->fresh();
+            $this->notifier($nomination, 'activee');
+
+            return $nomination;
         });
     }
 
@@ -194,7 +206,10 @@ class NominationService extends BaseService
                 $commentaire
             );
 
-            return $nomination->fresh();
+            $nomination = $nomination->fresh();
+            $this->notifier($nomination, 'rejetee');
+
+            return $nomination;
         });
     }
 
@@ -274,5 +289,26 @@ class NominationService extends BaseService
     private function referenceActe(int $id, TypeActeNomination $typeActe): string
     {
         return $typeActe->prefixeNumero().'-NOM-'.date('Y').'-'.str_pad((string) $id, 4, '0', STR_PAD_LEFT);
+    }
+
+    private function notifier(Nomination $nomination, string $action): void
+    {
+        $destinataires = collect();
+
+        if ($nomination->created_by) {
+            $auteur = $this->userRepository->findById((int) $nomination->created_by);
+            if ($auteur instanceof User) {
+                $destinataires->push($auteur);
+            }
+        }
+
+        $compteAgent = $this->userRepository->findByAgentId((int) $nomination->agent_id);
+        if ($compteAgent instanceof User) {
+            $destinataires->push($compteAgent);
+        }
+
+        $destinataires->unique('id')->each(
+            fn (User $user) => $user->notify(new NominationEvenementNotification($nomination, $action))
+        );
     }
 }
