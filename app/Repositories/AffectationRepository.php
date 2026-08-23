@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Enums\StatutAffectation;
+use App\Enums\StatutNomination;
 use App\Interfaces\AffectationInterface;
 use App\Models\Affectation;
 use App\Models\Bureau;
@@ -80,7 +81,7 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
     {
         return Nomination::where('structurable_type', $type)
             ->where('structurable_id', $id)
-            ->where('statut', 'active')
+            ->where('statut', StatutNomination::ACTIVE)
             ->latest()
             ->first();
     }

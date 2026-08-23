@@ -1,7 +1,7 @@
 # Note frontend — routes Carrière
 
-> Date : 2026-08-15  
-> Branche API : `feature/affectation`  
+> Date : 2026-08-23  
+> Branches API : `feature/affectation`, `feature/nomination`  
 > Breaking : **non** (alias conservés) — changements de contrat checklist à prendre en compte.
 
 ## 1. Nouveau préfixe
@@ -43,7 +43,7 @@ Préfixe API Laravel : toutes les routes ci-dessous sont sous `/api`.
 
 Inchangé (reste `/integration`) : dossiers, documents, circuit, actes, compte, matériel, prise de service, stages, `POST …/validations/{id}/approuver`.
 
-Swagger : tags **Carrière — Affectations** (les tags Intégration des mêmes routes sont marqués *deprecated*).
+Swagger : tags **Carrière — Affectations** et **Carrière — Nominations** (les tags Intégration des mêmes routes sont marqués *deprecated*).
 
 ## 3. Checklist post-intégration (`taches_post_integration`)
 
@@ -65,13 +65,17 @@ Les clés `etape` **14** et **15** sont **conservées** (pas de suppression).
 - Si vous affichez « X tâches obligatoires restantes », filtrer sur `obligatoire === true`.
 - `INTEGRE` ne dépend plus d’une affectation ni d’une nomination.
 
-## 4. Activation d’affectation
+## 4. Activation d’affectation / nomination
 
-`POST /carriere/affectations/{id}/activer`
+`POST /carriere/affectations/{id}/activer` et `POST /carriere/nominations/{id}/activer`
 
 - Body inchangé : `{ "dossier_integration_id": 7 }` reste **accepté**.
-- Le champ est **ignoré** : le dossier **ne passe plus** à `AFFECTE`.
-- L’affectation précédente `active` est toujours clôturée.
+- Le champ est **ignoré** : le dossier **ne passe plus** à `AFFECTE` / `NOMME`.
+- L’affectation ou nomination précédente `active` est clôturée (pour la nomination : active de la **structure** et de l’**agent**).
+- Une nomination ne peut être activée que depuis le statut `approuvee` (circuit terminé).
+- `statut` : valeurs minuscules (`en_attente`, `approuvee`, `active`, `cloturee`, `rejetee`). Champ additionnel `statut_label`.
+- Cohérence poste / structure : Chef de Bureau → Bureau, Chef de Service → Service, Directeur* → Direction. Sinon `422` sur `poste`.
+- Étape checklist 15 : `fait` seulement s’il existe une nomination **active**.
 
 Ne plus attendre un changement de statut dossier après activation.
 

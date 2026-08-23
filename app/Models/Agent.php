@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatutNomination;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -127,7 +128,7 @@ class Agent extends Model
 
     public function nominationActive(): HasOne
     {
-        return $this->hasOne(Nomination::class)->where('statut', 'active')->latest();
+        return $this->hasOne(Nomination::class)->where('statut', StatutNomination::ACTIVE)->latest();
     }
 
     public function contratActif(): HasOne

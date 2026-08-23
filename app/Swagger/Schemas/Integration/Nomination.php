@@ -15,7 +15,8 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'date_debut', type: 'string', format: 'date'),
         new OA\Property(property: 'date_fin', type: 'string', format: 'date', nullable: true),
         new OA\Property(property: 'type_acte', type: 'string', nullable: true, example: 'decision'),
-        new OA\Property(property: 'statut', type: 'string', example: 'EN_ATTENTE'),
+        new OA\Property(property: 'statut', type: 'string', example: 'en_attente', enum: ['en_attente', 'approuvee', 'active', 'cloturee', 'rejetee']),
+        new OA\Property(property: 'statut_label', type: 'string', example: 'En attente de validation'),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
         new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
     ]

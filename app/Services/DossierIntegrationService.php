@@ -277,6 +277,7 @@ class DossierIntegrationService extends BaseService
             'typeIntegration',
             'agent.affectations',
             'agent.nominations',
+            'agent.nominationActive',
             'agent.remisesMateriel',
             'agent.salaireActuel',
             'agent.contratActif',
@@ -345,7 +346,7 @@ class DossierIntegrationService extends BaseService
                 'etape'       => 15,
                 'label'       => 'Nommer l\'agent (module carrière)',
                 'endpoint'    => 'POST /carriere/nominations',
-                'statut'      => $agent?->nominations?->isNotEmpty() ? 'fait' : 'non_fait',
+                'statut'      => $agent?->nominationActive ? 'fait' : 'non_fait',
                 'obligatoire' => false,
             ];
         }

@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\StatutNomination;
 use App\Interfaces\NominationInterface;
 use App\Models\Nomination;
 use Illuminate\Support\Collection;
@@ -15,24 +16,55 @@ class NominationRepository extends BaseRepository implements NominationInterface
 
     public function getByAgent(int $agentId): Collection
     {
-        return Nomination::where('agent_id', $agentId)->get();
+        return Nomination::query()
+            ->where('agent_id', $agentId)
+            ->with('structure')
+            ->orderByDesc('date_debut')
+            ->orderByDesc('id')
+            ->get();
     }
 
     public function getActive(int $agentId): ?Nomination
     {
-        return Nomination::where('agent_id', $agentId)
-            ->where('statut', 'active')
-            ->latest()
+        return Nomination::query()
+            ->where('agent_id', $agentId)
+            ->where('statut', StatutNomination::ACTIVE)
+            ->latest('id')
             ->first();
     }
 
-    public function cloturerNominationsActives(string $structurableType, int $structurableId): void
+    public function cloturer(int $id, ?string $dateFin): Nomination
     {
-        Nomination::where('structurable_type', $structurableType)
+        $nomination = $this->findById($id);
+        $nomination->update([
+            'statut'   => StatutNomination::CLOTUREE,
+            'date_fin' => $dateFin ?? now()->toDateString(),
+        ]);
+
+        return $nomination->fresh();
+    }
+
+    public function cloturerActivesPourStructure(string $structurableType, int $structurableId, ?int $saufId = null): void
+    {
+        Nomination::query()
+            ->where('structurable_type', $structurableType)
             ->where('structurable_id', $structurableId)
-            ->where('statut', 'active')
+            ->where('statut', StatutNomination::ACTIVE)
+            ->when($saufId !== null, fn ($q) => $q->where('id', '!=', $saufId))
             ->update([
-                'statut'   => 'cloturee',
+                'statut'   => StatutNomination::CLOTUREE,
+                'date_fin' => now()->toDateString(),
+            ]);
+    }
+
+    public function cloturerActivePourAgent(int $agentId, ?int $saufId = null): void
+    {
+        Nomination::query()
+            ->where('agent_id', $agentId)
+            ->where('statut', StatutNomination::ACTIVE)
+            ->when($saufId !== null, fn ($q) => $q->where('id', '!=', $saufId))
+            ->update([
+                'statut'   => StatutNomination::CLOTUREE,
                 'date_fin' => now()->toDateString(),
             ]);
     }

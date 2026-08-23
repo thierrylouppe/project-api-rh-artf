@@ -7,8 +7,10 @@ use App\Http\Requests\ValidationWorkflow\RejectionRequest;
 use App\Http\Resources\ValidationWorkflowResource;
 use App\Models\Affectation;
 use App\Models\DossierIntegration;
+use App\Models\Nomination;
 use App\Services\AffectationService;
 use App\Services\DossierIntegrationService;
+use App\Services\NominationService;
 use App\Services\ValidationWorkflowService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -20,6 +22,7 @@ class ValidationWorkflowController extends BaseController
         ValidationWorkflowService $service,
         private readonly DossierIntegrationService $dossierService,
         private readonly AffectationService $affectationService,
+        private readonly NominationService $nominationService,
     ) {
         parent::__construct($service);
     }
@@ -65,6 +68,13 @@ class ValidationWorkflowController extends BaseController
             $this->affectationService->approuver($validation->validable_id);
         }
 
+        if (
+            $validation->validable_type === Nomination::class
+            && $this->service->circuitTermine(Nomination::class, $validation->validable_id)
+        ) {
+            $this->nominationService->approuver($validation->validable_id);
+        }
+
         return $this->respond($validation, 'Validation approuvée');
     }
 
@@ -96,6 +106,10 @@ class ValidationWorkflowController extends BaseController
 
         if ($validation->validable_type === Affectation::class) {
             $this->affectationService->rejeter($validation->validable_id, $request->input('commentaire', ''));
+        }
+
+        if ($validation->validable_type === Nomination::class) {
+            $this->nominationService->rejeter($validation->validable_id, $request->input('commentaire', ''));
         }
 
         return $this->respond($validation, 'Validation rejetée');

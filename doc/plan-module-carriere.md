@@ -152,9 +152,11 @@ Cœur de `feature/affectation`. Pas de nouvelle feature métier (pas d’auto-DR
 - Étape 15 : conservée, `POST /carriere/nominations`, toujours optionnelle.
 - Docs + note FE : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md).
 
-### Lot 3 — Nominations & contrats (même schéma, autre branche possible)
+### Lot 3 — Nominations & contrats
 
-- Alias `/carriere/nominations` + `/carriere/contrats` (si pas déjà faits au lot 0).
+Détail nominations : [`plan-module-nomination.md`](./plan-module-nomination.md) (phase 1 sur `feature/nomination`).
+
+- Alias `/carriere/nominations` + `/carriere/contrats` (lot 0 déjà fait).
 - `NominationController::activer` n’appelle plus `marquerNomme`.
 - Contrats : pas de changement de règles ; seul le préfixe bouge.
 - Tests nomination : activer ne touche pas le dossier.

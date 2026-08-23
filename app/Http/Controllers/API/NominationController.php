@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Requests\Nomination\ActiverRequest;
+use App\Http\Requests\Nomination\CloturerRequest;
 use App\Http\Requests\Nomination\CreateRequest;
+use App\Http\Requests\Nomination\RejeterRequest;
 use App\Http\Resources\NominationResource;
-use App\Services\DossierIntegrationService;
 use App\Services\NominationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
+/** @property NominationService $service */
 class NominationController extends BaseController
 {
-    public function __construct(
-        NominationService $service,
-        private readonly DossierIntegrationService $dossierService,
-    ) {
+    public function __construct(NominationService $service)
+    {
         parent::__construct($service);
     }
 
@@ -26,25 +27,27 @@ class NominationController extends BaseController
 
     protected function showRelations(): array
     {
-        return ['agent', 'validations.validateur'];
+        return ['agent', 'structure', 'validations.validateur'];
     }
 
-    #[OA\Get(path: '/api/integration/nominations', operationId: 'listNominations', tags: ['Intégration — Nominations'], summary: 'Liste des nominations', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Liste'), new OA\Response(response: 401, description: 'Non authentifié', content: new OA\JsonContent(ref: '#/components/schemas/Error401'))])]
+    #[OA\Get(path: '/api/carriere/nominations', operationId: 'listNominationsCarriere', tags: ['Carrière — Nominations'], summary: 'Liste des nominations', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Liste'), new OA\Response(response: 401, description: 'Non authentifié', content: new OA\JsonContent(ref: '#/components/schemas/Error401'))])]
+    #[OA\Get(path: '/api/integration/nominations', operationId: 'listNominations', tags: ['Intégration — Nominations'], summary: 'Liste des nominations (alias)', deprecated: true, security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Liste'), new OA\Response(response: 401, description: 'Non authentifié', content: new OA\JsonContent(ref: '#/components/schemas/Error401'))])]
     public function index(Request $request): JsonResponse
     {
         return parent::index($request);
     }
 
-    #[OA\Get(path: '/api/integration/nominations/{id}', operationId: 'showNomination', tags: ['Intégration — Nominations'], summary: 'Détail d\'une nomination', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Détail', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse')), new OA\Response(response: 404, description: 'Introuvable', content: new OA\JsonContent(ref: '#/components/schemas/Error404'))])]
+    #[OA\Get(path: '/api/carriere/nominations/{id}', operationId: 'showNominationCarriere', tags: ['Carrière — Nominations'], summary: 'Détail d\'une nomination', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Détail', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse')), new OA\Response(response: 404, description: 'Introuvable', content: new OA\JsonContent(ref: '#/components/schemas/Error404'))])]
+    #[OA\Get(path: '/api/integration/nominations/{id}', operationId: 'showNomination', tags: ['Intégration — Nominations'], summary: 'Détail d\'une nomination (alias)', deprecated: true, security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Détail', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse')), new OA\Response(response: 404, description: 'Introuvable', content: new OA\JsonContent(ref: '#/components/schemas/Error404'))])]
     public function show(Request $request): JsonResponse
     {
         return parent::show($request);
     }
 
     #[OA\Post(
-        path: '/api/integration/nominations',
-        operationId: 'storeNomination',
-        tags: ['Intégration — Nominations'],
+        path: '/api/carriere/nominations',
+        operationId: 'storeNominationCarriere',
+        tags: ['Carrière — Nominations'],
         summary: 'Créer une nomination',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
@@ -66,6 +69,7 @@ class NominationController extends BaseController
             new OA\Response(response: 422, description: 'Validation', content: new OA\JsonContent(ref: '#/components/schemas/Error422')),
         ]
     )]
+    #[OA\Post(path: '/api/integration/nominations', operationId: 'storeNomination', tags: ['Intégration — Nominations'], summary: 'Créer une nomination (alias)', deprecated: true, security: [['bearerAuth' => []]], responses: [new OA\Response(response: 201, description: 'Créée')])]
     public function store(CreateRequest $request): JsonResponse
     {
         $nomination = $this->service->create($request->validated());
@@ -73,20 +77,19 @@ class NominationController extends BaseController
         return $this->respond($nomination, 'Nomination créée — circuit de validation initialisé', 201);
     }
 
-    #[OA\Post(path: '/api/integration/nominations/{nomination}/activer', operationId: 'activerNomination', tags: ['Intégration — Nominations'], summary: 'Activer une nomination', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [new OA\Property(property: 'dossier_integration_id', type: 'integer', nullable: true)])), responses: [new OA\Response(response: 200, description: 'Activée', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse'))])]
-    public function activer(Request $request, int $id): JsonResponse
+    #[OA\Post(path: '/api/carriere/nominations/{nomination}/activer', operationId: 'activerNominationCarriere', tags: ['Carrière — Nominations'], summary: 'Activer une nomination', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [new OA\Property(property: 'dossier_integration_id', type: 'integer', nullable: true, description: 'Ignoré — conservé pour compatibilité FE')])), responses: [new OA\Response(response: 200, description: 'Activée', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse'))])]
+    #[OA\Post(path: '/api/integration/nominations/{nomination}/activer', operationId: 'activerNomination', tags: ['Intégration — Nominations'], summary: 'Activer une nomination (alias)', deprecated: true, security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Activée')])]
+    public function activer(ActiverRequest $request, int $id): JsonResponse
     {
-        $nomination = $this->service->activer($id);
-
-        if ($request->filled('dossier_integration_id')) {
-            $this->dossierService->marquerNomme($request->input('dossier_integration_id'));
-        }
-
-        return $this->respond($nomination, 'Nomination activée — ancienne nomination clôturée automatiquement');
+        return $this->respond(
+            $this->service->activer($id),
+            'Nomination activée — ancienne nomination clôturée automatiquement'
+        );
     }
 
-    #[OA\Post(path: '/api/integration/nominations/{nomination}/cloturer', operationId: 'cloturerNomination', tags: ['Intégration — Nominations'], summary: 'Clôturer une nomination', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [new OA\Property(property: 'date_fin', type: 'string', format: 'date')])), responses: [new OA\Response(response: 200, description: 'Clôturée', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse'))])]
-    public function cloturer(Request $request, int $id): JsonResponse
+    #[OA\Post(path: '/api/carriere/nominations/{nomination}/cloturer', operationId: 'cloturerNominationCarriere', tags: ['Carrière — Nominations'], summary: 'Clôturer une nomination', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [new OA\Property(property: 'date_fin', type: 'string', format: 'date')])), responses: [new OA\Response(response: 200, description: 'Clôturée', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse'))])]
+    #[OA\Post(path: '/api/integration/nominations/{nomination}/cloturer', operationId: 'cloturerNomination', tags: ['Intégration — Nominations'], summary: 'Clôturer une nomination (alias)', deprecated: true, security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Clôturée')])]
+    public function cloturer(CloturerRequest $request, int $id): JsonResponse
     {
         return $this->respond(
             $this->service->cloturer($id, $request->input('date_fin')),
@@ -94,16 +97,18 @@ class NominationController extends BaseController
         );
     }
 
-    #[OA\Post(path: '/api/integration/nominations/{nomination}/rejeter', operationId: 'rejeterNomination', tags: ['Intégration — Nominations'], summary: 'Rejeter une nomination', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(content: new OA\JsonContent(ref: '#/components/schemas/TransitionRequest')), responses: [new OA\Response(response: 200, description: 'Rejetée', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse'))])]
-    public function rejeter(Request $request, int $id): JsonResponse
+    #[OA\Post(path: '/api/carriere/nominations/{nomination}/rejeter', operationId: 'rejeterNominationCarriere', tags: ['Carrière — Nominations'], summary: 'Rejeter une nomination', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(content: new OA\JsonContent(ref: '#/components/schemas/TransitionRequest')), responses: [new OA\Response(response: 200, description: 'Rejetée', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse'))])]
+    #[OA\Post(path: '/api/integration/nominations/{nomination}/rejeter', operationId: 'rejeterNomination', tags: ['Intégration — Nominations'], summary: 'Rejeter une nomination (alias)', deprecated: true, security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Rejetée')])]
+    public function rejeter(RejeterRequest $request, int $id): JsonResponse
     {
         return $this->respond(
-            $this->service->rejeter($id, $request->input('commentaire', '')),
+            $this->service->rejeter($id, $request->validated('commentaire')),
             'Nomination rejetée'
         );
     }
 
-    #[OA\Get(path: '/api/integration/agents/{agent}/nominations', operationId: 'listNominationsByAgent', tags: ['Intégration — Nominations'], summary: 'Nominations d\'un agent', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'agent', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Liste')])]
+    #[OA\Get(path: '/api/carriere/agents/{agent}/nominations', operationId: 'listNominationsByAgentCarriere', tags: ['Carrière — Nominations'], summary: 'Nominations d\'un agent', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'agent', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Liste')])]
+    #[OA\Get(path: '/api/integration/agents/{agent}/nominations', operationId: 'listNominationsByAgent', tags: ['Intégration — Nominations'], summary: 'Nominations d\'un agent (alias)', deprecated: true, security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'agent', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Liste')])]
     public function byAgent(int $agentId): JsonResponse
     {
         $nominations = $this->service->getByAgent($agentId);
