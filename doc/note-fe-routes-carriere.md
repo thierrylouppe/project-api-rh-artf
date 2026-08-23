@@ -23,6 +23,10 @@ Préfixe API Laravel : toutes les routes ci-dessous sont sous `/api`.
 |------------------------|---------------------|
 | `POST /carriere/affectations` | `POST /integration/affectations` |
 | `POST /carriere/affectations/groupee` | `POST /integration/affectations/groupee` |
+| `GET /carriere/affectations/lots/{id}` | `GET /integration/affectations/lots/{id}` |
+| `POST /carriere/affectations/lots/{id}/activer` | `POST /integration/affectations/lots/{id}/activer` |
+| `POST /carriere/affectations/lots/{id}/rejeter` | `POST /integration/affectations/lots/{id}/rejeter` |
+| `GET /carriere/affectations/lots/{id}/acte` | `GET /integration/affectations/lots/{id}/acte` |
 | `GET /carriere/affectations` | `GET /integration/affectations` |
 | `GET /carriere/affectations/{id}` | `GET /integration/affectations/{id}` |
 | `GET /carriere/agents/{id}/affectations` | `GET /integration/agents/{id}/affectations` |
@@ -89,6 +93,20 @@ Les clés `etape` **14** et **15** sont **conservées** (pas de suppression).
 - Étape checklist 15 : `fait` seulement s’il existe une nomination **active**.
 
 Ne plus attendre un changement de statut dossier après activation.
+
+### Lot groupé d’affectations (un circuit, un acte)
+
+`POST /carriere/affectations/groupee` crée désormais un **lot** (plus N circuits).
+
+- Minimum 2 agents distincts. **Plusieurs agents peuvent aller dans la même structure.**
+- Champs communs : `date_affectation`, `motif`, `note_service` (fichier optionnel).
+- Par ligne : `agent_id`, `structurable_*`, `superieur_hierarchique_id` (auto si absent).
+- Réponse : `data.id` (lot), `data.total`, `data.affectations[]`, `data.validations[]`, `data.statut` (`en_attente_validation`).
+- Circuit sur le **lot** (`LotAffectation`), pas sur chaque affectation.
+- `POST …/affectations/lots/{id}/activer` active **toutes** les lignes (termine l’active de chaque agent).
+- `GET …/affectations/lots/{id}/acte` : un PDF qui liste tout le monde (`NS-LOT-AFF-2026-0001.pdf`).
+- Le ZIP `POST …/notes-service/lot` reste pour des notes **individuelles** (IDs unitaires).
+- Interdit : activer / rejeter une ligne isolée si `lot_affectation_id` est renseigné.
 
 ## 5. Nominations — lectures et acte (phase 2)
 

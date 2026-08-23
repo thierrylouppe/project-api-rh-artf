@@ -2,6 +2,7 @@
 
 namespace App\Interfaces;
 
+use App\Enums\StatutAffectation;
 use App\Models\Affectation;
 use Illuminate\Support\Collection;
 
@@ -18,4 +19,8 @@ interface AffectationInterface extends BaseInterface
 
     /** Agents dont l'affectation active désigne ce supérieur. */
     public function getActivesParSuperieur(int $superieurId): Collection;
+
+    public function getByLot(int $lotId): Collection;
+
+    public function updateStatutByLot(int $lotId, StatutAffectation $statut): void;
 }

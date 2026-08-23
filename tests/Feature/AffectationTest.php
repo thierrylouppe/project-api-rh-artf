@@ -11,6 +11,7 @@ use App\Models\Bureau;
 use App\Models\Direction;
 use App\Models\DossierIntegration;
 use App\Models\Localite;
+use App\Models\LotAffectation;
 use App\Models\Nomination;
 use App\Models\Service;
 use App\Models\TypeIntegration;
@@ -88,11 +89,11 @@ class AffectationTest extends TestCase
             ->assertJsonValidationErrors(['structurable_id']);
     }
 
-    public function test_affectation_groupee(): void
+    public function test_affectation_groupee_un_circuit_et_activation_globale(): void
     {
         $autre = $this->creerAgent('Marie', 'Duo');
 
-        $this->postJson('/api/carriere/affectations/groupee', [
+        $response = $this->postJson('/api/carriere/affectations/groupee', [
             'date_affectation' => '2026-07-01',
             'motif'            => 'Réorganisation',
             'agents'           => [
@@ -105,6 +106,78 @@ class AffectationTest extends TestCase
                     'agent_id'          => $autre->id,
                     'structurable_type' => Service::class,
                     'structurable_id'   => $this->service->id,
+                ],
+            ],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.total', 2)
+            ->assertJsonPath('data.statut', StatutAffectation::EN_ATTENTE_VALIDATION->value);
+
+        $lotId = $response->json('data.id');
+        $this->assertCount(2, $response->json('data.affectations'));
+        $this->assertSame(0, ValidationWorkflow::query()->where('validable_type', Affectation::class)->count());
+        $this->assertSame(5, ValidationWorkflow::query()->where('validable_type', LotAffectation::class)->where('validable_id', $lotId)->count());
+
+        $ligneId = $response->json('data.affectations.0.id');
+        $this->postJson("/api/carriere/affectations/{$ligneId}/activer")->assertStatus(422);
+
+        $validations = ValidationWorkflow::query()
+            ->where('validable_type', LotAffectation::class)
+            ->where('validable_id', $lotId)
+            ->orderBy('ordre')
+            ->get();
+
+        foreach ($validations as $validation) {
+            $this->postJson("/api/integration/validations/{$validation->id}/approuver", [
+                'commentaire' => 'OK lot '.$validation->ordre,
+            ])->assertOk();
+        }
+
+        $this->assertSame(StatutAffectation::APPROUVEE, LotAffectation::find($lotId)->statut);
+        $this->assertTrue(Affectation::where('lot_affectation_id', $lotId)->get()->every(
+            fn (Affectation $a) => $a->statut === StatutAffectation::APPROUVEE
+        ));
+
+        $this->postJson("/api/carriere/affectations/lots/{$lotId}/activer")
+            ->assertOk()
+            ->assertJsonPath('data.statut', StatutAffectation::ACTIVE->value);
+
+        $this->assertTrue(Affectation::where('lot_affectation_id', $lotId)->get()->every(
+            fn (Affectation $a) => $a->statut === StatutAffectation::ACTIVE
+        ));
+
+        $this->get("/api/carriere/affectations/lots/{$lotId}/acte")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_lot_autorise_meme_structure_et_refuse_un_seul_agent(): void
+    {
+        $autre = $this->creerAgent('Marc', 'Boukaka');
+
+        $this->postJson('/api/carriere/affectations/groupee', [
+            'date_affectation' => '2026-07-01',
+            'agents'           => [
+                [
+                    'agent_id'          => $this->agent->id,
+                    'structurable_type' => Bureau::class,
+                    'structurable_id'   => $this->bureau->id,
+                ],
+            ],
+        ])->assertStatus(422);
+
+        $this->postJson('/api/carriere/affectations/groupee', [
+            'date_affectation' => '2026-07-01',
+            'agents'           => [
+                [
+                    'agent_id'          => $this->agent->id,
+                    'structurable_type' => Bureau::class,
+                    'structurable_id'   => $this->bureau->id,
+                ],
+                [
+                    'agent_id'          => $autre->id,
+                    'structurable_type' => Bureau::class,
+                    'structurable_id'   => $this->bureau->id,
                 ],
             ],
         ])

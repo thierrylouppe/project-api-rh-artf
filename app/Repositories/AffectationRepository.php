@@ -87,6 +87,21 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
         return null;
     }
 
+    public function getByLot(int $lotId): Collection
+    {
+        return Affectation::query()
+            ->where('lot_affectation_id', $lotId)
+            ->orderBy('id')
+            ->get();
+    }
+
+    public function updateStatutByLot(int $lotId, StatutAffectation $statut): void
+    {
+        Affectation::query()
+            ->where('lot_affectation_id', $lotId)
+            ->update(['statut' => $statut]);
+    }
+
     private function nominationActiveParStructure(string $type, int $id): ?Nomination
     {
         return Nomination::where('structurable_type', $type)

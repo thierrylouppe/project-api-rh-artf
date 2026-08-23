@@ -12,7 +12,6 @@ use App\Models\Direction;
 use App\Models\Service;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -96,37 +95,69 @@ class AffectationService extends BaseService
         return DB::transaction(function () use ($id) {
             $affectation = $this->repository->findById($id);
 
-            abort_unless(
-                $affectation->statut->peutTransitionnerVers(StatutAffectation::ACTIVE),
+            abort_if(
+                $affectation->lot_affectation_id,
                 422,
-                "L'affectation ne peut être activée que depuis le statut « Approuvée ». Statut actuel : « {$affectation->statut->label()} »."
+                'Cette affectation appartient à un lot : activez le lot, pas la ligne.'
             );
 
-            $ancienneActive = $this->repository->getActive($affectation->agent_id);
-            if ($ancienneActive && $ancienneActive->id !== $id) {
-                $this->repository->terminer($ancienneActive->id, null);
-            }
-
-            $affectation->update(['statut' => StatutAffectation::ACTIVE]);
-
-            $this->historiqueRepository->enregistrer(
-                Affectation::class,
-                $id,
-                Auth::id(),
-                'affectation_activee',
-                ['statut' => StatutAffectation::APPROUVEE->value],
-                ['statut' => StatutAffectation::ACTIVE->value],
-                null
-            );
-
-            return $affectation->fresh();
+            return $this->executerActivation($affectation);
         });
+    }
+
+    public function activerLigneDeLot(int $id): Affectation
+    {
+        $affectation = $this->repository->findById($id);
+
+        abort_unless(
+            $affectation->lot_affectation_id,
+            422,
+            'Cette affectation n\'appartient pas à un lot.'
+        );
+
+        return $this->executerActivation($affectation);
+    }
+
+    private function executerActivation(Affectation $affectation): Affectation
+    {
+        $id = (int) $affectation->id;
+
+        abort_unless(
+            $affectation->statut->peutTransitionnerVers(StatutAffectation::ACTIVE),
+            422,
+            "L'affectation ne peut être activée que depuis le statut « Approuvée ». Statut actuel : « {$affectation->statut->label()} »."
+        );
+
+        $ancienneActive = $this->repository->getActive($affectation->agent_id);
+        if ($ancienneActive && $ancienneActive->id !== $id) {
+            $this->repository->terminer($ancienneActive->id, null);
+        }
+
+        $affectation->update(['statut' => StatutAffectation::ACTIVE]);
+
+        $this->historiqueRepository->enregistrer(
+            Affectation::class,
+            $id,
+            Auth::id(),
+            'affectation_activee',
+            ['statut' => StatutAffectation::APPROUVEE->value],
+            ['statut' => StatutAffectation::ACTIVE->value],
+            null
+        );
+
+        return $affectation->fresh();
     }
 
     public function rejeter(int $id, string $commentaire): Affectation
     {
         return DB::transaction(function () use ($id, $commentaire) {
             $affectation = $this->repository->findById($id);
+
+            abort_if(
+                $affectation->lot_affectation_id,
+                422,
+                'Cette affectation appartient à un lot : rejetez le lot, pas la ligne.'
+            );
 
             abort_unless(
                 $affectation->statut->peutTransitionnerVers(StatutAffectation::REJETEE),
@@ -183,51 +214,6 @@ class AffectationService extends BaseService
         }
 
         return $this->create($data);
-    }
-
-    /**
-     * Crée une affectation par agent, chacun vers sa propre structure et son propre supérieur
-     * hiérarchique. Seuls date_affectation, motif et note_service sont communs au lot.
-     *
-     * @param  array{
-     *     date_affectation: string,
-     *     motif: string|null,
-     *     note_service: string|null,
-     *     note_service_nom_original: string|null,
-     *     agents: array<array{
-     *         agent_id: int,
-     *         structurable_type: string,
-     *         structurable_id: int,
-     *         superieur_hierarchique_id: int|null
-     *     }>
-     * } $data
-     * @return Collection<Affectation>
-     */
-    public function affecterGroupe(array $data, ?UploadedFile $noteService = null): Collection
-    {
-        if ($noteService !== null) {
-            $data['note_service']              = $noteService->store('affectations/groupees/notes-service', 'local');
-            $data['note_service_nom_original'] = $noteService->getClientOriginalName();
-        }
-
-        return DB::transaction(function () use ($data) {
-            $commonData = Arr::except($data, ['agents']);
-
-            return collect($data['agents'])->map(function (array $agentData) use ($commonData) {
-                $superieurId = ! empty($agentData['superieur_hierarchique_id'])
-                    ? (int) $agentData['superieur_hierarchique_id']
-                    : $this->repository->resoudreSuperiorParStructure(
-                        $agentData['structurable_type'],
-                        (int) $agentData['structurable_id']
-                    );
-
-                $payload = array_merge($commonData, $agentData, [
-                    'superieur_hierarchique_id' => $superieurId,
-                ]);
-
-                return $this->create($payload);
-            });
-        });
     }
 
     /**

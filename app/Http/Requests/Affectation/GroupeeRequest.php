@@ -24,7 +24,7 @@ class GroupeeRequest extends FormRequest
             'note_service'      => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
 
             // Liste des agents avec leur propre structure et supérieur
-            'agents'                                  => ['required', 'array', 'min:1'],
+            'agents'                                  => ['required', 'array', 'min:2'],
             'agents.*.agent_id'                       => ['required', 'integer', 'exists:agents,id', 'distinct'],
             'agents.*.structurable_type'              => ['required', 'string', 'in:App\\Models\\Direction,App\\Models\\Service,App\\Models\\Bureau'],
             'agents.*.structurable_id'                => ['required', 'integer'],
@@ -50,7 +50,7 @@ class GroupeeRequest extends FormRequest
     {
         return [
             'agents.required'                        => 'La liste des agents est obligatoire.',
-            'agents.min'                             => 'Au moins un agent doit être fourni.',
+            'agents.min'                             => 'Un lot doit contenir au moins deux affectations.',
             'agents.*.agent_id.required'             => 'L\'identifiant de l\'agent est obligatoire.',
             'agents.*.agent_id.exists'               => 'L\'agent :input n\'existe pas.',
             'agents.*.agent_id.distinct'             => 'Un même agent ne peut pas apparaître deux fois dans le lot.',

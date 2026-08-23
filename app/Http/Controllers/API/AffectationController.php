@@ -4,7 +4,6 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Requests\Affectation\ActiverRequest;
 use App\Http\Requests\Affectation\CreateRequest;
-use App\Http\Requests\Affectation\GroupeeRequest;
 use App\Http\Requests\Affectation\NoteServiceLotRequest;
 use App\Http\Requests\Affectation\RejeterRequest;
 use App\Http\Requests\Affectation\TerminerRequest;
@@ -92,31 +91,6 @@ class AffectationController extends BaseController
         }
 
         return $this->respond($affectation, $message, 201);
-    }
-
-    #[OA\Post(path: '/api/carriere/affectations/groupee', operationId: 'storeAffectationGroupeeCarriere', tags: ['Carrière — Affectations'], summary: 'Affectation groupée', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 201, description: 'Créées'), new OA\Response(response: 422, description: 'Validation', content: new OA\JsonContent(ref: '#/components/schemas/Error422'))])]
-    #[OA\Post(path: '/api/integration/affectations/groupee', operationId: 'storeAffectationGroupee', tags: ['Intégration — Affectations'], summary: 'Affectation groupée (alias)', deprecated: true, security: [['bearerAuth' => []]], responses: [new OA\Response(response: 201, description: 'Créées')])]
-    public function groupee(GroupeeRequest $request): JsonResponse
-    {
-        $affectations = $this->service->affecterGroupe(
-            $request->validated(),
-            $request->file('note_service')
-        );
-        $count        = $affectations->count();
-
-        $message      = "{$count} affectation(s) créée(s) — circuits de validation initialisés";
-        $sansSuperior = $affectations->filter(fn ($a) => empty($a->superieur_hierarchique_id))->count();
-        if ($sansSuperior > 0) {
-            $message .= ". {$sansSuperior} agent(s) sans supérieur hiérarchique résolu pour leur structure.";
-        }
-
-        return response()->json([
-            'data' => [
-                'total'        => $count,
-                'affectations' => AffectationResource::collection($affectations),
-            ],
-            'message' => $message,
-        ], 201);
     }
 
     #[OA\Post(path: '/api/carriere/affectations/{affectation}/activer', operationId: 'activerAffectationCarriere', tags: ['Carrière — Affectations'], summary: 'Activer une affectation', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'affectation', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [new OA\Property(property: 'dossier_integration_id', type: 'integer', nullable: true, description: 'Ignoré — conservé pour compatibilité FE')])), responses: [new OA\Response(response: 200, description: 'Activée', content: new OA\JsonContent(ref: '#/components/schemas/AffectationResponse'))])]

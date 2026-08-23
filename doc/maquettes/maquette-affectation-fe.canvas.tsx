@@ -243,33 +243,74 @@ function EcranUnitaire() {
 
 function EcranGroupee() {
   const [created, setCreated] = useCanvasState("g-created", false);
+  const [statut, setStatut] = useCanvasState("g-lot-statut", "en_attente");
   const [motif, setMotif] = useCanvasState(
     "g-motif",
     "Réorganisation trimestrielle — note de service n° 12/DRHL/2026",
   );
 
+  const label =
+    statut === "en_attente"
+      ? "En attente de validation"
+      : statut === "approuvee"
+        ? "Approuvée"
+        : "Active";
+
   if (created) {
     return (
       <Stack gap={16}>
-        <Callout tone="success" title="3 affectations créées">
-          Une ligne = une affectation, chacune avec son circuit. La note
-          jointe est le même fichier pour tout le lot.
+        <Callout tone="success" title="Lot #4 créé">
+          Un seul circuit pour tout le lot. Plusieurs agents peuvent aller
+          dans la même structure. Activer une ligne isolée = 422.
         </Callout>
+        <Grid columns={3} gap={12}>
+          <Stat value="2026-07-01" label="Date d’effet" />
+          <Stat value="3" label="Lignes" />
+          <Stat value={label} label="Statut du lot" />
+        </Grid>
         <Table
           headers={["ID", "Agent", "Destination", "Supérieur", "Statut"]}
           striped
           rows={[
-            ["10", "LOUPPE Thierry", "Bureau Courrier", "MBEMBA Jean", "En attente"],
-            ["11", "KAYA Aline", "Service Paie", "NGOMA Paul", "En attente"],
-            ["12", "BOUKAKA Marc", "Direction Juridique", "DG", "En attente"],
+            ["10", "LOUPPE Thierry", "Bureau Courrier", "MBEMBA Jean", label],
+            ["11", "KAYA Aline", "Service Paie", "NGOMA Paul", label],
+            ["12", "BOUKAKA Marc", "Bureau Courrier", "MBEMBA Jean", label],
           ]}
           rowTone={["info", "info", "info"]}
         />
-        <Row gap={8}>
-          <Button variant="primary" onClick={() => setCreated(false)}>
+        <H3>Circuit unique (sur le lot)</H3>
+        <Table
+          headers={["Niveau", "État"]}
+          rows={[
+            ["Chef de bureau", statut === "en_attente" ? "En cours" : "Approuvé"],
+            ["Chef de service", statut === "en_attente" ? "En attente" : "Approuvé"],
+            ["Directeur", statut === "en_attente" ? "En attente" : "Approuvé"],
+            ["DRHL", statut === "en_attente" ? "En attente" : "Approuvé"],
+            ["Directeur général", statut === "en_attente" ? "En attente" : "Approuvé"],
+          ]}
+        />
+        <Row gap={8} wrap>
+          {statut === "en_attente" && (
+            <Button variant="primary" onClick={() => setStatut("approuvee")}>
+              Simuler circuit terminé
+            </Button>
+          )}
+          <Button
+            variant="primary"
+            disabled={statut !== "approuvee"}
+            onClick={() => setStatut("active")}
+          >
+            Activer tout le lot
+          </Button>
+          <Button variant="secondary">Télécharger l’acte</Button>
+          <Button variant="ghost" onClick={() => setCreated(false)}>
             Revenir au formulaire
           </Button>
         </Row>
+        <Text size="small" tone="tertiary">
+          GET …/affectations/lots/4 · POST …/lots/4/activer · GET
+          …/lots/4/acte → NS-LOT-AFF-2026-0004.pdf
+        </Text>
       </Stack>
     );
   }
@@ -279,8 +320,8 @@ function EcranGroupee() {
       <Stack gap={4}>
         <H2>Affectation groupée</H2>
         <Text tone="secondary">
-          Une note de service commune · chaque agent va vers sa propre
-          structure
+          Un lot, un circuit, un PDF — plusieurs agents peuvent partager
+          une structure
         </Text>
       </Stack>
 
@@ -353,7 +394,7 @@ function EcranGroupee() {
 
       <Row gap={8}>
         <Button variant="primary" onClick={() => setCreated(true)}>
-          Créer 3 affectations
+          Créer le lot
         </Button>
         <Button variant="ghost">Annuler</Button>
       </Row>

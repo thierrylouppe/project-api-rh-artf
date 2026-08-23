@@ -9,6 +9,7 @@ use App\Http\Controllers\API\ContratController;
 use App\Http\Controllers\API\DocumentDossierController;
 use App\Http\Controllers\API\DossierIntegrationController;
 use App\Http\Controllers\API\CarriereAgentController;
+use App\Http\Controllers\API\LotAffectationController;
 use App\Http\Controllers\API\LotNominationController;
 use App\Http\Controllers\API\NominationController;
 use App\Http\Controllers\API\PriseDeServiceController;
@@ -69,7 +70,11 @@ $routesCarriere = function (): void {
     Route::apiResource('contrats', ContratController::class)->only(['index', 'store', 'show']);
     Route::post('contrats/{contrat}/resilier', [ContratController::class, 'resilier']);
 
-    Route::post('affectations/groupee',               [AffectationController::class, 'groupee']);
+    Route::post('affectations/groupee',               [LotAffectationController::class, 'store']);
+    Route::get('affectations/lots/{lot}',             [LotAffectationController::class, 'detail']);
+    Route::post('affectations/lots/{lot}/activer',    [LotAffectationController::class, 'activer']);
+    Route::post('affectations/lots/{lot}/rejeter',    [LotAffectationController::class, 'rejeter']);
+    Route::get('affectations/lots/{lot}/acte',        [LotAffectationController::class, 'acte']);
     Route::post('affectations/notes-service/lot',     [AffectationController::class, 'noteServiceLot']);
     Route::apiResource('affectations', AffectationController::class)->only(['index', 'store', 'show']);
     Route::post('affectations/{affectation}/activer',     [AffectationController::class, 'activer']);

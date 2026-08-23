@@ -13,6 +13,7 @@ class AffectationResource extends JsonResource
             'id'                          => $this->id,
             'agent_id'                    => $this->when(! $this->relationLoaded('agent'), $this->agent_id),
             'agent'                       => new AgentResource($this->whenLoaded('agent')),
+            'lot_affectation_id'          => $this->lot_affectation_id,
             'structurable_type'           => $this->structurable_type,
             'structurable_id'             => $this->structurable_id,
             'motif'                       => $this->motif,

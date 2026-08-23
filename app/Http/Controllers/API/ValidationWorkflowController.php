@@ -7,10 +7,12 @@ use App\Http\Requests\ValidationWorkflow\RejectionRequest;
 use App\Http\Resources\ValidationWorkflowResource;
 use App\Models\Affectation;
 use App\Models\DossierIntegration;
+use App\Models\LotAffectation;
 use App\Models\LotNomination;
 use App\Models\Nomination;
 use App\Services\AffectationService;
 use App\Services\DossierIntegrationService;
+use App\Services\LotAffectationService;
 use App\Services\LotNominationService;
 use App\Services\NominationService;
 use App\Services\ValidationWorkflowService;
@@ -24,6 +26,7 @@ class ValidationWorkflowController extends BaseController
         ValidationWorkflowService $service,
         private readonly DossierIntegrationService $dossierService,
         private readonly AffectationService $affectationService,
+        private readonly LotAffectationService $lotAffectationService,
         private readonly NominationService $nominationService,
         private readonly LotNominationService $lotNominationService,
     ) {
@@ -72,6 +75,13 @@ class ValidationWorkflowController extends BaseController
         }
 
         if (
+            $validation->validable_type === LotAffectation::class
+            && $this->service->circuitTermine(LotAffectation::class, $validation->validable_id)
+        ) {
+            $this->lotAffectationService->approuver($validation->validable_id);
+        }
+
+        if (
             $validation->validable_type === Nomination::class
             && $this->service->circuitTermine(Nomination::class, $validation->validable_id)
         ) {
@@ -116,6 +126,10 @@ class ValidationWorkflowController extends BaseController
 
         if ($validation->validable_type === Affectation::class) {
             $this->affectationService->rejeter($validation->validable_id, $request->input('commentaire', ''));
+        }
+
+        if ($validation->validable_type === LotAffectation::class) {
+            $this->lotAffectationService->rejeter($validation->validable_id, $request->input('commentaire', ''));
         }
 
         if ($validation->validable_type === Nomination::class) {
