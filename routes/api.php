@@ -9,6 +9,7 @@ use App\Http\Controllers\API\ContratController;
 use App\Http\Controllers\API\DocumentDossierController;
 use App\Http\Controllers\API\DossierIntegrationController;
 use App\Http\Controllers\API\CarriereAgentController;
+use App\Http\Controllers\API\LotNominationController;
 use App\Http\Controllers\API\NominationController;
 use App\Http\Controllers\API\PriseDeServiceController;
 use App\Http\Controllers\API\RemiseMaterielController;
@@ -78,6 +79,11 @@ $routesCarriere = function (): void {
 
     Route::get('nominations/postes-vacants', [NominationController::class, 'postesVacants']);
     Route::get('nominations/chefs/{chef}/agents-sous-autorite', [NominationController::class, 'agentsSousAutorite']);
+    Route::post('nominations/groupee', [LotNominationController::class, 'store']);
+    Route::get('nominations/lots/{lot}', [LotNominationController::class, 'detail']);
+    Route::post('nominations/lots/{lot}/activer', [LotNominationController::class, 'activer']);
+    Route::post('nominations/lots/{lot}/rejeter', [LotNominationController::class, 'rejeter']);
+    Route::get('nominations/lots/{lot}/acte', [LotNominationController::class, 'acte']);
     Route::apiResource('nominations', NominationController::class)->only(['index', 'store', 'show', 'update']);
     Route::post('nominations/{nomination}/activer',       [NominationController::class, 'activer']);
     Route::post('nominations/{nomination}/cloturer',      [NominationController::class, 'cloturer']);

@@ -7,55 +7,38 @@ use App\Enums\TypeActeNomination;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class Nomination extends Model
+class LotNomination extends Model
 {
     use HasFilterScope;
 
-    protected $table = 'nominations';
+    protected $table = 'lot_nominations';
 
     protected $fillable = [
-        'agent_id',
-        'poste',
-        'structurable_type',
-        'structurable_id',
-        'date_debut',
-        'date_fin',
         'type_acte',
+        'date_debut',
         'statut',
         'created_by',
-        'lot_nomination_id',
     ];
 
     protected $casts = [
         'date_debut' => 'date',
-        'date_fin'   => 'date',
         'statut'     => StatutNomination::class,
         'type_acte'  => TypeActeNomination::class,
     ];
 
-    protected array $filterable = ['agent_id', 'statut', 'poste', 'lot_nomination_id'];
+    protected array $filterable = ['statut', 'type_acte'];
 
-    public function agent(): BelongsTo
+    public function nominations(): HasMany
     {
-        return $this->belongsTo(Agent::class);
-    }
-
-    public function structure(): MorphTo
-    {
-        return $this->morphTo('structurable');
+        return $this->hasMany(Nomination::class, 'lot_nomination_id');
     }
 
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function lot(): BelongsTo
-    {
-        return $this->belongsTo(LotNomination::class, 'lot_nomination_id');
     }
 
     public function validations(): MorphMany

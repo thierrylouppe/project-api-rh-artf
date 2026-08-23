@@ -202,6 +202,13 @@ Cohérence poste / structure proposée :
 | Lien `fonction_id` physique | `poste` string suffit en V1 |
 | Renommage namespaces PHP / tables | Hors V1 |
 
+### Lot groupé — ✅
+
+- [x] Entité `lot_nominations` + lignes `nominations.lot_nomination_id`
+- [x] Un circuit sur le lot, un acte PDF collectif
+- [x] Activation / rejet du lot entier
+
+
 ---
 
 ## 4. Architecture cible (phase 1)

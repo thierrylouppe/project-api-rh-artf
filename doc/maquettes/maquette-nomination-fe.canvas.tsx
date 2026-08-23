@@ -25,6 +25,7 @@ import {
 type Ecran =
   | "checklist"
   | "creer"
+  | "groupee"
   | "fiche"
   | "postes"
   | "historique"
@@ -33,10 +34,11 @@ type Ecran =
 const ECRANS: { id: Ecran; label: string }[] = [
   { id: "checklist", label: "1. Checklist" },
   { id: "creer", label: "2. Créer" },
-  { id: "fiche", label: "3. Circuit & activer" },
-  { id: "postes", label: "4. Postes & équipe" },
-  { id: "historique", label: "5. Historique & acte" },
-  { id: "synthese", label: "6. Synthèse carrière" },
+  { id: "groupee", label: "3. Lot groupé" },
+  { id: "fiche", label: "4. Circuit & activer" },
+  { id: "postes", label: "5. Postes & équipe" },
+  { id: "historique", label: "6. Historique & acte" },
+  { id: "synthese", label: "7. Synthèse carrière" },
 ];
 
 const POSTES = [
@@ -74,6 +76,7 @@ export default function MaquetteNominationFe() {
         <EcranChecklist onGoto={() => setEcran("creer")} />
       )}
       {ecran === "creer" && <EcranCreer onCreated={() => setEcran("fiche")} />}
+      {ecran === "groupee" && <EcranGroupee />}
       {ecran === "fiche" && <EcranFiche />}
       {ecran === "postes" && <EcranPostes />}
       {ecran === "historique" && <EcranHistorique />}
@@ -216,6 +219,95 @@ function EcranCreer({ onCreated }: { onCreated: () => void }) {
       <Text size="small" tone="tertiary">
         POST /carriere/nominations · statut initial en_attente · circuit
         initialisé
+      </Text>
+    </Stack>
+  );
+}
+
+function EcranGroupee() {
+  const [statut, setStatut] = useCanvasState("nom-lot-statut", "en_attente");
+
+  const label =
+    statut === "en_attente"
+      ? "En attente de validation"
+      : statut === "approuvee"
+        ? "Approuvée"
+        : "Active";
+
+  return (
+    <Stack gap={16}>
+      <Stack gap={4}>
+        <H2>Lot de nominations</H2>
+        <Text tone="secondary">
+          Plusieurs lignes, un seul circuit, un seul PDF — ce n’est pas une
+          affectation groupée (N circuits).
+        </Text>
+      </Stack>
+
+      <Callout tone="info" title="Règles du lot">
+        Minimum 2 agents distincts. Une structure = une ligne. Cohérence
+        poste ↔ type. Activer / rejeter / PUT une ligne isolée = 422.
+      </Callout>
+
+      <Grid columns={3} gap={12}>
+        <Stat value="2026-09-01" label="Date de début" />
+        <Stat value="Décision" label="Type d’acte" />
+        <Stat value={label} label="Statut du lot" />
+      </Grid>
+
+      <H3>Lignes (pas de circuit chacune)</H3>
+      <Table
+        headers={["Agent", "Poste", "Structure", "Statut ligne"]}
+        striped
+        rows={[
+          ["LOUPPE Thierry", "Chef de Service", "Service RH", label],
+          ["KAYA Aline", "Chef de Bureau", "Bureau Courrier", label],
+        ]}
+      />
+
+      <H3>Circuit unique (sur le lot)</H3>
+      <Table
+        headers={["Niveau", "État"]}
+        rows={[
+          ["Chef de bureau", statut === "en_attente" ? "En cours" : "Approuvé"],
+          ["Chef de service", statut === "en_attente" ? "En attente" : "Approuvé"],
+          ["Directeur", statut === "en_attente" ? "En attente" : "Approuvé"],
+          ["DRHL", statut === "en_attente" ? "En attente" : "Approuvé"],
+          ["Directeur général", statut === "en_attente" ? "En attente" : "Approuvé"],
+        ]}
+        rowTone={
+          statut === "en_attente"
+            ? ["info", "neutral", "neutral", "neutral", "neutral"]
+            : ["success", "success", "success", "success", "success"]
+        }
+      />
+
+      <Row gap={8} wrap>
+        {statut === "en_attente" && (
+          <Button variant="primary" onClick={() => setStatut("approuvee")}>
+            Simuler circuit terminé
+          </Button>
+        )}
+        <Button
+          variant="primary"
+          disabled={statut !== "approuvee"}
+          onClick={() => setStatut("active")}
+        >
+          Activer tout le lot
+        </Button>
+        <Button variant="secondary">Télécharger l’acte du lot</Button>
+      </Row>
+
+      {statut === "active" && (
+        <Callout tone="success" title="Toutes les lignes actives">
+          Clôture des actives agent + structure pour chaque ligne. Fichier
+          type NOM-LOT-NOM-2026-0001.pdf
+        </Callout>
+      )}
+
+      <Text size="small" tone="tertiary">
+        POST /carriere/nominations/groupee · GET …/lots/{"{id}"} · POST
+        …/lots/{"{id}"}/activer · GET …/lots/{"{id}"}/acte
       </Text>
     </Stack>
   );

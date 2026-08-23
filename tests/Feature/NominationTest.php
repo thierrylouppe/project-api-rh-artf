@@ -12,6 +12,7 @@ use App\Models\Bureau;
 use App\Models\Direction;
 use App\Models\DossierIntegration;
 use App\Models\Localite;
+use App\Models\LotNomination;
 use App\Models\Nomination;
 use App\Models\Service;
 use App\Models\TypeIntegration;
@@ -294,6 +295,105 @@ class NominationTest extends TestCase
 
         $this->assertSame(1, $this->user->notifications()->count());
         $this->assertSame('creee', $this->user->notifications()->first()->data['action']);
+    }
+
+    public function test_lot_un_circuit_et_activation_globale(): void
+    {
+        $autre = $this->creerAgent('Aline', 'Kaya');
+
+        $response = $this->postJson('/api/carriere/nominations/groupee', [
+            'date_debut' => '2026-09-01',
+            'type_acte'  => 'decision',
+            'agents'     => [
+                [
+                    'agent_id'          => $this->agent->id,
+                    'poste'             => 'Chef de Service',
+                    'structurable_type' => Service::class,
+                    'structurable_id'   => $this->service->id,
+                ],
+                [
+                    'agent_id'          => $autre->id,
+                    'poste'             => 'Chef de Bureau',
+                    'structurable_type' => Bureau::class,
+                    'structurable_id'   => $this->bureau->id,
+                ],
+            ],
+        ])->assertCreated();
+
+        $lotId = $response->json('data.id');
+        $this->assertCount(2, $response->json('data.nominations'));
+        $this->assertSame(StatutNomination::EN_ATTENTE->value, $response->json('data.statut'));
+
+        $this->assertSame(0, ValidationWorkflow::query()->where('validable_type', Nomination::class)->count());
+        $this->assertSame(5, ValidationWorkflow::query()->where('validable_type', LotNomination::class)->where('validable_id', $lotId)->count());
+
+        $ligneId = $response->json('data.nominations.0.id');
+        $this->postJson("/api/carriere/nominations/{$ligneId}/activer")->assertStatus(422);
+
+        $validations = ValidationWorkflow::query()
+            ->where('validable_type', LotNomination::class)
+            ->where('validable_id', $lotId)
+            ->orderBy('ordre')
+            ->get();
+
+        foreach ($validations as $validation) {
+            $this->postJson("/api/integration/validations/{$validation->id}/approuver", [
+                'commentaire' => 'OK lot '.$validation->ordre,
+            ])->assertOk();
+        }
+
+        $this->assertSame(StatutNomination::APPROUVEE, LotNomination::find($lotId)->statut);
+        $this->assertTrue(Nomination::where('lot_nomination_id', $lotId)->get()->every(
+            fn (Nomination $n) => $n->statut === StatutNomination::APPROUVEE
+        ));
+
+        $this->postJson("/api/carriere/nominations/lots/{$lotId}/activer")
+            ->assertOk()
+            ->assertJsonPath('data.statut', StatutNomination::ACTIVE->value);
+
+        $this->assertTrue(Nomination::where('lot_nomination_id', $lotId)->get()->every(
+            fn (Nomination $n) => $n->statut === StatutNomination::ACTIVE
+        ));
+
+        $this->get("/api/carriere/nominations/lots/{$lotId}/acte")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_lot_refuse_un_seul_agent_et_poste_incoherent(): void
+    {
+        $this->postJson('/api/carriere/nominations/groupee', [
+            'date_debut' => '2026-09-01',
+            'agents'     => [
+                [
+                    'agent_id'          => $this->agent->id,
+                    'poste'             => 'Chef de Service',
+                    'structurable_type' => Service::class,
+                    'structurable_id'   => $this->service->id,
+                ],
+            ],
+        ])->assertStatus(422);
+
+        $autre = $this->creerAgent('Marc', 'Boukaka');
+        $this->postJson('/api/carriere/nominations/groupee', [
+            'date_debut' => '2026-09-01',
+            'agents'     => [
+                [
+                    'agent_id'          => $this->agent->id,
+                    'poste'             => 'Chef de Bureau',
+                    'structurable_type' => Service::class,
+                    'structurable_id'   => $this->service->id,
+                ],
+                [
+                    'agent_id'          => $autre->id,
+                    'poste'             => 'Chef de Bureau',
+                    'structurable_type' => Bureau::class,
+                    'structurable_id'   => $this->bureau->id,
+                ],
+            ],
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['agents.0.poste']);
     }
 
     private function payloadNomination(

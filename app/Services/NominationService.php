@@ -54,6 +54,12 @@ class NominationService extends BaseService
             'Seule une nomination en attente de validation peut être modifiée.'
         );
 
+        abort_if(
+            $nomination->lot_nomination_id,
+            422,
+            'Cette nomination appartient à un lot : elle ne peut pas être modifiée isolément.'
+        );
+
         unset($data['statut'], $data['created_by']);
 
         return $data;
@@ -114,45 +120,71 @@ class NominationService extends BaseService
         return DB::transaction(function () use ($id) {
             $nomination = $this->repository->findById($id);
 
-            abort_unless(
-                $nomination->statut->peutTransitionnerVers(StatutNomination::ACTIVE),
-                422,
-                "La nomination ne peut être activée que depuis le statut « Approuvée ». Statut actuel : « {$nomination->statut->label()} »."
-            );
-
-            $this->repository->cloturerActivesPourStructure(
-                $nomination->structurable_type,
-                $nomination->structurable_id,
-                $id
-            );
-            $this->repository->cloturerActivePourAgent($nomination->agent_id, $id);
-
             abort_if(
-                $this->repository->getActive($nomination->agent_id) !== null,
+                $nomination->lot_nomination_id,
                 422,
-                'Cet agent a déjà une nomination active.'
+                'Cette nomination appartient à un lot : activez le lot, pas la ligne.'
             );
 
-            $nomination->update([
-                'statut'     => StatutNomination::ACTIVE,
-                'date_debut' => $nomination->date_debut ?? now()->toDateString(),
-            ]);
-
-            $this->historiqueRepository->enregistrer(
-                Nomination::class,
-                $id,
-                Auth::id(),
-                'nomination_activee',
-                ['statut' => StatutNomination::APPROUVEE->value],
-                ['statut' => StatutNomination::ACTIVE->value, 'poste' => $nomination->poste],
-                null
-            );
-
-            $nomination = $nomination->fresh();
-            $this->notifier($nomination, 'activee');
-
-            return $nomination;
+            return $this->executerActivation($nomination);
         });
+    }
+
+    public function activerLigneDeLot(int $id): Nomination
+    {
+        $nomination = $this->repository->findById($id);
+
+        abort_unless(
+            $nomination->lot_nomination_id,
+            422,
+            'Cette nomination n\'appartient pas à un lot.'
+        );
+
+        return $this->executerActivation($nomination);
+    }
+
+    private function executerActivation(\App\Models\Nomination $nomination): \App\Models\Nomination
+    {
+        $id = (int) $nomination->id;
+
+        abort_unless(
+            $nomination->statut->peutTransitionnerVers(StatutNomination::ACTIVE),
+            422,
+            "La nomination ne peut être activée que depuis le statut « Approuvée ». Statut actuel : « {$nomination->statut->label()} »."
+        );
+
+        $this->repository->cloturerActivesPourStructure(
+            $nomination->structurable_type,
+            $nomination->structurable_id,
+            $id
+        );
+        $this->repository->cloturerActivePourAgent($nomination->agent_id, $id);
+
+        abort_if(
+            $this->repository->getActive($nomination->agent_id) !== null,
+            422,
+            'Cet agent a déjà une nomination active.'
+        );
+
+        $nomination->update([
+            'statut'     => StatutNomination::ACTIVE,
+            'date_debut' => $nomination->date_debut ?? now()->toDateString(),
+        ]);
+
+        $this->historiqueRepository->enregistrer(
+            Nomination::class,
+            $id,
+            Auth::id(),
+            'nomination_activee',
+            ['statut' => StatutNomination::APPROUVEE->value],
+            ['statut' => StatutNomination::ACTIVE->value, 'poste' => $nomination->poste],
+            null
+        );
+
+        $nomination = $nomination->fresh();
+        $this->notifier($nomination, 'activee');
+
+        return $nomination;
     }
 
     public function cloturer(int $id, ?string $dateFin = null): Nomination
@@ -186,6 +218,12 @@ class NominationService extends BaseService
     {
         return DB::transaction(function () use ($id, $commentaire) {
             $nomination = $this->repository->findById($id);
+
+            abort_if(
+                $nomination->lot_nomination_id,
+                422,
+                'Cette nomination appartient à un lot : rejetez le lot, pas la ligne.'
+            );
 
             abort_unless(
                 $nomination->statut->peutTransitionnerVers(StatutNomination::REJETEE),

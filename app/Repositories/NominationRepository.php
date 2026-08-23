@@ -121,4 +121,19 @@ class NominationRepository extends BaseRepository implements NominationInterface
 
         return $result;
     }
+
+    public function getByLot(int $lotId): Collection
+    {
+        return Nomination::query()
+            ->where('lot_nomination_id', $lotId)
+            ->orderBy('id')
+            ->get();
+    }
+
+    public function updateStatutByLot(int $lotId, StatutNomination $statut): void
+    {
+        Nomination::query()
+            ->where('lot_nomination_id', $lotId)
+            ->update(['statut' => $statut]);
+    }
 }

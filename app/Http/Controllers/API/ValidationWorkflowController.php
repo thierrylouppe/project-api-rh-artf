@@ -7,9 +7,11 @@ use App\Http\Requests\ValidationWorkflow\RejectionRequest;
 use App\Http\Resources\ValidationWorkflowResource;
 use App\Models\Affectation;
 use App\Models\DossierIntegration;
+use App\Models\LotNomination;
 use App\Models\Nomination;
 use App\Services\AffectationService;
 use App\Services\DossierIntegrationService;
+use App\Services\LotNominationService;
 use App\Services\NominationService;
 use App\Services\ValidationWorkflowService;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +25,7 @@ class ValidationWorkflowController extends BaseController
         private readonly DossierIntegrationService $dossierService,
         private readonly AffectationService $affectationService,
         private readonly NominationService $nominationService,
+        private readonly LotNominationService $lotNominationService,
     ) {
         parent::__construct($service);
     }
@@ -75,6 +78,13 @@ class ValidationWorkflowController extends BaseController
             $this->nominationService->approuver($validation->validable_id);
         }
 
+        if (
+            $validation->validable_type === LotNomination::class
+            && $this->service->circuitTermine(LotNomination::class, $validation->validable_id)
+        ) {
+            $this->lotNominationService->approuver($validation->validable_id);
+        }
+
         return $this->respond($validation, 'Validation approuvée');
     }
 
@@ -110,6 +120,10 @@ class ValidationWorkflowController extends BaseController
 
         if ($validation->validable_type === Nomination::class) {
             $this->nominationService->rejeter($validation->validable_id, $request->input('commentaire', ''));
+        }
+
+        if ($validation->validable_type === LotNomination::class) {
+            $this->lotNominationService->rejeter($validation->validable_id, $request->input('commentaire', ''));
         }
 
         return $this->respond($validation, 'Validation rejetée');

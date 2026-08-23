@@ -13,6 +13,7 @@ class NominationResource extends JsonResource
             'id'                => $this->id,
             'agent_id'          => $this->when(! $this->relationLoaded('agent'), $this->agent_id),
             'agent'             => new AgentResource($this->whenLoaded('agent')),
+            'lot_nomination_id' => $this->lot_nomination_id,
             'poste'             => $this->poste,
             'structurable_type' => $this->structurable_type,
             'structurable_id'   => $this->structurable_id,

@@ -2,6 +2,7 @@
 
 namespace App\Interfaces;
 
+use App\Enums\StatutNomination;
 use App\Models\Nomination;
 use Illuminate\Support\Collection;
 
@@ -20,4 +21,8 @@ interface NominationInterface extends BaseInterface
     public function getHistoriqueByAgent(int $agentId): Collection;
 
     public function postesVacants(): Collection;
+
+    public function getByLot(int $lotId): Collection;
+
+    public function updateStatutByLot(int $lotId, StatutNomination $statut): void;
 }

@@ -32,6 +32,11 @@ Préfixe API Laravel : toutes les routes ci-dessous sont sous `/api`.
 | `GET /carriere/affectations/{id}/note-service` | `GET /integration/affectations/{id}/note-service` |
 | `POST /carriere/affectations/notes-service/lot` | `POST /integration/affectations/notes-service/lot` |
 | `GET/POST /carriere/nominations` | `GET/POST /integration/nominations` |
+| `POST /carriere/nominations/groupee` | `POST /integration/nominations/groupee` |
+| `GET /carriere/nominations/lots/{id}` | `GET /integration/nominations/lots/{id}` |
+| `POST /carriere/nominations/lots/{id}/activer` | `POST /integration/nominations/lots/{id}/activer` |
+| `POST /carriere/nominations/lots/{id}/rejeter` | `POST /integration/nominations/lots/{id}/rejeter` |
+| `GET /carriere/nominations/lots/{id}/acte` | `GET /integration/nominations/lots/{id}/acte` |
 | `PUT /carriere/nominations/{id}` | `PUT /integration/nominations/{id}` |
 | `POST /carriere/nominations/{id}/activer` | `POST /integration/nominations/{id}/activer` |
 | `POST /carriere/nominations/{id}/cloturer` | `POST /integration/nominations/{id}/cloturer` |
@@ -92,6 +97,27 @@ Ne plus attendre un changement de statut dossier après activation.
 - `GET /carriere/agents/{id}/nominations/historique` : toutes les nominations **sauf** `active` (ne remplace pas `GET …/nominations`).
 - `PUT /carriere/nominations/{id}` : uniquement si `en_attente` — sinon `422`.
 - `GET /carriere/nominations/{id}/acte` : PDF (`type_acte` : `arrete` | `decision` | `note_service`). Champ `type_acte_label` dans le JSON.
+
+### Lot groupé (un circuit, un acte)
+
+`POST /carriere/nominations/groupee`
+
+```json
+{
+  "date_debut": "2026-09-01",
+  "type_acte": "decision",
+  "agents": [
+    { "agent_id": 42, "poste": "Chef de Service", "structurable_type": "App\\Models\\Service", "structurable_id": 3 },
+    { "agent_id": 7, "poste": "Chef de Bureau", "structurable_type": "App\\Models\\Bureau", "structurable_id": 8 }
+  ]
+}
+```
+
+- Minimum 2 lignes ; agents distincts ; une structure = une ligne dans le lot.
+- Circuit sur le **lot** (`LotNomination`), pas sur chaque nomination.
+- `POST …/lots/{id}/activer` active **toutes** les lignes (clôture les actives agent + structure).
+- `GET …/lots/{id}/acte` : un PDF qui liste tout le monde.
+- Interdit : activer / rejeter / PUT une ligne isolée si `lot_nomination_id` est renseigné.
 
 ## 5bis. Synthèse carrière (phase 3)
 

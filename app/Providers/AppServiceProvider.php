@@ -11,6 +11,7 @@ use App\Interfaces\ContratInterface;
 use App\Interfaces\DocumentDossierInterface;
 use App\Interfaces\DossierIntegrationInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
+use App\Interfaces\LotNominationInterface;
 use App\Interfaces\NominationInterface;
 use App\Interfaces\PriseDeServiceInterface;
 use App\Interfaces\RemiseMaterielInterface;
@@ -50,6 +51,7 @@ use App\Repositories\ContratRepository;
 use App\Repositories\DocumentDossierRepository;
 use App\Repositories\DossierIntegrationRepository;
 use App\Repositories\HistoriqueIntegrationRepository;
+use App\Repositories\LotNominationRepository;
 use App\Repositories\NominationRepository;
 use App\Repositories\PriseDeServiceRepository;
 use App\Repositories\RemiseMaterielRepository;
@@ -99,6 +101,7 @@ class AppServiceProvider extends ServiceProvider
         ContratInterface::class                => ContratRepository::class,
         AffectationInterface::class            => AffectationRepository::class,
         NominationInterface::class             => NominationRepository::class,
+        LotNominationInterface::class          => LotNominationRepository::class,
         CompteIntegrationInterface::class      => CompteIntegrationRepository::class,
         RemiseMaterielInterface::class         => RemiseMaterielRepository::class,
         PriseDeServiceInterface::class         => PriseDeServiceRepository::class,
