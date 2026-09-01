@@ -44,6 +44,8 @@ class DatabaseSeeder extends Seeder
             TypeContratSeeder::class,
             TypeAbsenceSeeder::class,
             TypeCongeSeeder::class,
+            JourFerieSeeder::class,
+            RegleAcquisitionCongeSeeder::class,
             MotifAdministratifSeeder::class,
 
             // ── 5. Recrutement / intégration ────────────────────────────

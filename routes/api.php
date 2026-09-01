@@ -11,6 +11,11 @@ use App\Http\Controllers\API\DossierIntegrationController;
 use App\Http\Controllers\API\CarriereAgentController;
 use App\Http\Controllers\API\LotAffectationController;
 use App\Http\Controllers\API\LotNominationController;
+use App\Http\Controllers\API\AbsenceController;
+use App\Http\Controllers\API\CongeSoldeController;
+use App\Http\Controllers\API\DemandeCongeController;
+use App\Http\Controllers\API\JourFerieController;
+use App\Http\Controllers\API\RegleAcquisitionCongeController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\NominationController;
 use App\Http\Controllers\API\PriseDeServiceController;
@@ -251,6 +256,47 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware('permission:gerer-salaires');
     Route::get('salaires-agents/{id}/bulletin', [SalaireAgentController::class, 'bulletinById'])
         ->middleware('permission:consulter-salaires');
+});
+
+// ============================================================
+// MODULE CONGÉS & ABSENCES
+// ============================================================
+Route::middleware('auth:sanctum')->prefix('conges')->group(function () {
+    Route::get('jours-feries', [JourFerieController::class, 'index'])->middleware('permission:consulter-conges');
+    Route::post('jours-feries', [JourFerieController::class, 'store'])->middleware('permission:valider-conges');
+    Route::put('jours-feries/{id}', [JourFerieController::class, 'update'])->middleware('permission:valider-conges');
+    Route::delete('jours-feries/{id}', [JourFerieController::class, 'destroy'])->middleware('permission:valider-conges');
+
+    Route::get('regles-acquisition', [RegleAcquisitionCongeController::class, 'index'])->middleware('permission:consulter-conges');
+    Route::post('regles-acquisition', [RegleAcquisitionCongeController::class, 'store'])->middleware('permission:valider-conges');
+    Route::put('regles-acquisition/{id}', [RegleAcquisitionCongeController::class, 'update'])->middleware('permission:valider-conges');
+    Route::delete('regles-acquisition/{id}', [RegleAcquisitionCongeController::class, 'destroy'])->middleware('permission:valider-conges');
+
+    Route::get('soldes', [CongeSoldeController::class, 'index'])->middleware('permission:consulter-conges');
+    Route::get('agents/{agent}/soldes', [CongeSoldeController::class, 'byAgent'])->middleware('permission:consulter-conges');
+
+    Route::get('statistiques', [DemandeCongeController::class, 'statistiques'])->middleware('permission:consulter-conges');
+    Route::get('agents/{agent}/demandes', [DemandeCongeController::class, 'byAgent'])->middleware('permission:consulter-conges');
+    Route::get('demandes', [DemandeCongeController::class, 'index'])->middleware('permission:consulter-conges');
+    Route::post('demandes', [DemandeCongeController::class, 'store'])->middleware('permission:creer-conges');
+    Route::get('demandes/{id}', [DemandeCongeController::class, 'show'])->middleware('permission:consulter-conges');
+    Route::post('demandes/{id}/valider-n1', [DemandeCongeController::class, 'validerN1'])->middleware('permission:valider-conges');
+    Route::post('demandes/{id}/rejeter-n1', [DemandeCongeController::class, 'rejeterN1'])->middleware('permission:valider-conges');
+    Route::post('demandes/{id}/valider-rh', [DemandeCongeController::class, 'validerRH'])->middleware('permission:valider-conges');
+    Route::post('demandes/{id}/rejeter-rh', [DemandeCongeController::class, 'rejeterRH'])->middleware('permission:valider-conges');
+    Route::post('demandes/{id}/valider-dg', [DemandeCongeController::class, 'validerDG'])->middleware('permission:valider-conges');
+    Route::post('demandes/{id}/rejeter-dg', [DemandeCongeController::class, 'rejeterDG'])->middleware('permission:valider-conges');
+    Route::get('demandes/{id}/fiche-pdf', [DemandeCongeController::class, 'fichePdf'])->middleware('permission:consulter-conges');
+    Route::get('demandes/{id}/attestation', [DemandeCongeController::class, 'attestation'])->middleware('permission:consulter-conges');
+});
+
+Route::middleware('auth:sanctum')->prefix('absences')->group(function () {
+    Route::get('/', [AbsenceController::class, 'index'])->middleware('permission:consulter-absences');
+    Route::post('/', [AbsenceController::class, 'store'])->middleware('permission:creer-absences');
+    Route::get('agents/{agent}', [AbsenceController::class, 'byAgent'])->middleware('permission:consulter-absences');
+    Route::get('{id}', [AbsenceController::class, 'show'])->middleware('permission:consulter-absences');
+    Route::post('{id}/valider', [AbsenceController::class, 'valider'])->middleware('permission:valider-absences');
+    Route::post('{id}/rejeter', [AbsenceController::class, 'rejeter'])->middleware('permission:valider-absences');
 });
 
 // ============================================================

@@ -21,6 +21,8 @@
 | Personnel | `/personnel/…` | Annuaires intégrés / stagiaires |
 | Carrière | `/carriere/…` | Affectations, nominations, lots, contrats, synthèse |
 | Salaires | `/salaires`, `/salaires-agents`, grille | Bulletin PDF, `avancerEchelon` |
+| Notifications | `/notifications` | Inbox + événements métier |
+| Congés & absences | `/conges`, `/absences` | Demandes, soldes, workflow N+1→RH, PDF |
 
 **Hors scope immédiat :** PDF actes d’intégration (Phase 1.B), recrutement amont (concours), formation, reporting.
 
@@ -76,12 +78,12 @@ Référentiels `TypeConge` / `TypeAbsence` déjà en place.
 
 | # | Sous-module | Contenu | Statut |
 |---|-------------|---------|--------|
-| C.1 | Paramétrage | Jours fériés, règles d’acquisition, soldes | ⬜ |
-| C.2 | Demandes | CRUD + calcul jours ouvrables (week-ends + fériés) | ⬜ |
-| C.3 | Workflow | Agent → N+1 → RH (valider / rejeter) | ⬜ |
-| C.4 | PDF | Fiche + attestation | ⬜ |
-| C.5 | Notifications | Via Vague A | ⬜ |
-| C.6 | Tests + guide de test | | ⬜ |
+| C.1 | Paramétrage | Jours fériés, règles d’acquisition, soldes | ✅ |
+| C.2 | Demandes | CRUD + calcul jours ouvrables (week-ends + fériés) | ✅ |
+| C.3 | Workflow | Agent → N+1 → RH (valider / rejeter) | ✅ |
+| C.4 | PDF | Fiche + attestation | ✅ |
+| C.5 | Notifications | Via Vague A | ✅ |
+| C.6 | Tests + guide de test | Tests Feature + note FE §2c | ✅ |
 
 Préfixe recommandé : `/api/conges/…` (et `/api/absences` si séparé).  
 Permissions nouvelles seulement (ne pas durcir les routes existantes).
@@ -121,3 +123,4 @@ A Notifications  →  C Congés  →  D.1 Évaluations
 |------|-------|------|
 | 2026-09-01 | — | Création de ce suivi |
 | 2026-09-01 | A | Inbox API, branchements intégration/carrière, job stage |
+| 2026-09-01 | C | Congés & absences (demandes, soldes, workflow, PDF) |

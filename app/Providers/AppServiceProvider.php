@@ -38,6 +38,11 @@ use App\Interfaces\ParametreApplicationInterface;
 use App\Interfaces\PermissionInterface;
 use App\Interfaces\RoleInterface;
 use App\Interfaces\ServiceInterface;
+use App\Interfaces\AbsenceInterface;
+use App\Interfaces\CongeSoldeInterface;
+use App\Interfaces\DemandeCongeInterface;
+use App\Interfaces\JourFerieInterface;
+use App\Interfaces\RegleAcquisitionCongeInterface;
 use App\Interfaces\TypeAbsenceInterface;
 use App\Interfaces\TypeCongeInterface;
 use App\Interfaces\TypeContratInterface;
@@ -80,6 +85,11 @@ use App\Repositories\ParametreApplicationRepository;
 use App\Repositories\PermissionRepository;
 use App\Repositories\RoleRepository;
 use App\Repositories\ServiceRepository;
+use App\Repositories\AbsenceRepository;
+use App\Repositories\CongeSoldeRepository;
+use App\Repositories\DemandeCongeRepository;
+use App\Repositories\JourFerieRepository;
+use App\Repositories\RegleAcquisitionCongeRepository;
 use App\Repositories\TypeAbsenceRepository;
 use App\Repositories\TypeCongeRepository;
 use App\Repositories\TypeContratRepository;
@@ -129,6 +139,12 @@ class AppServiceProvider extends ServiceProvider
         TypeAbsenceInterface::class       => TypeAbsenceRepository::class,
         TypeCongeInterface::class         => TypeCongeRepository::class,
         MotifAdministratifInterface::class => MotifAdministratifRepository::class,
+        // Module Congés & absences
+        JourFerieInterface::class             => JourFerieRepository::class,
+        RegleAcquisitionCongeInterface::class => RegleAcquisitionCongeRepository::class,
+        CongeSoldeInterface::class            => CongeSoldeRepository::class,
+        DemandeCongeInterface::class          => DemandeCongeRepository::class,
+        AbsenceInterface::class               => AbsenceRepository::class,
         // Module Grille Salariale
         ClassegrillesalarialeInterface::class => ClassegrillesalarialeRepository::class,
         ParametregrileInterface::class        => ParametregrileRepository::class,

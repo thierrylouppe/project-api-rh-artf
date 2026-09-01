@@ -42,7 +42,7 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Personnel | `/personnel/agents`, `/personnel/stagiaires` | **Livré** | Listes post-intégration (intégrés vs stagiaires). Fiche détail agent d’intégration : `GET /integration/agents/{id}`. |
 | Carrière | `/carriere/…` | **Livré** | Affectations, nominations, contrats, salaires agent, synthèse. Alias `/integration/…` encore OK **sauf** `GET /carriere/agents/{id}`. |
 | Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | Permissions `consulter-salaires` / `gerer-salaires`. |
-| Congés / absences | — | **Pas livré** | Référentiels `types-conges` / `types-absences` seulement. Pas de demandes ni validations. |
+| Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
 | Évaluations | — | **Pas livré** | — |
 | Reporting / dashboard | — | **Pas livré** | Permission `consulter-reporting` seedée, pas d’API. |
 | Inbox notifications | `/notifications` | **Livré** | Inbox utilisateur (`auth:sanctum`). Voir §2b. |
@@ -82,7 +82,222 @@ Forme `GET /notifications` :
 }
 ```
 
-`domaine` utile pour le routage d’écran : `integration`, `affectation`, `nomination`, `lot_affectation`, `lot_nomination`, `compte`, `prise_de_service`, `stage`.
+`domaine` utile pour le routage d’écran : `integration`, `affectation`, `nomination`, `lot_affectation`, `lot_nomination`, `compte`, `prise_de_service`, `stage`, `conge`, `absence`.
+
+---
+
+## 2c. Congés & absences — contrat FE
+
+Préfixes : **`/api/conges`**, **`/api/absences`**. Auth Bearer obligatoire. Listes **non paginées**. Pas de filtre « ma structure seulement » (V1).
+
+### Écrans recommandés
+
+| Écran | Qui | APIs |
+|-------|-----|------|
+| Mes demandes | `agent` (`creer-conges`) | `GET /conges/agents/{agent_id}/demandes` · `POST /conges/demandes` · soldes |
+| File N+1 | chef avec `valider-conges` | `GET /conges/demandes?statut=soumise` puis bouton si `prochaine_etape === "valider-n1"` |
+| File RH | rôle `rh` | `GET /conges/demandes?statut=soumise` et `?statut=validee_n1` · `prochaine_etape === "valider-rh"` |
+| File DG | rôle `directeur-general` | `GET /conges/demandes?statut=validee_rh` · `prochaine_etape === "valider-dg"` |
+| Paramétrage | `rh` / `admin` | types, jours fériés, règles d’acquisition |
+| Absences | créer : `creer-absences` ; valider : `valider-absences` (**pas** les chefs de service/bureau en seeder) | `/absences` |
+
+`agent_id` du connecté : `GET /user` → `data.agent_id` (peut être `null` pour un compte RH/DG non lié à un agent).
+
+### Permissions (menus / guards)
+
+| Permission | Usage |
+|------------|--------|
+| `consulter-conges` | Listes, détail, soldes, PDF, stats, fériés, règles |
+| `creer-conges` | `POST /conges/demandes` — seeder : `agent`, `rh`, `admin` |
+| `valider-conges` | Accès **routes** de workflow. **Insuffisant** pour signer : l’API vérifie N+1 / rôle `rh` / rôle `directeur-general` (sinon **403**) |
+| `consulter-absences` / `creer-absences` / `valider-absences` | Idem absences. Seeder : `chef-service` et `chef-bureau` n’ont **pas** `valider-absences` |
+
+Rôles : [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md). Comptes démo : `agent@arft.cg`, `rh@arft.cg`, `dg@arft.cg`, `chef-service@arft.cg`.
+
+### Types de congé (pilote le formulaire et le workflow)
+
+`GET /types-conges` (référentiel existant, champs **ajoutés**, non breaking).
+
+```json
+{
+  "id": 1,
+  "nom": "Congé annuel",
+  "jours_max": 30,
+  "necessite_n1": true,
+  "necessite_rh": true,
+  "necessite_dg": false,
+  "debite_solde": true,
+  "justificatif_requis": false
+}
+```
+
+| Flag | Comportement FE |
+|------|-----------------|
+| `justificatif_requis` | Champ fichier obligatoire. `POST` en **`multipart/form-data`** (pas JSON). |
+| `debite_solde` | Afficher le solde ; l’API refuse (422) si insuffisant. Sinon ne pas bloquer sur le solde. |
+| `jours_max` | Plafond indicatif. `0` (ex. maladie) = pas de plafond côté type. |
+| `necessite_*` | Ne pas afficher les boutons d’étapes inutiles. Source de vérité runtime : `data.prochaine_etape`. |
+
+Seed (noms exacts) :
+
+| Type | Circuit | Solde | Justificatif |
+|------|---------|-------|--------------|
+| Congé annuel | N+1 → RH | oui | non |
+| Maternité, paternité, exceptionnels (décès / mariage), maladie | RH seule | non | oui |
+| Sans solde, sabbatique | N+1 → RH → DG | non | oui |
+
+CRUD flags : `POST/PUT /types-conges` (mêmes champs boolean). Règle annuelle : `GET/POST /conges/regles-acquisition` (`type_conge_id`, `jours_par_mois` 2.5, `jours_max` 30).
+
+### Soumettre une demande
+
+`POST /conges/demandes` — permission `creer-conges`.
+
+JSON (sans fichier) :
+
+```json
+{
+  "agent_id": 12,
+  "type_conge_id": 1,
+  "date_debut": "2026-09-07",
+  "date_fin": "2026-09-11",
+  "motif": "optionnel"
+}
+```
+
+Avec justificatif : `FormData` — mêmes champs + `justificatif` (fichier, max 10 Mo). Ne pas forcer `Content-Type: application/json`.
+
+L’API calcule `nb_jours` (week-ends + fériés exclus). **Ne pas** envoyer `nb_jours` / `statut`. Période sans jour ouvrable → **422** (`message`). Chevauchement avec une demande encore ouverte → **422**.
+
+Pas de PUT/PATCH ni d’annulation après soumission.
+
+### Réponse demande
+
+```json
+{
+  "id": 1,
+  "agent_id": 12,
+  "agent": { },
+  "type_conge_id": 1,
+  "type_conge": { "necessite_n1": true, "necessite_rh": true, "necessite_dg": false, "debite_solde": true, "justificatif_requis": false },
+  "date_debut": "2026-09-07",
+  "date_fin": "2026-09-11",
+  "nb_jours": 4,
+  "motif": "…",
+  "statut": "soumise",
+  "statut_label": "Soumise",
+  "commentaire_n1": null,
+  "commentaire_rh": null,
+  "commentaire_dg": null,
+  "date_validation_n1": null,
+  "date_validation_rh": null,
+  "date_validation_dg": null,
+  "prochaine_etape": "valider-n1",
+  "justificatif": null
+}
+```
+
+`justificatif` : `{ "nom": "certificat.pdf" }` ou `null` (pas d’URL de téléchargement du fichier).
+
+`prochaine_etape` : `"valider-n1"` | `"valider-rh"` | `"valider-dg"` | `null` (terminée ou rejetée). **Afficher uniquement le bouton correspondant.**
+
+Statuts `statut` (snake_case) :
+
+| Valeur | Label |
+|--------|--------|
+| `soumise` | Soumise |
+| `validee_n1` / `rejetee_n1` | Validée / Rejetée N+1 |
+| `validee_rh` / `rejetee_rh` | Validée / Rejetée RH |
+| `validee_dg` / `rejetee_dg` | Validée / Rejetée DG |
+
+Filtres liste : `GET /conges/demandes?agent_id=&type_conge_id=&statut=` (égalité exacte). Détail : `GET /conges/demandes/{id}`. Par agent : `GET /conges/agents/{id}/demandes`.
+
+### Qui clique quoi (important)
+
+`valider-conges` ouvre la route ; le **métier** décide ensuite :
+
+| `prochaine_etape` | Qui peut signer | Comment le FE le sait | Sinon |
+|-------------------|-----------------|------------------------|--------|
+| `valider-n1` | Compte dont `agent_id` = `superieur_hierarchique_id` de l’**affectation active** du demandeur (ou rôle `admin`) | `GET /carriere/agents/{demande.agent_id}` → `affectation_active.superieur_hierarchique_id === user.agent_id` | **403** (mauvais utilisateur) · **422** si pas d’affectation active / pas de supérieur / supérieur sans compte |
+| `valider-rh` | Rôle `rh` ou `admin` | `user.roles[].name` | **403** (un chef ne signe pas la RH) |
+| `valider-dg` | Rôle `directeur-general` ou `admin` | idem | **403** |
+
+Un RH **ne peut pas** signer le N+1 (403). Ne pas proposer les 3 boutons à tout le monde.
+
+Valider : `POST /conges/demandes/{id}/valider-n1` (body optionnel `{ "commentaire": "…" }`). Idem `valider-rh`, `valider-dg`.
+
+Rejeter : `POST …/rejeter-n1` · `rejeter-rh` · `rejeter-dg` — body **obligatoire** `{ "commentaire": "…" }` (min. 3 caractères) sinon **422** `errors.commentaire`.
+
+Mauvaise étape (ex. `valider-rh` alors que `prochaine_etape` est `valider-n1`) → **422** (`message`).
+
+### Soldes
+
+- `GET /conges/agents/{id}/soldes?annee=2026`
+- `GET /conges/soldes` (tous)
+
+```json
+{ "id": 1, "agent_id": 12, "type_conge_id": 1, "type_conge": { }, "annee": 2026, "solde_initial": 30, "solde_actuel": 27 }
+```
+
+Le solde n’existe qu’après une première demande qui `debite_solde` (création paresseuse). Liste vide = normal. Débit **uniquement à la validation finale** si `debite_solde`.
+
+### PDF
+
+| URI | Quand |
+|-----|--------|
+| `GET /conges/demandes/{id}/fiche-pdf` | Dès la soumission |
+| `GET /conges/demandes/{id}/attestation` | Seulement si le circuit du type est **terminé validé** (`prochaine_etape === null` et statut `validee_rh` ou `validee_dg` selon le type). Sinon **422** |
+
+Réponse **binaire** `application/pdf` (pas JSON). Appeler avec le Bearer, `blob` / download. Ne pas parser en JSON.
+
+### Jours fériés (paramétrage RH)
+
+| | |
+|--|--|
+| Liste | `GET /conges/jours-feries` |
+| Créer | `POST` `{ "nom", "date": "YYYY-MM-DD", "recurrent": true }` |
+| Modifier / supprimer | `PUT` / `DELETE /conges/jours-feries/{id}` — permission `valider-conges` |
+
+`recurrent: true` : la date (mois/jour) se répète chaque année dans le calcul des jours ouvrables.
+
+### Stats
+
+`GET /conges/statistiques` → `{ "total", "par_statut": { "soumise": n, … }, "jours_accordes": n }` (`jours_accordes` = demandes dont le circuit est **entièrement** validé).
+
+### Absences (circuit unique)
+
+Types : `GET /types-absences` → `justification_requise` (si true, `motif` obligatoire à la création). Seed : permission d’absence, maladie, formation, mission, syndicale, retard, disponibilité, non justifiée.
+
+| | |
+|--|--|
+| Liste | `GET /absences?agent_id=&type_absence_id=&statut=&justifiee=` |
+| Par agent | `GET /absences/agents/{id}` |
+| Créer | `POST /absences` `{ "agent_id", "type_absence_id", "date_debut", "date_fin", "motif?" }` |
+| Valider / rejeter | `POST /absences/{id}/valider` · `POST /absences/{id}/rejeter` (`commentaire` obligatoire au rejet) |
+
+Statuts : `en_attente` · `validee` · `rejetee`. `nb_jours` calculé comme pour les congés. **Pas de N+1/RH/DG** : toute personne avec `valider-absences` peut valider.
+
+### Notifications (cloche)
+
+`domaine` : `conge` ou `absence`. Meta : `demande_id` / `absence_id`, `agent_id`.
+
+Actions congé : `soumise`, `validee_n1`, `rejetee_n1`, `validee_rh`, `rejetee_rh`, `validee_dg`, `rejetee_dg`. Absence : `declaree`. Routage : fiche demande / absence.
+
+### Erreurs à gérer
+
+| Code | Cas |
+|------|-----|
+| 401 | Token manquant |
+| 403 | Permission route **ou** mauvais signataire (N+1 / RH / DG) — `message` |
+| 404 | Id inconnu |
+| 422 validation | `errors` par champ (dates, fichier, `commentaire` rejet) |
+| 422 métier | `message` seul (solde, chevauchement, 0 jour ouvrable, mauvaise étape, pas d’affectation N+1, attestation trop tôt) |
+
+### Hors V1 (ne pas concevoir)
+
+- Inbox API « mes validations uniquement » (filtrer côté FE avec `prochaine_etape` + rôle / `agent_id`)
+- Édition / retrait d’une demande
+- Téléchargement du justificatif
+- Mail / SMS
 
 ---
 
@@ -129,6 +344,8 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | Contrats | `consulter-contrats`, `creer-contrats`, `modifier-contrats` |
 | Nominations (menus) | `consulter-nominations`, `gerer-nominations` — **pas encore** de middleware `permission:` sur les routes nomination |
 | Salaires | `consulter-salaires`, `gerer-salaires` (routes protégées) |
+| Congés | `consulter-conges`, `creer-conges`, `valider-conges` — les boutons N+1/RH/DG se jouent **en plus** sur le rôle / le supérieur (§2c) |
+| Absences | `consulter-absences`, `creer-absences`, `valider-absences` (`valider-absences` : pas les chefs en seeder) |
 | Users | `consulter-utilisateurs`, `creer-utilisateurs`, `modifier-utilisateurs` |
 | Rôles | `consulter-roles`, `creer-roles`, `modifier-roles` |
 
@@ -138,7 +355,6 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 
 ## 6. Hors périmètre actuel (ne pas concevoir d’écrans API)
 
-- Demandes de congés / absences / soldes
 - Campagnes et fiches d’évaluation
 - Catalogue formations, discipline, GED hors documents d’intégration
 - Dashboard / exports reporting
@@ -152,6 +368,8 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-01 | Circuit congés par type + contrat FE §2c | Brancher formulaires sur flags type, `prochaine_etape`, multipart justificatif, files N+1/RH/DG, PDF blob |
+| 2026-09-01 | Module congés / absences (`/conges`, `/absences`) | Écrans demandes, soldes, workflow, PDF |
 | 2026-09-01 | Inbox `/notifications` + événements intégration / affectation / stage | Brancher la cloche : liste, badge `meta.non_lues`, marquer lu |
 | 2026-08-25 | Création de ce fichier | Point d’entrée unique pour les échanges |
 | 2026-08-23 | Préfixe `/carriere`, lots affectation/nomination, checklist 14/15 optionnelles | Pointer vers `/carriere` ; ne plus bloquer le wizard sur 14 |

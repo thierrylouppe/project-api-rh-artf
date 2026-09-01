@@ -23,7 +23,7 @@ class RoleSeeder extends Seeder
                 'consulter-contrats', 'creer-contrats', 'modifier-contrats',
                 'consulter-nominations', 'gerer-nominations',
                 'consulter-salaires', 'gerer-salaires',
-                'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
+                'consulter-conges', 'creer-conges', 'valider-conges', 'consulter-absences', 'creer-absences', 'valider-absences',
                 'consulter-evaluations', 'consulter-reporting',
             ],
             // Hiérarchie : lecture structure / agents + validations d'équipe (pas le métier RH)
