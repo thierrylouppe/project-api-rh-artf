@@ -332,6 +332,8 @@ flowchart LR
 
 **Suite recommandée (après GO acceptation) :**
 
+Suivi opérationnel (cases à cocher) : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).
+
 1. **Phase 2** — notifications transverses (validation, affectation, job stage).
 2. **ou Phase 4** — dossier agent vie courante (fiche / carrière lecture).
 3. **ou Phase 5** — congés & absences.

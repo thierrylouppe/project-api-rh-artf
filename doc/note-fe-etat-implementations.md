@@ -2,12 +2,13 @@
 
 > Document **vivant** : à mettre à jour à chaque livraison API qui impacte le front.  
 > Objectif : un seul point d’entrée pour les échanges FE (quoi appeler, quoi ne plus attendre, où lire le détail).  
-> Dernière mise à jour : **2026-08-25**
+> Dernière mise à jour : **2026-09-01**
 
 Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste résumé.**
 
 | Sujet | Fichier |
 |-------|---------|
+| Suivi implémentation (vagues A–D) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
 | Routes carrière, lots, checklist 14/15 | [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md) |
 | Workflow intégration par type | [`workflow-integration-par-type.md`](./workflow-integration-par-type.md) |
@@ -44,7 +45,44 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Congés / absences | — | **Pas livré** | Référentiels `types-conges` / `types-absences` seulement. Pas de demandes ni validations. |
 | Évaluations | — | **Pas livré** | — |
 | Reporting / dashboard | — | **Pas livré** | Permission `consulter-reporting` seedée, pas d’API. |
-| Inbox notifications | — | **Partiel** | Écriture DB sur nomination / lots. **Pas** d’endpoint `GET /notifications`. Ne pas brancher de cloche pour l’instant. |
+| Inbox notifications | `/notifications` | **Livré** | Inbox utilisateur (`auth:sanctum`). Voir §2b. |
+
+---
+
+## 2b. Notifications — cloche
+
+Préfixe : **`/api/notifications`** (`Authorization: Bearer` requis, pas de permission dédiée).
+
+| Méthode | URI | Usage FE |
+|---------|-----|----------|
+| `GET` | `/notifications` | Inbox paginée. Query optionnelle : `non_lues=1`, `per_page`, `page`. |
+| `GET` | `/notifications/non-lues` | Badge / liste courte. |
+| `POST` | `/notifications/{id}/lu` | `{id}` = UUID. 404 si ce n’est pas la notif de l’utilisateur. |
+| `POST` | `/notifications/tout-lire` | Marque tout comme lu. |
+
+Forme `GET /notifications` :
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "type": "RhEvenementNotification",
+      "domaine": "integration",
+      "action": "validee_rh",
+      "message": "…",
+      "data": { "domaine": "integration", "action": "validee_rh", "message": "…", "dossier_id": 1 },
+      "lu": false,
+      "read_at": null,
+      "created_at": "…"
+    }
+  ],
+  "meta": { "current_page": 1, "last_page": 1, "per_page": 20, "total": 1, "non_lues": 1 },
+  "message": "Notifications récupérées"
+}
+```
+
+`domaine` utile pour le routage d’écran : `integration`, `affectation`, `nomination`, `lot_affectation`, `lot_nomination`, `compte`, `prise_de_service`, `stage`.
 
 ---
 
@@ -104,7 +142,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 - Campagnes et fiches d’évaluation
 - Catalogue formations, discipline, GED hors documents d’intégration
 - Dashboard / exports reporting
-- Liste / marquer lu des notifications
+- Mail / SMS (canal `database` uniquement pour l’instant)
 
 ---
 
@@ -114,6 +152,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-01 | Inbox `/notifications` + événements intégration / affectation / stage | Brancher la cloche : liste, badge `meta.non_lues`, marquer lu |
 | 2026-08-25 | Création de ce fichier | Point d’entrée unique pour les échanges |
 | 2026-08-23 | Préfixe `/carriere`, lots affectation/nomination, checklist 14/15 optionnelles | Pointer vers `/carriere` ; ne plus bloquer le wizard sur 14 |
 | 2026-08-16 | Rôles globaux, `rh` seul métier RH, comptes démo | Menus par permissions ; 7 comptes seeder |

@@ -2,8 +2,12 @@
 
 namespace App\Services;
 
+use App\Interfaces\DossierIntegrationInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
+use App\Interfaces\UserInterface;
 use App\Interfaces\ValidationWorkflowInterface;
+use App\Models\DossierIntegration;
+use App\Models\User;
 use App\Models\ValidationWorkflow;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +19,9 @@ class ValidationWorkflowService extends BaseService
     public function __construct(
         ValidationWorkflowInterface $repository,
         private readonly HistoriqueIntegrationInterface $historiqueRepository,
+        private readonly NotificationService $notificationService,
+        private readonly DossierIntegrationInterface $dossierRepository,
+        private readonly UserInterface $userRepository,
     ) {
         parent::__construct($repository);
     }
@@ -58,6 +65,8 @@ class ValidationWorkflowService extends BaseService
                 $commentaire
             );
 
+            $this->notifierCircuitDossier($validation, 'approuvee');
+
             return $validation;
         });
     }
@@ -77,6 +86,8 @@ class ValidationWorkflowService extends BaseService
                 $commentaire
             );
 
+            $this->notifierCircuitDossier($validation, 'rejetee');
+
             return $validation;
         });
     }
@@ -95,6 +106,8 @@ class ValidationWorkflowService extends BaseService
                 ['niveau' => $validation->niveau->value, 'statut' => 'renvoye'],
                 $commentaire
             );
+
+            $this->notifierCircuitDossier($validation, 'renvoyee');
 
             return $validation;
         });
@@ -116,5 +129,40 @@ class ValidationWorkflowService extends BaseService
             ->where('validable_id', $id)
             ->orderBy('ordre')
             ->get();
+    }
+
+    private function notifierCircuitDossier(ValidationWorkflow $validation, string $action): void
+    {
+        if ($validation->validable_type !== DossierIntegration::class) {
+            return;
+        }
+
+        $dossier = $this->dossierRepository->findById((int) $validation->validable_id);
+        $niveau  = $validation->niveau?->label() ?? $validation->niveau;
+
+        $message = match ($action) {
+            'approuvee' => "Le niveau « {$niveau} » du dossier {$dossier->reference} a été approuvé.",
+            'rejetee'   => "Le niveau « {$niveau} » du dossier {$dossier->reference} a été rejeté.",
+            'renvoyee'  => "Le niveau « {$niveau} » du dossier {$dossier->reference} a été renvoyé.",
+            default     => "Mise à jour du circuit du dossier {$dossier->reference}.",
+        };
+
+        $demandeur = $dossier->demandeur_id
+            ? $this->userRepository->findOptional((int) $dossier->demandeur_id)
+            : null;
+
+        if ($demandeur instanceof User) {
+            $this->notificationService->notifierEvenement(
+                $demandeur,
+                'integration',
+                'circuit_'.$action,
+                $message,
+                [
+                    'dossier_id'    => $dossier->id,
+                    'reference'     => $dossier->reference,
+                    'validation_id' => $validation->id,
+                ]
+            );
+        }
     }
 }

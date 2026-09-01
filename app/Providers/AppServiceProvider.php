@@ -13,6 +13,7 @@ use App\Interfaces\DossierIntegrationInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
 use App\Interfaces\LotAffectationInterface;
 use App\Interfaces\LotNominationInterface;
+use App\Interfaces\NotificationInterface;
 use App\Interfaces\NominationInterface;
 use App\Interfaces\PriseDeServiceInterface;
 use App\Interfaces\RemiseMaterielInterface;
@@ -54,6 +55,7 @@ use App\Repositories\DossierIntegrationRepository;
 use App\Repositories\HistoriqueIntegrationRepository;
 use App\Repositories\LotAffectationRepository;
 use App\Repositories\LotNominationRepository;
+use App\Repositories\NotificationRepository;
 use App\Repositories\NominationRepository;
 use App\Repositories\PriseDeServiceRepository;
 use App\Repositories\RemiseMaterielRepository;
@@ -133,6 +135,7 @@ class AppServiceProvider extends ServiceProvider
         SalaireInterface::class               => SalaireRepository::class,
         SalaireAgentInterface::class          => SalaireAgentRepository::class,
         // Module 1.3 — Administration système
+        NotificationInterface::class        => NotificationRepository::class,
         UserInterface::class                => UserRepository::class,
         RoleInterface::class                => RoleRepository::class,
         PermissionInterface::class          => PermissionRepository::class,

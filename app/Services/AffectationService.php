@@ -10,6 +10,7 @@ use App\Models\Affectation;
 use App\Models\Bureau;
 use App\Models\Direction;
 use App\Models\Service;
+use App\Notifications\AffectationEvenementNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -25,6 +26,7 @@ class AffectationService extends BaseService
         AffectationInterface $repository,
         private readonly ValidationWorkflowInterface $workflowRepository,
         private readonly HistoriqueIntegrationInterface $historiqueRepository,
+        private readonly NotificationService $notificationService,
     ) {
         parent::__construct($repository);
     }
@@ -59,6 +61,8 @@ class AffectationService extends BaseService
             null
         );
 
+        $this->notifier($model, 'creee');
+
         return $model;
     }
 
@@ -86,7 +90,10 @@ class AffectationService extends BaseService
                 null
             );
 
-            return $affectation->fresh();
+            $affectation = $affectation->fresh();
+            $this->notifier($affectation, 'approuvee');
+
+            return $affectation;
         });
     }
 
@@ -145,7 +152,13 @@ class AffectationService extends BaseService
             null
         );
 
-        return $affectation->fresh();
+        $affectation = $affectation->fresh();
+
+        if (! $affectation->lot_affectation_id) {
+            $this->notifier($affectation, 'activee');
+        }
+
+        return $affectation;
     }
 
     public function rejeter(int $id, string $commentaire): Affectation
@@ -178,7 +191,10 @@ class AffectationService extends BaseService
                 $commentaire
             );
 
-            return $affectation->fresh();
+            $affectation = $affectation->fresh();
+            $this->notifier($affectation, 'rejetee');
+
+            return $affectation;
         });
     }
 
@@ -291,5 +307,18 @@ class AffectationService extends BaseService
     public function nomFichierNoteService(int $id): string
     {
         return 'NS-AFF-' . date('Y') . '-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT) . '.pdf';
+    }
+
+    private function notifier(Affectation $affectation, string $action): void
+    {
+        $destinataires = $this->notificationService->destinatairesAuteurEtAgent(
+            $affectation->created_by ? (int) $affectation->created_by : null,
+            $affectation->agent_id ? (int) $affectation->agent_id : null,
+        );
+
+        $this->notificationService->envoyerGroupe(
+            $destinataires,
+            new AffectationEvenementNotification($affectation, $action)
+        );
     }
 }

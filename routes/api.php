@@ -11,6 +11,7 @@ use App\Http\Controllers\API\DossierIntegrationController;
 use App\Http\Controllers\API\CarriereAgentController;
 use App\Http\Controllers\API\LotAffectationController;
 use App\Http\Controllers\API\LotNominationController;
+use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\NominationController;
 use App\Http\Controllers\API\PriseDeServiceController;
 use App\Http\Controllers\API\RemiseMaterielController;
@@ -260,6 +261,16 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
+
+    // ============================================================
+    // MODULE NOTIFICATIONS — inbox utilisateur
+    // ============================================================
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/non-lues', [NotificationController::class, 'nonLues']);
+        Route::post('/tout-lire', [NotificationController::class, 'toutLire']);
+        Route::post('/{id}/lu', [NotificationController::class, 'marquerLu']);
+    });
 
     Route::apiResource('users', UserController::class)->middleware([
         'index' => 'permission:consulter-utilisateurs',

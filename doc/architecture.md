@@ -318,6 +318,7 @@ Avant toute PR ou commit de feature :
 | Document | Contenu |
 |----------|---------|
 | [`instruction_projet.md`](./instruction_projet.md) | Spec complète, modules, TODOs, seeders |
+| [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) | Suivi d’implémentation des vagues restantes |
 | Ce fichier | Règles d'architecture et checklist d'implémentation |
 | `.cursor/rules/architecture-layers.mdc` | Règle Cursor pour l'agent IA |
 
