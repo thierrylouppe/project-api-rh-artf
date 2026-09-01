@@ -37,11 +37,15 @@ class Agent extends Model
         'type_integration_id',
         'date_prise_service',
         'statut',
+        'archived_at',
+        'archived_by',
+        'motif_archivage',
     ];
 
     protected $casts = [
-        'date_naissance'    => 'date',
+        'date_naissance'     => 'date',
         'date_prise_service' => 'date',
+        'archived_at'        => 'datetime',
     ];
 
     protected array $filterable = ['nom', 'prenom', 'matricule', 'statut', 'genre', 'type_integration_id'];
@@ -144,5 +148,35 @@ class Agent extends Model
     public function salaireActuel(): HasOne
     {
         return $this->hasOne(SalaireAgent::class)->where('statut', 'actif')->latest('date_debut');
+    }
+
+    public function informationsPersonnelles(): HasOne
+    {
+        return $this->hasOne(InformationsPersonnelle::class);
+    }
+
+    public function informationsProfessionnelles(): HasOne
+    {
+        return $this->hasOne(InformationsProfessionnelle::class);
+    }
+
+    public function contactsUrgence(): HasMany
+    {
+        return $this->hasMany(ContactUrgence::class);
+    }
+
+    public function situationFamiliale(): HasOne
+    {
+        return $this->hasOne(SituationFamiliale::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(DocumentAgent::class);
+    }
+
+    public function archivedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'archived_by');
     }
 }

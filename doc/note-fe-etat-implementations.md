@@ -39,7 +39,7 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Structure org. | `/localites` … `/bureaux` | **Livré** | Hiérarchie Localité → Administration → Direction → Service → Bureau. `byParent` pour les selects. |
 | Référentiels | `/diplomes`, `/grades`, `/types-integrations`, etc. | **Livré** | Listes pour formulaires. Circuit configurable : `GET/PUT /types-integrations/{id}/circuit`. |
 | Intégration (entrée) | `/integration/…` | **Livré** | Dossier + documents + circuit + acte + compte + matériel + prise de service + stages. **Pas** affectation/nomination ici (carrière). |
-| Personnel | `/personnel/agents`, `/personnel/stagiaires` | **Livré** | Listes post-intégration (intégrés vs stagiaires). Fiche détail agent d’intégration : `GET /integration/agents/{id}`. |
+| Personnel | `/personnel/…` | **Livré** | Listes + **fiche vie courante** (infos, contacts, GED, archivage). §2d. Fiche wizard : `GET /integration/agents/{id}`. |
 | Carrière | `/carriere/…` | **Livré** | Affectations, nominations, contrats, salaires agent, synthèse. Alias `/integration/…` encore OK **sauf** `GET /carriere/agents/{id}`. |
 | Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | Permissions `consulter-salaires` / `gerer-salaires`. |
 | Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
@@ -301,6 +301,24 @@ Actions congé : `soumise`, `validee_n1`, `rejetee_n1`, `validee_rh`, `rejetee_r
 
 ---
 
+## 2d. Dossier agent (vie courante)
+
+Préfixe **`/api/personnel`**. Auth Bearer. Pas de permission dédiée (comme le reste de `/personnel` aujourd’hui). `GET /integration/agents/{id}` reste la fiche **wizard**.
+
+| Action | Méthode | URI |
+|--------|---------|-----|
+| Fiche complète | `GET` | `/personnel/agents/{id}` (infos, contacts, situation, documents) |
+| Infos perso / pro / famille | `GET` + `PUT` upsert | `…/informations-personnelles` · `…/informations-professionnelles` · `…/situation-familiale` (`data: null` si vide) |
+| Contacts urgence | `GET/POST` · `PUT/DELETE …/{id}` | `…/contacts-urgence` |
+| Documents | `GET/POST` · `GET …/{id}/fichier` (blob) · `DELETE` (soft) | `…/documents` · `…/documents/arborescence` |
+| Archives | `POST …/archiver` `{ "motif" }` · `POST …/desarchiver` | Liste : `GET /personnel/agents?statut=archive` (hors liste par défaut) |
+
+`PUT` perso : `adresse`, `quartier`, `ville`, `code_postal`, `pays`. Pro : `diplome_id`, `niveau_etude`, `specialite`, `annees_experience`, `etablissement`. Famille : `statut_matrimonial` (`celibataire` \| `marie` \| `divorce` \| `veuf` \| `union_libre`), `nb_enfants`. Documents : multipart `type_document_id`, `fichier`, `titre?`, `sous_dossier?` (défaut `general`). Types : `GET /types-documents`.
+
+Archivage : `statut=archive`, compte utilisateur `is_active=false`, écritures dossier **422**. Désarchivage → `inactif` + compte réactivé. Stagiaire : pas d’archivage ici (module stage).
+
+---
+
 ## 3. Intégration — à retenir pour le wizard
 
 Deux chemins API ; le FE actuel utilise **B**.
@@ -356,7 +374,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 ## 6. Hors périmètre actuel (ne pas concevoir d’écrans API)
 
 - Campagnes et fiches d’évaluation
-- Catalogue formations, discipline, GED hors documents d’intégration
+- Catalogue formations, discipline, GED **versioning / recherche** (la GED agent légère est livrée, §2d)
 - Dashboard / exports reporting
 - Mail / SMS (canal `database` uniquement pour l’instant)
 
@@ -368,7 +386,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
-| 2026-09-01 | Circuit congés par type + contrat FE §2c | Brancher formulaires sur flags type, `prochaine_etape`, multipart justificatif, files N+1/RH/DG, PDF blob |
+| 2026-09-01 | Vague B dossier agent (`/personnel/agents/{id}` …) | Fiche vie courante, upsert infos, GED, archivage |
 | 2026-09-01 | Module congés / absences (`/conges`, `/absences`) | Écrans demandes, soldes, workflow, PDF |
 | 2026-09-01 | Inbox `/notifications` + événements intégration / affectation / stage | Brancher la cloche : liste, badge `meta.non_lues`, marquer lu |
 | 2026-08-25 | Création de ce fichier | Point d’entrée unique pour les échanges |

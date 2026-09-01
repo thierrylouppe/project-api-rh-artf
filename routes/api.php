@@ -39,6 +39,11 @@ use App\Http\Controllers\API\LocaliteController;
 use App\Http\Controllers\API\MotifAdministratifController;
 use App\Http\Controllers\API\ParametreApplicationController;
 use App\Http\Controllers\API\PersonnelController;
+use App\Http\Controllers\API\ContactUrgenceController;
+use App\Http\Controllers\API\DocumentAgentController;
+use App\Http\Controllers\API\InformationsPersonnelleController;
+use App\Http\Controllers\API\InformationsProfessionnelleController;
+use App\Http\Controllers\API\SituationFamilialeController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\ServiceController;
@@ -183,6 +188,30 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () use 
 Route::prefix('personnel')->middleware('auth:sanctum')->group(function () {
     Route::get('agents', [PersonnelController::class, 'agents']);
     Route::get('stagiaires', [PersonnelController::class, 'stagiaires']);
+    Route::get('agents/{agent}', [PersonnelController::class, 'afficher']);
+    Route::post('agents/{agent}/archiver', [PersonnelController::class, 'archiver']);
+    Route::post('agents/{agent}/desarchiver', [PersonnelController::class, 'desarchiver']);
+
+    Route::get('agents/{agent}/informations-personnelles', [InformationsPersonnelleController::class, 'afficher']);
+    Route::put('agents/{agent}/informations-personnelles', [InformationsPersonnelleController::class, 'upsert']);
+
+    Route::get('agents/{agent}/informations-professionnelles', [InformationsProfessionnelleController::class, 'afficher']);
+    Route::put('agents/{agent}/informations-professionnelles', [InformationsProfessionnelleController::class, 'upsert']);
+
+    Route::get('agents/{agent}/contacts-urgence', [ContactUrgenceController::class, 'lister']);
+    Route::post('agents/{agent}/contacts-urgence', [ContactUrgenceController::class, 'store']);
+    Route::put('agents/{agent}/contacts-urgence/{id}', [ContactUrgenceController::class, 'update']);
+    Route::delete('agents/{agent}/contacts-urgence/{id}', [ContactUrgenceController::class, 'supprimer']);
+
+    Route::get('agents/{agent}/situation-familiale', [SituationFamilialeController::class, 'afficher']);
+    Route::put('agents/{agent}/situation-familiale', [SituationFamilialeController::class, 'upsert']);
+
+    Route::get('agents/{agent}/documents/arborescence', [DocumentAgentController::class, 'arborescence']);
+    Route::get('agents/{agent}/documents', [DocumentAgentController::class, 'lister']);
+    Route::post('agents/{agent}/documents', [DocumentAgentController::class, 'store']);
+    Route::get('agents/{agent}/documents/{id}', [DocumentAgentController::class, 'afficher']);
+    Route::get('agents/{agent}/documents/{id}/fichier', [DocumentAgentController::class, 'telecharger']);
+    Route::delete('agents/{agent}/documents/{id}', [DocumentAgentController::class, 'supprimer']);
 });
 
 // ============================================================

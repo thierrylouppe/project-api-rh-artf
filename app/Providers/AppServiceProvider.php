@@ -40,9 +40,14 @@ use App\Interfaces\RoleInterface;
 use App\Interfaces\ServiceInterface;
 use App\Interfaces\AbsenceInterface;
 use App\Interfaces\CongeSoldeInterface;
+use App\Interfaces\ContactUrgenceInterface;
 use App\Interfaces\DemandeCongeInterface;
+use App\Interfaces\DocumentAgentInterface;
+use App\Interfaces\InformationsPersonnelleInterface;
+use App\Interfaces\InformationsProfessionnelleInterface;
 use App\Interfaces\JourFerieInterface;
 use App\Interfaces\RegleAcquisitionCongeInterface;
+use App\Interfaces\SituationFamilialeInterface;
 use App\Interfaces\TypeAbsenceInterface;
 use App\Interfaces\TypeCongeInterface;
 use App\Interfaces\TypeContratInterface;
@@ -87,9 +92,14 @@ use App\Repositories\RoleRepository;
 use App\Repositories\ServiceRepository;
 use App\Repositories\AbsenceRepository;
 use App\Repositories\CongeSoldeRepository;
+use App\Repositories\ContactUrgenceRepository;
 use App\Repositories\DemandeCongeRepository;
+use App\Repositories\DocumentAgentRepository;
+use App\Repositories\InformationsPersonnelleRepository;
+use App\Repositories\InformationsProfessionnelleRepository;
 use App\Repositories\JourFerieRepository;
 use App\Repositories\RegleAcquisitionCongeRepository;
+use App\Repositories\SituationFamilialeRepository;
 use App\Repositories\TypeAbsenceRepository;
 use App\Repositories\TypeCongeRepository;
 use App\Repositories\TypeContratRepository;
@@ -145,6 +155,12 @@ class AppServiceProvider extends ServiceProvider
         CongeSoldeInterface::class            => CongeSoldeRepository::class,
         DemandeCongeInterface::class          => DemandeCongeRepository::class,
         AbsenceInterface::class               => AbsenceRepository::class,
+        // Module dossier agent (vie courante)
+        InformationsPersonnelleInterface::class     => InformationsPersonnelleRepository::class,
+        InformationsProfessionnelleInterface::class => InformationsProfessionnelleRepository::class,
+        ContactUrgenceInterface::class              => ContactUrgenceRepository::class,
+        SituationFamilialeInterface::class          => SituationFamilialeRepository::class,
+        DocumentAgentInterface::class               => DocumentAgentRepository::class,
         // Module Grille Salariale
         ClassegrillesalarialeInterface::class => ClassegrillesalarialeRepository::class,
         ParametregrileInterface::class        => ParametregrileRepository::class,

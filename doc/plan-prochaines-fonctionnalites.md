@@ -1,7 +1,7 @@
 # Prochaines fonctionnalités — suivi d’implémentation
 
 > Document **vivant** : cocher au fur et à mesure.  
-> Dernière mise à jour : **2026-09-01** (Vague A livrée sur `feature/notifications`)  
+> Dernière mise à jour : **2026-09-01** (Vague B sur `feature/dossier-agent`)  
 > Architecture obligatoire : [`architecture.md`](./architecture.md)  
 > Plan long : [`plan_complet.md`](./plan_complet.md)  
 > Contrat FE actuel : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md)
@@ -22,7 +22,8 @@
 | Carrière | `/carriere/…` | Affectations, nominations, lots, contrats, synthèse |
 | Salaires | `/salaires`, `/salaires-agents`, grille | Bulletin PDF, `avancerEchelon` |
 | Notifications | `/notifications` | Inbox + événements métier |
-| Congés & absences | `/conges`, `/absences` | Demandes, soldes, workflow N+1→RH, PDF |
+| Congés & absences | `/conges`, `/absences` | Demandes, soldes, circuit par type, PDF |
+| Dossier agent | `/personnel/agents/{id}` | Infos, contacts, GED, archivage |
 
 **Hors scope immédiat :** PDF actes d’intégration (Phase 1.B), recrutement amont (concours), formation, reporting.
 
@@ -64,9 +65,9 @@ Interface → Repository → binding AppServiceProvider → Service → FormRequ
 
 | # | Tâche | Statut |
 |---|--------|--------|
-| B.1 | Infos perso / pro / contacts / situation familiale (si incomplet) | ⬜ |
-| B.2 | Documents agent hors dossier d’intégration (GED légère) | ⬜ |
-| B.3 | Soft delete / archivage agent (règles métier) | ⬜ |
+| B.1 | Infos perso / pro / contacts / situation familiale (si incomplet) | ✅ |
+| B.2 | Documents agent hors dossier d’intégration (GED légère) | ✅ |
+| B.3 | Soft delete / archivage agent (règles métier) | ✅ |
 
 Lecture carrière (`GET /carriere/agents/{id}`, historiques) : **déjà livré**.
 
@@ -124,3 +125,4 @@ A Notifications  →  C Congés  →  D.1 Évaluations
 | 2026-09-01 | — | Création de ce suivi |
 | 2026-09-01 | A | Inbox API, branchements intégration/carrière, job stage |
 | 2026-09-01 | C | Congés & absences (demandes, soldes, workflow, PDF) |
+| 2026-09-01 | B | Fiche personnel, GED agent, archivage |

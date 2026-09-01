@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Interfaces\AgentInterface;
 use App\Interfaces\DossierIntegrationInterface;
+use App\Interfaces\UserInterface;
 use App\Models\Agent;
 use App\Models\Diplome;
 use App\Models\DossierIntegration;
@@ -18,6 +19,7 @@ class AgentService extends BaseService
     public function __construct(
         AgentInterface $repository,
         private readonly DossierIntegrationInterface $dossierRepository,
+        private readonly UserInterface $userRepository,
     ) {
         parent::__construct($repository);
     }
@@ -152,5 +154,73 @@ class AgentService extends BaseService
         ]);
 
         return $agent;
+    }
+
+    public function fichePersonnel(int $id): Agent
+    {
+        /** @var Agent $agent */
+        $agent = $this->repository->findById($id);
+        $agent->load([
+            'grade',
+            'categorie',
+            'echelon',
+            'fonction',
+            'typeIntegration',
+            'informationsPersonnelles',
+            'informationsProfessionnelles.diplome',
+            'contactsUrgence',
+            'situationFamiliale',
+            'documents.typeDocument',
+            'affectationActive',
+            'nominationActive',
+            'contratActif',
+        ]);
+
+        return $agent;
+    }
+
+    public function archiver(int $id, string $motif): Agent
+    {
+        /** @var Agent $agent */
+        $agent = $this->repository->findById($id);
+
+        abort_if($agent->statut === 'archive', 422, 'Cet agent est déjà archivé.');
+        abort_if($agent->statut === 'stagiaire', 422, 'Un stagiaire se clôture via le module stage, pas par archivage RH.');
+
+        $agent = $this->repository->update($id, [
+            'statut'          => 'archive',
+            'archived_at'     => now(),
+            'archived_by'     => Auth::id(),
+            'motif_archivage' => $motif,
+        ]);
+
+        $compte = $this->userRepository->findByAgentId($id);
+        if ($compte) {
+            $this->userRepository->update($compte->id, ['is_active' => false]);
+        }
+
+        return $agent->fresh();
+    }
+
+    public function desarchiver(int $id): Agent
+    {
+        /** @var Agent $agent */
+        $agent = $this->repository->findById($id);
+
+        abort_unless($agent->statut === 'archive', 422, 'Cet agent n\'est pas archivé.');
+
+        $agent = $this->repository->update($id, [
+            'statut'          => 'inactif',
+            'archived_at'     => null,
+            'archived_by'     => null,
+            'motif_archivage' => null,
+        ]);
+
+        $compte = $this->userRepository->findByAgentId($id);
+        if ($compte) {
+            $this->userRepository->update($compte->id, ['is_active' => true]);
+        }
+
+        return $agent->fresh();
     }
 }

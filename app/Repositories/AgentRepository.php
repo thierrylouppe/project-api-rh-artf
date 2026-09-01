@@ -26,12 +26,18 @@ class AgentRepository extends BaseRepository implements AgentInterface
 
     public function getIntegres(array $filters = []): Collection
     {
-        return Agent::query()
-            ->where('statut', '!=', 'stagiaire')
+        $query = Agent::query()
             ->whereHas('dossierIntegration', function ($query) {
                 $query->where('statut', StatutDossier::INTEGRE->value);
-            })
-            ->filter($filters)
+            });
+
+        if (($filters['statut'] ?? '') === 'archive') {
+            $query->where('statut', 'archive');
+        } else {
+            $query->whereNotIn('statut', ['stagiaire', 'archive'])->filter($filters);
+        }
+
+        return $query
             ->with($this->relationsListePersonnel())
             ->orderBy('nom')
             ->orderBy('prenom')

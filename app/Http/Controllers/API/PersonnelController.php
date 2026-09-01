@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Requests\Agent\ArchiverRequest;
 use App\Http\Resources\AgentResource;
 use App\Services\AgentService;
 use Illuminate\Http\JsonResponse;
@@ -45,6 +46,21 @@ class PersonnelController extends BaseController
         $items = $this->service->listerIntegres($request->query());
 
         return $this->collectionResponse(AgentResource::collection($items));
+    }
+
+    public function afficher(int $agent): JsonResponse
+    {
+        return $this->respond($this->service->fichePersonnel($agent), 'Fiche agent');
+    }
+
+    public function archiver(ArchiverRequest $request, int $agent): JsonResponse
+    {
+        return $this->respond($this->service->archiver($agent, $request->validated('motif')), 'Agent archivé');
+    }
+
+    public function desarchiver(int $agent): JsonResponse
+    {
+        return $this->respond($this->service->desarchiver($agent), 'Agent désarchivé (statut inactif)');
     }
 
     #[OA\Get(
