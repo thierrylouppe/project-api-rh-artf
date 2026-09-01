@@ -73,6 +73,10 @@ class AffectationTest extends TestCase
             ->assertJsonPath('data.statut', StatutAffectation::EN_ATTENTE_VALIDATION->value)
             ->assertJsonPath('data.superieur_hierarchique_id', $this->superieur->id);
 
+        $this->assertSame(1, $this->user->notifications()->count());
+        $this->assertSame('creee', $this->user->notifications()->first()->data['action']);
+        $this->assertSame('affectation', $this->user->notifications()->first()->data['domaine']);
+
         $this->postJson('/api/integration/affectations', [
             ...$payload,
             'agent_id' => $this->creerAgent('Alias', 'Fe')->id,

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Interfaces\CompteIntegrationInterface;
 use App\Models\Agent;
 use App\Models\CompteIntegration;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -12,8 +13,10 @@ use Illuminate\Support\Str;
 /** @property CompteIntegrationInterface $repository */
 class CompteIntegrationService extends BaseService
 {
-    public function __construct(CompteIntegrationInterface $repository)
-    {
+    public function __construct(
+        CompteIntegrationInterface $repository,
+        private readonly NotificationService $notificationService,
+    ) {
         parent::__construct($repository);
     }
 
@@ -25,7 +28,7 @@ class CompteIntegrationService extends BaseService
             $motDePasseTemp  = Str::random(10);
             $badgeNumero     = 'ARTF-BADGE-' . str_pad($agent->id, 5, '0', STR_PAD_LEFT);
 
-            $user = \App\Models\User::create([
+            $user = User::create([
                 'name'      => $agent->nom_complet,
                 'email'     => $emailPro,
                 'password'  => Hash::make($motDePasseTemp),
@@ -46,6 +49,17 @@ class CompteIntegrationService extends BaseService
                 'badge_numero'        => $badgeNumero,
                 'date_creation'       => now(),
             ]);
+
+            $this->notificationService->notifierEvenement(
+                $user,
+                'compte',
+                'provisionne',
+                'Votre compte utilisateur a été créé.',
+                [
+                    'agent_id' => $agent->id,
+                    'login'    => $login,
+                ]
+            );
 
             return $compte;
         });

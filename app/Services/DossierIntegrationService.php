@@ -11,9 +11,11 @@ use App\Interfaces\CompteIntegrationInterface;
 use App\Interfaces\ConventionStageInterface;
 use App\Interfaces\DossierIntegrationInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
+use App\Interfaces\UserInterface;
 use App\Interfaces\ValidationWorkflowInterface;
 use App\Models\ActeAdministratif;
 use App\Models\DossierIntegration;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -31,6 +33,8 @@ class DossierIntegrationService extends BaseService
         private readonly CompteIntegrationInterface $compteRepository,
         private readonly DocumentDossierService $documentDossierService,
         private readonly CompteIntegrationService $compteService,
+        private readonly NotificationService $notificationService,
+        private readonly UserInterface $userRepository,
     ) {
         parent::__construct($repository);
     }
@@ -510,6 +514,8 @@ class DossierIntegrationService extends BaseService
                 $commentaire
             );
 
+            $this->notifierTransition($dossier, $cible);
+
             return $dossier;
         });
     }
@@ -522,5 +528,56 @@ class DossierIntegrationService extends BaseService
     public function findByReference(string $reference): ?DossierIntegration
     {
         return $this->repository->findByReference($reference);
+    }
+
+    private function notifierTransition(DossierIntegration $dossier, StatutDossier $cible): void
+    {
+        $message = match ($cible) {
+            StatutDossier::VALIDE_RH => "Le dossier {$dossier->reference} a été validé par les RH.",
+            StatutDossier::REJETE    => "Le dossier {$dossier->reference} a été rejeté.",
+            StatutDossier::VALIDE_DG => "Le dossier {$dossier->reference} a reçu la validation DG.",
+            StatutDossier::INTEGRE   => "Le dossier {$dossier->reference} est intégré.",
+            default                  => null,
+        };
+
+        if ($message === null) {
+            return;
+        }
+
+        $action = match ($cible) {
+            StatutDossier::VALIDE_RH => 'validee_rh',
+            StatutDossier::REJETE    => 'rejetee',
+            StatutDossier::VALIDE_DG => 'validee_dg',
+            StatutDossier::INTEGRE   => 'integre',
+            default                  => 'mise_a_jour',
+        };
+
+        $destinataires = collect();
+
+        if ($dossier->demandeur_id) {
+            $demandeur = $this->userRepository->findOptional((int) $dossier->demandeur_id);
+            if ($demandeur instanceof User) {
+                $destinataires->push($demandeur);
+            }
+        }
+
+        if ($dossier->agent_id) {
+            $compte = $this->userRepository->findByAgentId((int) $dossier->agent_id);
+            if ($compte instanceof User) {
+                $destinataires->push($compte);
+            }
+        }
+
+        $this->notificationService->notifierEvenementGroupe(
+            $destinataires,
+            'integration',
+            $action,
+            $message,
+            [
+                'dossier_id' => $dossier->id,
+                'reference'  => $dossier->reference,
+                'statut'     => $cible->value,
+            ]
+        );
     }
 }
