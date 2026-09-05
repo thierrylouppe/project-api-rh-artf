@@ -22,7 +22,9 @@ class DiplomeRepository extends BaseRepository implements DiplomeInterface
             $query->filter($filters);
         }
 
-        return $query->get();
+        return $query
+            ->with(['classeGrille.categorie', 'classeGrille.grade'])
+            ->get();
     }
 
     public function findById(int $id): Model

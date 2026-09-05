@@ -133,7 +133,9 @@ GET /diplomes
         "categorie": "Classe VIII",
         "categorie_id": 8,
         "grade": "Inspecteur",
-        "grade_id": 8
+        "grade_id": 8,
+        "echelon": "Échelon 1",
+        "echelon_id": 1
       }
     },
     {
@@ -147,7 +149,9 @@ GET /diplomes
         "categorie": "Classe VII",
         "categorie_id": 7,
         "grade": "Vérificateur",
-        "grade_id": 7
+        "grade_id": 7,
+        "echelon": "Échelon 1",
+        "echelon_id": 1
       }
     }
   ]

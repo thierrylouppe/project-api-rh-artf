@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\Diplome\CreateRequest;
 use App\Http\Requests\Diplome\UpdateRequest;
 use App\Http\Resources\DiplomeResource;
-use App\Http\Resources\ReferentielRhListResource;
 use App\Services\DiplomeService;
 use Illuminate\Http\JsonResponse;
 
@@ -19,11 +18,6 @@ class DiplomeController extends BaseController
     protected function resource(): string
     {
         return DiplomeResource::class;
-    }
-
-    protected function listResource(): string
-    {
-        return ReferentielRhListResource::class;
     }
 
     public function store(CreateRequest $request): JsonResponse
