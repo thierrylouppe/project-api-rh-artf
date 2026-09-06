@@ -19,9 +19,20 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
         return Affectation::class;
     }
 
+    public function getAll(array $filters = []): Collection
+    {
+        $query = Affectation::query()->with('agent');
+
+        if (method_exists(Affectation::class, 'scopeFilter')) {
+            $query->filter($filters);
+        }
+
+        return $query->get();
+    }
+
     public function getByAgent(int $agentId): Collection
     {
-        return Affectation::where('agent_id', $agentId)->get();
+        return Affectation::where('agent_id', $agentId)->with('agent')->get();
     }
 
     public function getActive(int $agentId): ?Affectation

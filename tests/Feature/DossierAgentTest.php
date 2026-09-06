@@ -47,6 +47,17 @@ class DossierAgentTest extends TestCase
         Sanctum::actingAs($this->user);
     }
 
+    public function test_liste_dossiers_inclut_identite_agent(): void
+    {
+        $this->getJson('/api/integration/dossiers')
+            ->assertOk()
+            ->assertJsonPath('data.0.agent_id', $this->agent->id)
+            ->assertJsonPath('data.0.agent.id', $this->agent->id)
+            ->assertJsonPath('data.0.agent.nom', $this->agent->nom)
+            ->assertJsonPath('data.0.agent.prenom', $this->agent->prenom)
+            ->assertJsonPath('data.0.agent.nom_complet', $this->agent->nom_complet);
+    }
+
     public function test_fiche_et_upsert_infos_perso_pro_famille_et_contacts(): void
     {
         $this->getJson("/api/personnel/agents/{$this->agent->id}")

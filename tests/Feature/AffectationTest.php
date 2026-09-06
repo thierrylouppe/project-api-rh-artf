@@ -264,7 +264,24 @@ class AffectationTest extends TestCase
 
         $this->getJson("/api/carriere/agents/{$this->agent->id}/affectations")
             ->assertOk()
-            ->assertJsonCount(1, 'data');
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.agent_id', $this->agent->id)
+            ->assertJsonPath('data.0.agent.nom', $this->agent->nom)
+            ->assertJsonPath('data.0.agent.prenom', $this->agent->prenom)
+            ->assertJsonPath('data.0.agent.nom_complet', $this->agent->nom_complet);
+    }
+
+    public function test_index_inclut_identite_agent(): void
+    {
+        $this->creerAffectation($this->agent);
+
+        $this->getJson('/api/carriere/affectations')
+            ->assertOk()
+            ->assertJsonPath('data.0.agent_id', $this->agent->id)
+            ->assertJsonPath('data.0.agent.id', $this->agent->id)
+            ->assertJsonPath('data.0.agent.nom', $this->agent->nom)
+            ->assertJsonPath('data.0.agent.prenom', $this->agent->prenom)
+            ->assertJsonPath('data.0.agent.nom_complet', $this->agent->nom_complet);
     }
 
     private function payloadAffectation(Agent $agent): array

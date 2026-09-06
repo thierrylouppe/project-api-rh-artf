@@ -14,6 +14,17 @@ class DossierIntegrationRepository extends BaseRepository implements DossierInte
         return DossierIntegration::class;
     }
 
+    public function getAll(array $filters = []): Collection
+    {
+        $query = DossierIntegration::query()->with('agent');
+
+        if (method_exists(DossierIntegration::class, 'scopeFilter')) {
+            $query->filter($filters);
+        }
+
+        return $query->get();
+    }
+
     public function findByReference(string $reference): ?DossierIntegration
     {
         return DossierIntegration::where('reference', $reference)->first();

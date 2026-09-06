@@ -9,6 +9,7 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
         new OA\Property(property: 'agent_id', type: 'integer', example: 1),
+        new OA\Property(property: 'agent', ref: '#/components/schemas/AgentIdentite', nullable: true),
         new OA\Property(property: 'structurable_type', type: 'string', example: 'App\\Models\\Direction'),
         new OA\Property(property: 'structurable_id', type: 'integer', example: 1),
         new OA\Property(property: 'motif', type: 'string', nullable: true),

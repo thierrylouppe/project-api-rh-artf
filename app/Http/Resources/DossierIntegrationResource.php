@@ -23,8 +23,11 @@ class DossierIntegrationResource extends JsonResource
             'type_integration'     => new TypeIntegrationResource($this->whenLoaded('typeIntegration')),
             'demandeur_id'         => $this->when(! $this->relationLoaded('demandeur'), $this->demandeur_id),
             'demandeur'            => new UserResource($this->whenLoaded('demandeur')),
-            'agent_id'             => $this->when(! $this->relationLoaded('agent'), $this->agent_id),
-            'agent'                => new AgentResource($this->whenLoaded('agent')),
+            'agent_id'             => $this->agent_id,
+            'agent'                => $this->when(
+                $this->relationLoaded('agent'),
+                fn () => $this->agent ? new AgentIdentiteResource($this->agent) : null
+            ),
             'documents'            => DocumentDossierResource::collection($this->whenLoaded('documents')),
             'validations'          => ValidationWorkflowResource::collection($this->whenLoaded('validations')),
             'actes'                => ActeAdministratifResource::collection($this->whenLoaded('actes')),

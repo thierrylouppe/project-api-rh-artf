@@ -19,6 +19,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'type_integration_id', type: 'integer', example: 1),
         new OA\Property(property: 'demandeur_id', type: 'integer', nullable: true),
         new OA\Property(property: 'agent_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'agent', ref: '#/components/schemas/AgentIdentite', nullable: true),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
         new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
     ]

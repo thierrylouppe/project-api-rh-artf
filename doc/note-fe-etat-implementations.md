@@ -2,7 +2,7 @@
 
 > Document **vivant** : à mettre à jour à chaque livraison API qui impacte le front.  
 > Objectif : un seul point d’entrée pour les échanges FE (quoi appeler, quoi ne plus attendre, où lire le détail).  
-> Dernière mise à jour : **2026-09-05**
+> Dernière mise à jour : **2026-09-06**
 
 Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste résumé.**
 
@@ -386,6 +386,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-06 | Listes dossiers + affectations : bloc `agent` (identité) | Afficher le nom sans appel extra. `agent_id` conservé. `agent` = `{ id, matricule, nom, prenom, nom_complet }` ou `null`. |
 | 2026-09-05 | `GET /diplomes` : `classe_grille` sur chaque item + `echelon(_id)` | Auto-remplir `categorie_id` / `grade_id` / `echelon_id` au choix du diplôme. Pas de `fonction`. Nullable si pas de classe. |
 | 2026-09-01 | Vague B dossier agent (`/personnel/agents/{id}` …) | Fiche vie courante, upsert infos, GED, archivage |
 | 2026-09-01 | Module congés / absences (`/conges`, `/absences`) | Écrans demandes, soldes, workflow, PDF |
