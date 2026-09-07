@@ -29,6 +29,15 @@ class DemandeCongeController extends BaseController
         return ['agent', 'typeConge'];
     }
 
+    #[OA\Get(path: '/api/conges/demandes/a-valider', operationId: 'demandesCongesAValider', tags: ['Congés'], summary: 'File à valider par l\'utilisateur connecté', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Liste')])]
+    public function aValider(): JsonResponse
+    {
+        return $this->collectionResponse(
+            DemandeCongeResource::collection($this->service->aValider()),
+            'Demandes à valider'
+        );
+    }
+
     #[OA\Get(path: '/api/conges/demandes', operationId: 'listDemandesConges', tags: ['Congés'], summary: 'Liste des demandes', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Liste')])]
     public function index(Request $request): JsonResponse
     {

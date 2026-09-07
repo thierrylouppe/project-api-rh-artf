@@ -95,9 +95,7 @@ Préfixes : **`/api/conges`**, **`/api/absences`**. Auth Bearer obligatoire. Lis
 | Écran | Qui | APIs |
 |-------|-----|------|
 | Mes demandes | `agent` (`creer-conges`) | `GET /conges/agents/{agent_id}/demandes` · `POST /conges/demandes` · soldes |
-| File N+1 | chef avec `valider-conges` | `GET /conges/demandes?statut=soumise` puis bouton si `prochaine_etape === "valider-n1"` |
-| File RH | rôle `rh` | `GET /conges/demandes?statut=soumise` et `?statut=validee_n1` · `prochaine_etape === "valider-rh"` |
-| File DG | rôle `directeur-general` | `GET /conges/demandes?statut=validee_rh` · `prochaine_etape === "valider-dg"` |
+| File à valider | `valider-conges` | **`GET /conges/demandes/a-valider`** — uniquement les dossiers que le user peut signer (N+1 / RH / DG). `admin` voit toute la file. |
 | Paramétrage | `rh` / `admin` | types, jours fériés, règles d’acquisition |
 | Absences | créer : `creer-absences` ; valider : `valider-absences` (**pas** les chefs de service/bureau en seeder) | `/absences` |
 
@@ -166,7 +164,7 @@ JSON (sans fichier) :
 
 Avec justificatif : `FormData` — mêmes champs + `justificatif` (fichier, max 10 Mo). Ne pas forcer `Content-Type: application/json`.
 
-L’API calcule `nb_jours` (week-ends + fériés exclus). **Ne pas** envoyer `nb_jours` / `statut`. Période sans jour ouvrable → **422** (`message`). Chevauchement avec une demande encore ouverte → **422**.
+L’API calcule `nb_jours` (week-ends + fériés exclus). **Ne pas** envoyer `nb_jours` / `statut`. Période sans jour ouvrable → **422** (`message`). Chevauchement avec une demande **ouverte ou accordée** (y compris `validee_dg`) **ou une absence** `en_attente` / `validee` → **422**. Idem à la création d’une absence.
 
 Pas de PUT/PATCH ni d’annulation après soumission.
 
@@ -209,7 +207,7 @@ Statuts `statut` (snake_case) :
 | `validee_rh` / `rejetee_rh` | Validée / Rejetée RH |
 | `validee_dg` / `rejetee_dg` | Validée / Rejetée DG |
 
-Filtres liste : `GET /conges/demandes?agent_id=&type_conge_id=&statut=` (égalité exacte). Détail : `GET /conges/demandes/{id}`. Par agent : `GET /conges/agents/{id}/demandes`.
+Filtres liste : `GET /conges/demandes?agent_id=&type_conge_id=&statut=` (égalité exacte). File signataire : `GET /conges/demandes/a-valider` (`valider-conges`). Détail : `GET /conges/demandes/{id}`. Par agent : `GET /conges/agents/{id}/demandes`.
 
 ### Qui clique quoi (important)
 
@@ -294,10 +292,10 @@ Actions congé : `soumise`, `validee_n1`, `rejetee_n1`, `validee_rh`, `rejetee_r
 
 ### Hors V1 (ne pas concevoir)
 
-- Inbox API « mes validations uniquement » (filtrer côté FE avec `prochaine_etape` + rôle / `agent_id`)
 - Édition / retrait d’une demande
 - Téléchargement du justificatif
 - Mail / SMS
+- Pagination, solde pré-créé, circuit N+1 sur les absences
 
 ---
 
@@ -386,6 +384,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-07 | File `GET /conges/demandes/a-valider` + chevauchement DG/absences | Brancher les files N+1/RH/DG sur cet endpoint. 422 si période déjà prise (congé accordé ou absence). |
 | 2026-09-06 | Listes dossiers + affectations : bloc `agent` (identité) | Afficher le nom sans appel extra. `agent_id` conservé. `agent` = `{ id, matricule, nom, prenom, nom_complet }` ou `null`. |
 | 2026-09-05 | `GET /diplomes` : `classe_grille` sur chaque item + `echelon(_id)` | Auto-remplir `categorie_id` / `grade_id` / `echelon_id` au choix du diplôme. Pas de `fonction`. Nullable si pas de classe. |
 | 2026-09-01 | Vague B dossier agent (`/personnel/agents/{id}` …) | Fiche vie courante, upsert infos, GED, archivage |

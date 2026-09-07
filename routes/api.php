@@ -306,6 +306,7 @@ Route::middleware('auth:sanctum')->prefix('conges')->group(function () {
 
     Route::get('statistiques', [DemandeCongeController::class, 'statistiques'])->middleware('permission:consulter-conges');
     Route::get('agents/{agent}/demandes', [DemandeCongeController::class, 'byAgent'])->middleware('permission:consulter-conges');
+    Route::get('demandes/a-valider', [DemandeCongeController::class, 'aValider'])->middleware('permission:valider-conges');
     Route::get('demandes', [DemandeCongeController::class, 'index'])->middleware('permission:consulter-conges');
     Route::post('demandes', [DemandeCongeController::class, 'store'])->middleware('permission:creer-conges');
     Route::get('demandes/{id}', [DemandeCongeController::class, 'show'])->middleware('permission:consulter-conges');

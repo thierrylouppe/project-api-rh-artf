@@ -249,6 +249,94 @@ class DemandeCongeTest extends TestCase
         $this->getJson("/api/conges/demandes/{$id}/attestation")->assertOk();
     }
 
+    public function test_file_a_valider_filtre_selon_le_signataire(): void
+    {
+        $id = $this->postJson('/api/conges/demandes', [
+            'agent_id'      => $this->agent->id,
+            'type_conge_id' => $this->annuel->id,
+            'date_debut'    => '2026-09-07',
+            'date_fin'      => '2026-09-09',
+        ])->assertCreated()->json('data.id');
+
+        $this->getJson('/api/conges/demandes/a-valider')->assertForbidden();
+
+        Sanctum::actingAs($this->chefUser);
+        $this->getJson('/api/conges/demandes/a-valider')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $id)
+            ->assertJsonPath('data.0.prochaine_etape', 'valider-n1');
+
+        Sanctum::actingAs($this->rhUser);
+        $this->getJson('/api/conges/demandes/a-valider')->assertOk()->assertJsonCount(0, 'data');
+
+        Sanctum::actingAs($this->chefUser);
+        $this->postJson("/api/conges/demandes/{$id}/valider-n1")->assertOk();
+        $this->getJson('/api/conges/demandes/a-valider')->assertOk()->assertJsonCount(0, 'data');
+
+        Sanctum::actingAs($this->rhUser);
+        $this->getJson('/api/conges/demandes/a-valider')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.prochaine_etape', 'valider-rh');
+    }
+
+    public function test_chevauchement_bloque_conge_accorde_et_absence(): void
+    {
+        $type = TypeConge::create([
+            'nom'                 => 'Congé sans solde',
+            'jours_max'           => 90,
+            'necessite_n1'        => true,
+            'necessite_rh'        => true,
+            'necessite_dg'        => true,
+            'debite_solde'        => false,
+            'justificatif_requis' => true,
+        ]);
+
+        $id = $this->post('/api/conges/demandes', [
+            'agent_id'      => $this->agent->id,
+            'type_conge_id' => $type->id,
+            'date_debut'    => '2026-09-07',
+            'date_fin'      => '2026-09-09',
+            'justificatif'  => UploadedFile::fake()->create('demande.pdf', 20, 'application/pdf'),
+        ])->assertCreated()->json('data.id');
+
+        Sanctum::actingAs($this->chefUser);
+        $this->postJson("/api/conges/demandes/{$id}/valider-n1")->assertOk();
+        Sanctum::actingAs($this->rhUser);
+        $this->postJson("/api/conges/demandes/{$id}/valider-rh")->assertOk();
+        Sanctum::actingAs($this->dgUser);
+        $this->postJson("/api/conges/demandes/{$id}/valider-dg")->assertOk();
+
+        Sanctum::actingAs($this->demandeur);
+        $this->postJson('/api/conges/demandes', [
+            'agent_id'      => $this->agent->id,
+            'type_conge_id' => $this->annuel->id,
+            'date_debut'    => '2026-09-08',
+            'date_fin'      => '2026-09-10',
+        ])->assertStatus(422);
+
+        $permission = TypeAbsence::create([
+            'nom'                   => 'Permission',
+            'justification_requise' => true,
+        ]);
+
+        $this->postJson('/api/absences', [
+            'agent_id'        => $this->agent->id,
+            'type_absence_id' => $permission->id,
+            'date_debut'      => '2026-10-05',
+            'date_fin'        => '2026-10-05',
+            'motif'           => 'RDV',
+        ])->assertCreated();
+
+        $this->postJson('/api/conges/demandes', [
+            'agent_id'      => $this->agent->id,
+            'type_conge_id' => $this->annuel->id,
+            'date_debut'    => '2026-10-05',
+            'date_fin'      => '2026-10-06',
+        ])->assertStatus(422);
+    }
+
     public function test_solde_insuffisant_uniquement_si_debite_solde(): void
     {
         $court = TypeConge::create([

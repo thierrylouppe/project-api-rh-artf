@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\StatutDemandeConge;
+use App\Interfaces\AbsenceInterface;
 use App\Interfaces\AffectationInterface;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\DemandeCongeInterface;
@@ -29,6 +30,7 @@ class DemandeCongeService extends BaseService
         private readonly AffectationInterface $affectationRepository,
         private readonly AgentInterface $agentRepository,
         private readonly TypeCongeInterface $typeCongeRepository,
+        private readonly AbsenceInterface $absenceRepository,
     ) {
         parent::__construct($repository);
     }
@@ -36,6 +38,31 @@ class DemandeCongeService extends BaseService
     public function getByAgent(int $agentId): Collection
     {
         return $this->repository->getByAgent($agentId);
+    }
+
+    public function aValider(): Collection
+    {
+        $user = $this->utilisateurConnecte();
+
+        return $this->repository->getEnAttenteValidation()
+            ->filter(function (DemandeConge $demande) use ($user) {
+                $etape = $demande->typeConge?->prochaineEtape($demande->statut);
+                if ($etape === null) {
+                    return false;
+                }
+
+                if ($user->hasRole('admin')) {
+                    return true;
+                }
+
+                return match ($etape) {
+                    'valider-n1' => $this->estN1De($user, (int) $demande->agent_id),
+                    'valider-rh' => $user->hasRole('rh'),
+                    'valider-dg' => $user->hasRole('directeur-general'),
+                    default      => false,
+                };
+            })
+            ->values();
     }
 
     public function create(array $data): DemandeConge
@@ -53,12 +80,7 @@ class DemandeCongeService extends BaseService
             $nbJours = $this->jourFerieService->calculerJoursOuvrables($data['date_debut'], $data['date_fin']);
             abort_if($nbJours < 1, 422, 'La période ne contient aucun jour ouvrable.');
 
-            $chevauche = $this->repository->chevauchements(
-                (int) $data['agent_id'],
-                $data['date_debut'],
-                $data['date_fin']
-            );
-            abort_if($chevauche->isNotEmpty(), 422, 'Une demande de congé chevauche déjà cette période.');
+            $this->assertPeriodeLibre((int) $data['agent_id'], $data['date_debut'], $data['date_fin']);
 
             if ($type->debite_solde) {
                 $annee = (int) substr($data['date_debut'], 0, 4);
@@ -296,6 +318,33 @@ class DemandeCongeService extends BaseService
         abort_unless($user instanceof User, 401, 'Non authentifié.');
 
         return $user;
+    }
+
+    private function assertPeriodeLibre(int $agentId, string $debut, string $fin, ?int $exclureDemandeId = null): void
+    {
+        abort_if(
+            $this->repository->chevauchements($agentId, $debut, $fin, $exclureDemandeId)->isNotEmpty(),
+            422,
+            'Une demande de congé chevauche déjà cette période.'
+        );
+
+        abort_if(
+            $this->absenceRepository->chevauchements($agentId, $debut, $fin)->isNotEmpty(),
+            422,
+            'Une absence chevauche déjà cette période.'
+        );
+    }
+
+    private function estN1De(User $user, int $agentId): bool
+    {
+        $affectation = $this->affectationRepository->getActive($agentId);
+        if (! $affectation?->superieur_hierarchique_id) {
+            return false;
+        }
+
+        $compte = $this->userRepository->findByAgentId((int) $affectation->superieur_hierarchique_id);
+
+        return $compte instanceof User && (int) $compte->id === (int) $user->id;
     }
 
     private function assertEstN1(int $agentId): void

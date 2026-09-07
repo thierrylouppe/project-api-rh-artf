@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\StatutAbsence;
 use App\Interfaces\AbsenceInterface;
 use App\Models\Absence;
 use Illuminate\Support\Collection;
@@ -20,5 +21,23 @@ class AbsenceRepository extends BaseRepository implements AbsenceInterface
             ->with(['typeAbsence', 'agent'])
             ->orderByDesc('date_debut')
             ->get();
+    }
+
+    public function chevauchements(int $agentId, string $debut, string $fin, ?int $exclureId = null): Collection
+    {
+        $query = Absence::query()
+            ->where('agent_id', $agentId)
+            ->whereIn('statut', [
+                StatutAbsence::EN_ATTENTE->value,
+                StatutAbsence::VALIDEE->value,
+            ])
+            ->whereDate('date_debut', '<=', $fin)
+            ->whereDate('date_fin', '>=', $debut);
+
+        if ($exclureId !== null) {
+            $query->where('id', '!=', $exclureId);
+        }
+
+        return $query->get();
     }
 }

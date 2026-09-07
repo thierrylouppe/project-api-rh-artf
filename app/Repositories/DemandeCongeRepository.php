@@ -23,12 +23,26 @@ class DemandeCongeRepository extends BaseRepository implements DemandeCongeInter
             ->get();
     }
 
+    public function getEnAttenteValidation(): Collection
+    {
+        return DemandeConge::query()
+            ->whereIn('statut', [
+                StatutDemandeConge::SOUMISE->value,
+                StatutDemandeConge::VALIDEE_N1->value,
+                StatutDemandeConge::VALIDEE_RH->value,
+            ])
+            ->with(['typeConge', 'agent'])
+            ->orderBy('date_debut')
+            ->get();
+    }
+
     public function chevauchements(int $agentId, string $debut, string $fin, ?int $exclureId = null): Collection
     {
         $ouverts = [
             StatutDemandeConge::SOUMISE->value,
             StatutDemandeConge::VALIDEE_N1->value,
             StatutDemandeConge::VALIDEE_RH->value,
+            StatutDemandeConge::VALIDEE_DG->value,
         ];
 
         $query = DemandeConge::query()

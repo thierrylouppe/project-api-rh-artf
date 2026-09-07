@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\StatutAbsence;
 use App\Interfaces\AbsenceInterface;
 use App\Interfaces\AgentInterface;
+use App\Interfaces\DemandeCongeInterface;
 use App\Interfaces\TypeAbsenceInterface;
 use App\Models\Absence;
 use Illuminate\Support\Collection;
@@ -19,6 +20,7 @@ class AbsenceService extends BaseService
         private readonly AgentInterface $agentRepository,
         private readonly TypeAbsenceInterface $typeAbsenceRepository,
         private readonly NotificationService $notificationService,
+        private readonly DemandeCongeInterface $demandeCongeRepository,
     ) {
         parent::__construct($repository);
     }
@@ -35,6 +37,17 @@ class AbsenceService extends BaseService
 
         $nbJours = $this->jourFerieService->calculerJoursOuvrables($data['date_debut'], $data['date_fin']);
         abort_if($nbJours < 1, 422, 'La période ne contient aucun jour ouvrable.');
+
+        abort_if(
+            $this->repository->chevauchements((int) $data['agent_id'], $data['date_debut'], $data['date_fin'])->isNotEmpty(),
+            422,
+            'Une absence chevauche déjà cette période.'
+        );
+        abort_if(
+            $this->demandeCongeRepository->chevauchements((int) $data['agent_id'], $data['date_debut'], $data['date_fin'])->isNotEmpty(),
+            422,
+            'Une demande de congé chevauche déjà cette période.'
+        );
 
         if ($type->justification_requise && empty($data['motif'])) {
             abort(422, 'Un motif est requis pour ce type d\'absence.');
