@@ -15,8 +15,9 @@ class CongeSoldeResource extends JsonResource
             'type_conge_id' => $this->type_conge_id,
             'type_conge'    => new TypeCongeResource($this->whenLoaded('typeConge')),
             'annee'         => $this->annee,
-            'solde_initial' => (float) $this->solde_initial,
-            'solde_actuel'  => (float) $this->solde_actuel,
+            'solde_initial'    => (float) $this->solde_initial,
+            'solde_actuel'     => (float) $this->solde_actuel,
+            'jours_anciennete' => (float) $this->jours_anciennete,
         ];
     }
 }

@@ -463,7 +463,42 @@ class DemandeCongeTest extends TestCase
     {
         $this->getJson("/api/conges/agents/{$this->agent->id}/soldes?annee=2026")
             ->assertOk()
-            ->assertJsonPath('data.0.solde_actuel', 30);
+            ->assertJsonPath('data.0.solde_actuel', 30)
+            ->assertJsonPath('data.0.jours_anciennete', 0);
+    }
+
+    public function test_solde_ajoute_bonus_anciennete_selon_palier(): void
+    {
+        $this->agent->update(['date_prise_service' => '2016-01-01']);
+
+        $this->postJson('/api/conges/paliers-anciennete', [
+            'anciennete_min' => 0,
+            'anciennete_max' => 4,
+            'jours_bonus'    => 0,
+        ])->assertForbidden();
+
+        Sanctum::actingAs($this->rhUser);
+        $this->postJson('/api/conges/paliers-anciennete', [
+            'anciennete_min' => 0,
+            'anciennete_max' => 9,
+            'jours_bonus'    => 2,
+        ])->assertCreated();
+        $this->postJson('/api/conges/paliers-anciennete', [
+            'anciennete_min' => 10,
+            'anciennete_max' => null,
+            'jours_bonus'    => 4,
+        ])->assertCreated();
+        $this->postJson('/api/conges/paliers-anciennete', [
+            'anciennete_min' => 8,
+            'anciennete_max' => 12,
+            'jours_bonus'    => 3,
+        ])->assertStatus(422);
+
+        $this->getJson("/api/conges/agents/{$this->agent->id}/soldes?annee=2026")
+            ->assertOk()
+            ->assertJsonPath('data.0.jours_anciennete', 4)
+            ->assertJsonPath('data.0.solde_initial', 34)
+            ->assertJsonPath('data.0.solde_actuel', 34);
     }
 
     private function creerAgent(string $prenom, string $nom): Agent

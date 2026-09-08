@@ -46,6 +46,7 @@ use App\Interfaces\DocumentAgentInterface;
 use App\Interfaces\InformationsPersonnelleInterface;
 use App\Interfaces\InformationsProfessionnelleInterface;
 use App\Interfaces\JourFerieInterface;
+use App\Interfaces\PalierAncienneteCongeInterface;
 use App\Interfaces\RegleAcquisitionCongeInterface;
 use App\Interfaces\SituationFamilialeInterface;
 use App\Interfaces\TypeAbsenceInterface;
@@ -98,6 +99,7 @@ use App\Repositories\DocumentAgentRepository;
 use App\Repositories\InformationsPersonnelleRepository;
 use App\Repositories\InformationsProfessionnelleRepository;
 use App\Repositories\JourFerieRepository;
+use App\Repositories\PalierAncienneteCongeRepository;
 use App\Repositories\RegleAcquisitionCongeRepository;
 use App\Repositories\SituationFamilialeRepository;
 use App\Repositories\TypeAbsenceRepository;
@@ -151,6 +153,7 @@ class AppServiceProvider extends ServiceProvider
         MotifAdministratifInterface::class => MotifAdministratifRepository::class,
         // Module Congés & absences
         JourFerieInterface::class             => JourFerieRepository::class,
+        PalierAncienneteCongeInterface::class => PalierAncienneteCongeRepository::class,
         RegleAcquisitionCongeInterface::class => RegleAcquisitionCongeRepository::class,
         CongeSoldeInterface::class            => CongeSoldeRepository::class,
         DemandeCongeInterface::class          => DemandeCongeRepository::class,

@@ -15,6 +15,7 @@ use App\Http\Controllers\API\AbsenceController;
 use App\Http\Controllers\API\CongeSoldeController;
 use App\Http\Controllers\API\DemandeCongeController;
 use App\Http\Controllers\API\JourFerieController;
+use App\Http\Controllers\API\PalierAncienneteCongeController;
 use App\Http\Controllers\API\RegleAcquisitionCongeController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\NominationController;
@@ -295,6 +296,11 @@ Route::middleware('auth:sanctum')->prefix('conges')->group(function () {
     Route::post('jours-feries', [JourFerieController::class, 'store'])->middleware('permission:valider-conges');
     Route::put('jours-feries/{id}', [JourFerieController::class, 'update'])->middleware('permission:valider-conges');
     Route::delete('jours-feries/{id}', [JourFerieController::class, 'destroy'])->middleware('permission:valider-conges');
+
+    Route::get('paliers-anciennete', [PalierAncienneteCongeController::class, 'index'])->middleware('permission:consulter-conges');
+    Route::post('paliers-anciennete', [PalierAncienneteCongeController::class, 'store'])->middleware('permission:valider-conges');
+    Route::put('paliers-anciennete/{id}', [PalierAncienneteCongeController::class, 'update'])->middleware('permission:valider-conges');
+    Route::delete('paliers-anciennete/{id}', [PalierAncienneteCongeController::class, 'destroy'])->middleware('permission:valider-conges');
 
     Route::get('regles-acquisition', [RegleAcquisitionCongeController::class, 'index'])->middleware('permission:consulter-conges');
     Route::post('regles-acquisition', [RegleAcquisitionCongeController::class, 'store'])->middleware('permission:valider-conges');

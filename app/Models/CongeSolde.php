@@ -18,12 +18,14 @@ class CongeSolde extends Model
         'annee',
         'solde_initial',
         'solde_actuel',
+        'jours_anciennete',
     ];
 
     protected $casts = [
-        'annee'          => 'integer',
-        'solde_initial'  => 'decimal:2',
-        'solde_actuel'   => 'decimal:2',
+        'annee'            => 'integer',
+        'solde_initial'    => 'decimal:2',
+        'solde_actuel'     => 'decimal:2',
+        'jours_anciennete' => 'decimal:2',
     ];
 
     protected array $filterable = ['agent_id', 'type_conge_id', 'annee'];

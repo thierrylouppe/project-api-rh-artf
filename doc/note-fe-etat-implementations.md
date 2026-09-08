@@ -234,10 +234,24 @@ Mauvaise étape (ex. `valider-rh` alors que `prochaine_etape` est `valider-n1`) 
 - `GET /conges/soldes` (tous)
 
 ```json
-{ "id": 1, "agent_id": 12, "type_conge_id": 1, "type_conge": { }, "annee": 2026, "solde_initial": 30, "solde_actuel": 27 }
+{ "id": 1, "agent_id": 12, "type_conge_id": 1, "type_conge": { }, "annee": 2026, "solde_initial": 34, "solde_actuel": 31, "jours_anciennete": 4 }
 ```
 
 Le solde des types `debite_solde` est **créé à la lecture** (`GET …/soldes?annee=`). Liste vide uniquement s’il n’existe aucun type à débit. Débit **uniquement à la validation finale**.
+
+`solde_initial` = base (2,5 × 12 plafonné) **+** `jours_anciennete`. L’ancienneté = années révolues au **1er janvier** de l’année du solde, depuis `date_prise_service`. Sans date → bonus 0. Un solde déjà créé **n’est pas recalculé**.
+
+### Paliers d’ancienneté (paramétrage RH)
+
+Même modèle que les fériés. Permission lecture : `consulter-conges` ; écriture : `valider-conges`.
+
+| | |
+|--|--|
+| Liste | `GET /conges/paliers-anciennete` |
+| Créer | `POST` `{ "anciennete_min": 5, "anciennete_max": 9, "jours_bonus": 2 }` |
+| Modifier / supprimer | `PUT` / `DELETE /conges/paliers-anciennete/{id}` |
+
+`anciennete_max` nullable = pas de plafond (ex. 20 ans et +). Chevauchement de paliers → **422**. Seed : 0–4 → +0 · 5–9 → +2 · 10–19 → +4 · 20+ → +6.
 
 ### PDF
 
@@ -385,6 +399,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-08 | Paliers ancienneté + `jours_anciennete` sur le solde | CRUD `/conges/paliers-anciennete`. Solde = 30 + bonus. Seed 0/2/4/6 j. |
 | 2026-09-08 | Listes congés/absences : `agent` identité légère | Même contrat que dossiers : `{ id, matricule, nom, prenom, nom_complet }`. `agent_id` conservé. |
 | 2026-09-08 | Annulation, justificatif, soldes pré-créés, absences N+1 | `POST …/annuler`, `GET …/justificatif`, soldes à la lecture, `GET /absences/a-valider` (N+1) |
 | 2026-09-07 | File `GET /conges/demandes/a-valider` + chevauchement DG/absences | Brancher les files N+1/RH/DG sur cet endpoint. 422 si période déjà prise (congé accordé ou absence). |

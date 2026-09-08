@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
             TypeCongeSeeder::class,
             JourFerieSeeder::class,
             RegleAcquisitionCongeSeeder::class,
+            PalierAncienneteCongeSeeder::class,
             MotifAdministratifSeeder::class,
 
             // ── 5. Recrutement / intégration ────────────────────────────
