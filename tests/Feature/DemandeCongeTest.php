@@ -129,6 +129,49 @@ class DemandeCongeTest extends TestCase
             ->assertJsonPath('data.prochaine_etape', 'valider-n1');
     }
 
+    public function test_listes_conges_et_absences_incluent_identite_agent(): void
+    {
+        $this->postJson('/api/conges/demandes', [
+            'agent_id'      => $this->agent->id,
+            'type_conge_id' => $this->annuel->id,
+            'date_debut'    => '2026-09-07',
+            'date_fin'      => '2026-09-09',
+        ])->assertCreated();
+
+        $conge = $this->getJson('/api/conges/demandes')->assertOk()->json('data.0');
+        $this->assertSame($this->agent->id, $conge['agent_id']);
+        $this->assertSame([
+            'id'          => $this->agent->id,
+            'matricule'   => $this->agent->matricule,
+            'nom'         => $this->agent->nom,
+            'prenom'      => $this->agent->prenom,
+            'nom_complet' => $this->agent->nom_complet,
+        ], $conge['agent']);
+
+        $typeAbsence = TypeAbsence::create([
+            'nom'                   => 'Permission liste',
+            'justification_requise' => true,
+        ]);
+
+        $this->postJson('/api/absences', [
+            'agent_id'        => $this->agent->id,
+            'type_absence_id' => $typeAbsence->id,
+            'date_debut'      => '2026-09-14',
+            'date_fin'        => '2026-09-14',
+            'motif'           => 'RDV',
+        ])->assertCreated();
+
+        $absence = $this->getJson('/api/absences')->assertOk()->json('data.0');
+        $this->assertSame($this->agent->id, $absence['agent_id']);
+        $this->assertSame([
+            'id'          => $this->agent->id,
+            'matricule'   => $this->agent->matricule,
+            'nom'         => $this->agent->nom,
+            'prenom'      => $this->agent->prenom,
+            'nom_complet' => $this->agent->nom_complet,
+        ], $absence['agent']);
+    }
+
     public function test_week_end_seul_retourne_422(): void
     {
         $this->postJson('/api/conges/demandes', [

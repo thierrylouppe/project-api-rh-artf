@@ -14,6 +14,17 @@ class AbsenceRepository extends BaseRepository implements AbsenceInterface
         return Absence::class;
     }
 
+    public function getAll(array $filters = []): Collection
+    {
+        $query = Absence::query()->with(['agent', 'typeAbsence']);
+
+        if (method_exists(Absence::class, 'scopeFilter')) {
+            $query->filter($filters);
+        }
+
+        return $query->get();
+    }
+
     public function getByAgent(int $agentId): Collection
     {
         return Absence::query()

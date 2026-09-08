@@ -31,10 +31,7 @@ class AbsenceController extends BaseController
     #[OA\Get(path: '/api/absences', operationId: 'listAbsences', tags: ['Absences'], summary: 'Liste des absences', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Liste')])]
     public function index(Request $request): JsonResponse
     {
-        $items = $this->service->getAll($request->query());
-        $items->load(['agent', 'typeAbsence']);
-
-        return $this->collectionResponse($this->listResource()::collection($items));
+        return parent::index($request);
     }
 
     #[OA\Post(path: '/api/absences', operationId: 'storeAbsence', tags: ['Absences'], summary: 'Déclarer une absence', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 201, description: 'Créée')])]

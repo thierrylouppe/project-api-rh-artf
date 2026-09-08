@@ -12,7 +12,10 @@ class DemandeCongeResource extends JsonResource
         return [
             'id'                  => $this->id,
             'agent_id'            => $this->agent_id,
-            'agent'               => new AgentResource($this->whenLoaded('agent')),
+            'agent'               => $this->when(
+                $this->relationLoaded('agent'),
+                fn () => $this->agent ? new AgentIdentiteResource($this->agent) : null
+            ),
             'type_conge_id'       => $this->type_conge_id,
             'type_conge'          => new TypeCongeResource($this->whenLoaded('typeConge')),
             'date_debut'          => $this->date_debut?->format('Y-m-d'),

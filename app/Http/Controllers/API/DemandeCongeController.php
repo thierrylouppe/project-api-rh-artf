@@ -42,10 +42,7 @@ class DemandeCongeController extends BaseController
     #[OA\Get(path: '/api/conges/demandes', operationId: 'listDemandesConges', tags: ['Congés'], summary: 'Liste des demandes', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Liste')])]
     public function index(Request $request): JsonResponse
     {
-        $items = $this->service->getAll($request->query());
-        $items->load(['agent', 'typeConge']);
-
-        return $this->collectionResponse($this->listResource()::collection($items));
+        return parent::index($request);
     }
 
     #[OA\Get(path: '/api/conges/demandes/{id}', operationId: 'showDemandeConge', tags: ['Congés'], summary: 'Détail d\'une demande', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Détail')])]

@@ -174,7 +174,7 @@ Pas de PUT/PATCH après soumission. **Annulation** : `POST /conges/demandes/{id}
 {
   "id": 1,
   "agent_id": 12,
-  "agent": { },
+  "agent": { "id": 12, "matricule": null, "nom": "Agent", "prenom": "Jean", "nom_complet": "Jean Agent" },
   "type_conge_id": 1,
   "type_conge": { "necessite_n1": true, "necessite_rh": true, "necessite_dg": false, "debite_solde": true, "justificatif_requis": false },
   "date_debut": "2026-09-07",
@@ -385,6 +385,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-08 | Listes congés/absences : `agent` identité légère | Même contrat que dossiers : `{ id, matricule, nom, prenom, nom_complet }`. `agent_id` conservé. |
 | 2026-09-08 | Annulation, justificatif, soldes pré-créés, absences N+1 | `POST …/annuler`, `GET …/justificatif`, soldes à la lecture, `GET /absences/a-valider` (N+1) |
 | 2026-09-07 | File `GET /conges/demandes/a-valider` + chevauchement DG/absences | Brancher les files N+1/RH/DG sur cet endpoint. 422 si période déjà prise (congé accordé ou absence). |
 | 2026-09-06 | Listes dossiers + affectations : bloc `agent` (identité) | Afficher le nom sans appel extra. `agent_id` conservé. `agent` = `{ id, matricule, nom, prenom, nom_complet }` ou `null`. |

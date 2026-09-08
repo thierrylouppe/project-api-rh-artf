@@ -14,6 +14,17 @@ class DemandeCongeRepository extends BaseRepository implements DemandeCongeInter
         return DemandeConge::class;
     }
 
+    public function getAll(array $filters = []): Collection
+    {
+        $query = DemandeConge::query()->with(['agent', 'typeConge']);
+
+        if (method_exists(DemandeConge::class, 'scopeFilter')) {
+            $query->filter($filters);
+        }
+
+        return $query->get();
+    }
+
     public function getByAgent(int $agentId): Collection
     {
         return DemandeConge::query()
