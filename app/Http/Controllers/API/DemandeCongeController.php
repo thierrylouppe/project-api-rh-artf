@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DemandeCongeController extends BaseController
 {
@@ -106,6 +107,18 @@ class DemandeCongeController extends BaseController
     public function rejeterDG(RejectionRequest $request, int $id): JsonResponse
     {
         return $this->respond($this->service->rejeterDG($id, $request->validated('commentaire')), 'Demande rejetée DG');
+    }
+
+    #[OA\Post(path: '/api/conges/demandes/{id}/annuler', operationId: 'annulerDemandeConge', tags: ['Congés'], summary: 'Annuler une demande encore soumise', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Annulée')])]
+    public function annuler(int $id): JsonResponse
+    {
+        return $this->respond($this->service->annuler($id), 'Demande annulée');
+    }
+
+    #[OA\Get(path: '/api/conges/demandes/{id}/justificatif', operationId: 'justificatifDemandeConge', tags: ['Congés'], summary: 'Télécharger le justificatif', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Fichier')])]
+    public function justificatif(int $id): StreamedResponse
+    {
+        return $this->service->justificatif($id);
     }
 
     #[OA\Get(path: '/api/conges/statistiques', operationId: 'statistiquesConges', tags: ['Congés'], summary: 'Statistiques', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Stats')])]

@@ -20,6 +20,11 @@ class CongeSoldeService extends BaseService
 
     public function getByAgent(int $agentId, ?int $annee = null): Collection
     {
+        $cible = $annee ?? (int) now()->year;
+        foreach ($this->typeCongeRepository->getDebitantSolde() as $type) {
+            $this->getOrCreate($agentId, (int) $type->id, $cible);
+        }
+
         return $this->repository->getByAgent($agentId, $annee);
     }
 

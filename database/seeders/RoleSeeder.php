@@ -44,12 +44,12 @@ class RoleSeeder extends Seeder
             'chef-service' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
-                'consulter-conges', 'valider-conges', 'consulter-absences',
+                'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
             ],
             'chef-bureau' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
-                'consulter-conges', 'valider-conges', 'consulter-absences',
+                'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
             ],
             'agent' => [
                 'consulter-referentiels', 'consulter-conges', 'creer-conges',

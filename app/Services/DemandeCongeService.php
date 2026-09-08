@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\StatutDemandeConge;
 use App\Interfaces\AbsenceInterface;
-use App\Interfaces\AffectationInterface;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\DemandeCongeInterface;
 use App\Interfaces\TypeCongeInterface;
@@ -16,6 +15,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /** @property DemandeCongeInterface $repository */
@@ -27,7 +28,7 @@ class DemandeCongeService extends BaseService
         private readonly CongeSoldeService $congeSoldeService,
         private readonly NotificationService $notificationService,
         private readonly UserInterface $userRepository,
-        private readonly AffectationInterface $affectationRepository,
+        private readonly SuperieurHierarchiqueService $superieurService,
         private readonly AgentInterface $agentRepository,
         private readonly TypeCongeInterface $typeCongeRepository,
         private readonly AbsenceInterface $absenceRepository,
@@ -56,7 +57,7 @@ class DemandeCongeService extends BaseService
                 }
 
                 return match ($etape) {
-                    'valider-n1' => $this->estN1De($user, (int) $demande->agent_id),
+                    'valider-n1' => $this->superieurService->estN1($user, (int) $demande->agent_id),
                     'valider-rh' => $user->hasRole('rh'),
                     'valider-dg' => $user->hasRole('directeur-general'),
                     default      => false,
@@ -231,6 +232,42 @@ class DemandeCongeService extends BaseService
         ], 'rejetee_dg', 'La demande de congé a été rejetée par le Directeur Général.');
     }
 
+    public function annuler(int $id): DemandeConge
+    {
+        $demande = $this->charger($id);
+        $user    = $this->utilisateurConnecte();
+
+        abort_unless(
+            $demande->statut === StatutDemandeConge::SOUMISE,
+            422,
+            'Seule une demande encore soumise peut être annulée.'
+        );
+
+        $estTitulaire = (int) $user->agent_id === (int) $demande->agent_id
+            || (int) $user->id === (int) $demande->created_by
+            || $user->hasRole('admin');
+
+        abort_unless($estTitulaire, 403, 'Seul le demandeur peut annuler cette demande.');
+
+        return $this->appliquer($demande, StatutDemandeConge::ANNULEE, [], 'annulee', 'La demande de congé a été annulée.');
+    }
+
+    public function justificatif(int $id): StreamedResponse
+    {
+        $demande = $this->charger($id);
+
+        abort_unless(
+            $demande->justificatif_path && Storage::disk('local')->exists($demande->justificatif_path),
+            404,
+            'Aucun justificatif déposé.'
+        );
+
+        return Storage::disk('local')->download(
+            $demande->justificatif_path,
+            $demande->justificatif_nom_original ?: 'justificatif'
+        );
+    }
+
     public function statistiques(array $filters = []): array
     {
         $items = $this->repository->getAll($filters);
@@ -335,51 +372,9 @@ class DemandeCongeService extends BaseService
         );
     }
 
-    private function estN1De(User $user, int $agentId): bool
-    {
-        $affectation = $this->affectationRepository->getActive($agentId);
-        if (! $affectation?->superieur_hierarchique_id) {
-            return false;
-        }
-
-        $compte = $this->userRepository->findByAgentId((int) $affectation->superieur_hierarchique_id);
-
-        return $compte instanceof User && (int) $compte->id === (int) $user->id;
-    }
-
     private function assertEstN1(int $agentId): void
     {
-        $user = $this->utilisateurConnecte();
-        if ($user->hasRole('admin')) {
-            return;
-        }
-
-        $n1 = $this->compteN1($agentId);
-        abort_unless(
-            (int) $n1->id === (int) $user->id,
-            403,
-            'Seul le supérieur hiérarchique de l\'agent (affectation active) peut valider au niveau N+1.'
-        );
-    }
-
-    private function compteN1(int $agentId): User
-    {
-        $affectation = $this->affectationRepository->getActive($agentId);
-
-        abort_unless(
-            $affectation?->superieur_hierarchique_id,
-            422,
-            'Aucune affectation active avec supérieur hiérarchique : le N+1 ne peut pas être déterminé.'
-        );
-
-        $compte = $this->userRepository->findByAgentId((int) $affectation->superieur_hierarchique_id);
-        abort_unless(
-            $compte instanceof User,
-            422,
-            'Le supérieur hiérarchique n\'a pas de compte utilisateur.'
-        );
-
-        return $compte;
+        $this->superieurService->assertEstN1($this->utilisateurConnecte(), $agentId);
     }
 
     private function assertEstRh(): void
@@ -411,12 +406,9 @@ class DemandeCongeService extends BaseService
             $destinataires->push($compteAgent);
         }
 
-        $affectation = $this->affectationRepository->getActive((int) $demande->agent_id);
-        if ($affectation?->superieur_hierarchique_id) {
-            $n1 = $this->userRepository->findByAgentId((int) $affectation->superieur_hierarchique_id);
-            if ($n1 instanceof User) {
-                $destinataires->push($n1);
-            }
+        $n1 = $this->superieurService->trouverCompteN1((int) $demande->agent_id);
+        if ($n1 instanceof User) {
+            $destinataires->push($n1);
         }
 
         $this->notificationService->notifierRole(

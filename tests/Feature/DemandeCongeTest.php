@@ -65,11 +65,11 @@ class DemandeCongeTest extends TestCase
         $this->demandeur->givePermissionTo(['consulter-conges', 'creer-conges', 'consulter-absences', 'creer-absences', 'valider-absences']);
 
         $this->chefUser = User::factory()->create(['agent_id' => $this->chef->id]);
-        $this->chefUser->givePermissionTo(['consulter-conges', 'valider-conges']);
+        $this->chefUser->givePermissionTo(['consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences']);
         $this->chefUser->assignRole('chef-service');
 
         $this->rhUser = User::factory()->create();
-        $this->rhUser->givePermissionTo(['consulter-conges', 'valider-conges']);
+        $this->rhUser->givePermissionTo(['consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences']);
         $this->rhUser->assignRole('rh');
 
         $this->dgUser = User::factory()->create();
@@ -207,7 +207,7 @@ class DemandeCongeTest extends TestCase
 
         $this->getJson("/api/conges/agents/{$this->agent->id}/soldes?annee=2026")
             ->assertOk()
-            ->assertJsonCount(0, 'data');
+            ->assertJsonPath('data.0.solde_actuel', 30);
     }
 
     public function test_sans_solde_passe_par_dg(): void
@@ -372,9 +372,55 @@ class DemandeCongeTest extends TestCase
             ->assertJsonPath('data.statut', StatutAbsence::EN_ATTENTE->value)
             ->json('data.id');
 
+        $this->postJson("/api/absences/{$id}/valider")->assertForbidden();
+
+        Sanctum::actingAs($this->rhUser);
+        $this->postJson("/api/absences/{$id}/valider")->assertForbidden();
+        $this->getJson('/api/absences/a-valider')->assertOk()->assertJsonCount(0, 'data');
+
+        Sanctum::actingAs($this->chefUser);
+        $this->getJson('/api/absences/a-valider')->assertOk()->assertJsonCount(1, 'data');
         $this->postJson("/api/absences/{$id}/valider")
             ->assertOk()
             ->assertJsonPath('data.statut', StatutAbsence::VALIDEE->value);
+    }
+
+    public function test_annulation_et_justificatif(): void
+    {
+        $type = TypeConge::create([
+            'nom'                 => 'Congé maladie',
+            'necessite_n1'        => false,
+            'necessite_rh'        => true,
+            'debite_solde'        => false,
+            'justificatif_requis' => true,
+        ]);
+
+        $id = $this->post('/api/conges/demandes', [
+            'agent_id'      => $this->agent->id,
+            'type_conge_id' => $type->id,
+            'date_debut'    => '2026-09-07',
+            'date_fin'      => '2026-09-09',
+            'justificatif'  => UploadedFile::fake()->create('certificat.pdf', 80, 'application/pdf'),
+        ])->assertCreated()->json('data.id');
+
+        $this->get("/api/conges/demandes/{$id}/justificatif")->assertOk();
+
+        Sanctum::actingAs($this->rhUser);
+        $this->postJson("/api/conges/demandes/{$id}/annuler")->assertForbidden();
+
+        Sanctum::actingAs($this->demandeur);
+        $this->postJson("/api/conges/demandes/{$id}/annuler")
+            ->assertOk()
+            ->assertJsonPath('data.statut', StatutDemandeConge::ANNULEE->value);
+
+        $this->postJson("/api/conges/demandes/{$id}/annuler")->assertStatus(422);
+    }
+
+    public function test_solde_precree_sans_demande(): void
+    {
+        $this->getJson("/api/conges/agents/{$this->agent->id}/soldes?annee=2026")
+            ->assertOk()
+            ->assertJsonPath('data.0.solde_actuel', 30);
     }
 
     private function creerAgent(string $prenom, string $nom): Agent

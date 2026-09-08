@@ -43,6 +43,15 @@ class AbsenceController extends BaseController
         return $this->respond($this->service->create($request->validated()), 'Absence déclarée', 201);
     }
 
+    #[OA\Get(path: '/api/absences/a-valider', operationId: 'absencesAValider', tags: ['Absences'], summary: 'File N+1', security: [['bearerAuth' => []]], responses: [new OA\Response(response: 200, description: 'Liste')])]
+    public function aValider(): JsonResponse
+    {
+        return $this->collectionResponse(
+            AbsenceResource::collection($this->service->aValider()),
+            'Absences à valider'
+        );
+    }
+
     #[OA\Get(path: '/api/absences/agents/{agent}', operationId: 'absencesParAgent', tags: ['Absences'], summary: 'Absences d\'un agent', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'agent', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Liste')])]
     public function byAgent(int $agent): JsonResponse
     {

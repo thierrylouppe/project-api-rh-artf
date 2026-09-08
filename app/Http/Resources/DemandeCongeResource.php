@@ -30,6 +30,7 @@ class DemandeCongeResource extends JsonResource
             'prochaine_etape'     => $this->whenLoaded('typeConge', fn () => $this->typeConge->prochaineEtape($this->statut)),
             'justificatif'        => $this->justificatif_path ? [
                 'nom' => $this->justificatif_nom_original,
+                'url' => '/api/conges/demandes/'.$this->id.'/justificatif',
             ] : null,
             'created_at'          => $this->created_at,
         ];

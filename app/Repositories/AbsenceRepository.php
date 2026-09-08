@@ -23,6 +23,15 @@ class AbsenceRepository extends BaseRepository implements AbsenceInterface
             ->get();
     }
 
+    public function getEnAttente(): Collection
+    {
+        return Absence::query()
+            ->where('statut', StatutAbsence::EN_ATTENTE)
+            ->with(['agent', 'typeAbsence'])
+            ->orderBy('date_debut')
+            ->get();
+    }
+
     public function chevauchements(int $agentId, string $debut, string $fin, ?int $exclureId = null): Collection
     {
         $query = Absence::query()

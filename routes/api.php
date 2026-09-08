@@ -316,6 +316,8 @@ Route::middleware('auth:sanctum')->prefix('conges')->group(function () {
     Route::post('demandes/{id}/rejeter-rh', [DemandeCongeController::class, 'rejeterRH'])->middleware('permission:valider-conges');
     Route::post('demandes/{id}/valider-dg', [DemandeCongeController::class, 'validerDG'])->middleware('permission:valider-conges');
     Route::post('demandes/{id}/rejeter-dg', [DemandeCongeController::class, 'rejeterDG'])->middleware('permission:valider-conges');
+    Route::post('demandes/{id}/annuler', [DemandeCongeController::class, 'annuler'])->middleware('permission:creer-conges');
+    Route::get('demandes/{id}/justificatif', [DemandeCongeController::class, 'justificatif'])->middleware('permission:consulter-conges');
     Route::get('demandes/{id}/fiche-pdf', [DemandeCongeController::class, 'fichePdf'])->middleware('permission:consulter-conges');
     Route::get('demandes/{id}/attestation', [DemandeCongeController::class, 'attestation'])->middleware('permission:consulter-conges');
 });
@@ -323,6 +325,7 @@ Route::middleware('auth:sanctum')->prefix('conges')->group(function () {
 Route::middleware('auth:sanctum')->prefix('absences')->group(function () {
     Route::get('/', [AbsenceController::class, 'index'])->middleware('permission:consulter-absences');
     Route::post('/', [AbsenceController::class, 'store'])->middleware('permission:creer-absences');
+    Route::get('a-valider', [AbsenceController::class, 'aValider'])->middleware('permission:valider-absences');
     Route::get('agents/{agent}', [AbsenceController::class, 'byAgent'])->middleware('permission:consulter-absences');
     Route::get('{id}', [AbsenceController::class, 'show'])->middleware('permission:consulter-absences');
     Route::post('{id}/valider', [AbsenceController::class, 'valider'])->middleware('permission:valider-absences');

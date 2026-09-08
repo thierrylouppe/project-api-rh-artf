@@ -97,7 +97,7 @@ Préfixes : **`/api/conges`**, **`/api/absences`**. Auth Bearer obligatoire. Lis
 | Mes demandes | `agent` (`creer-conges`) | `GET /conges/agents/{agent_id}/demandes` · `POST /conges/demandes` · soldes |
 | File à valider | `valider-conges` | **`GET /conges/demandes/a-valider`** — uniquement les dossiers que le user peut signer (N+1 / RH / DG). `admin` voit toute la file. |
 | Paramétrage | `rh` / `admin` | types, jours fériés, règles d’acquisition |
-| Absences | créer : `creer-absences` ; valider : `valider-absences` (**pas** les chefs de service/bureau en seeder) | `/absences` |
+| Absences | `creer-absences` · file **`GET /absences/a-valider`** · valider = **N+1** (même règle que les congés). Chefs ont `valider-absences`. |
 
 `agent_id` du connecté : `GET /user` → `data.agent_id` (peut être `null` pour un compte RH/DG non lié à un agent).
 
@@ -106,9 +106,9 @@ Préfixes : **`/api/conges`**, **`/api/absences`**. Auth Bearer obligatoire. Lis
 | Permission | Usage |
 |------------|--------|
 | `consulter-conges` | Listes, détail, soldes, PDF, stats, fériés, règles |
-| `creer-conges` | `POST /conges/demandes` — seeder : `agent`, `rh`, `admin` |
+| `creer-conges` | `POST /conges/demandes` · `POST …/annuler` — seeder : `agent`, `rh`, `admin` |
 | `valider-conges` | Accès **routes** de workflow. **Insuffisant** pour signer : l’API vérifie N+1 / rôle `rh` / rôle `directeur-general` (sinon **403**) |
-| `consulter-absences` / `creer-absences` / `valider-absences` | Idem absences. Seeder : `chef-service` et `chef-bureau` n’ont **pas** `valider-absences` |
+| `consulter-absences` / `creer-absences` / `valider-absences` | Absences. `valider-absences` : chefs + RH + DG. **Signer** = N+1 (ou `admin`), sinon **403** |
 
 Rôles : [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md). Comptes démo : `agent@arft.cg`, `rh@arft.cg`, `dg@arft.cg`, `chef-service@arft.cg`.
 
@@ -166,7 +166,7 @@ Avec justificatif : `FormData` — mêmes champs + `justificatif` (fichier, max 
 
 L’API calcule `nb_jours` (week-ends + fériés exclus). **Ne pas** envoyer `nb_jours` / `statut`. Période sans jour ouvrable → **422** (`message`). Chevauchement avec une demande **ouverte ou accordée** (y compris `validee_dg`) **ou une absence** `en_attente` / `validee` → **422**. Idem à la création d’une absence.
 
-Pas de PUT/PATCH ni d’annulation après soumission.
+Pas de PUT/PATCH après soumission. **Annulation** : `POST /conges/demandes/{id}/annuler` tant que `statut=soumise` (demandeur / `created_by` / `admin`). Ensuite **422**.
 
 ### Réponse demande
 
@@ -194,7 +194,7 @@ Pas de PUT/PATCH ni d’annulation après soumission.
 }
 ```
 
-`justificatif` : `{ "nom": "certificat.pdf" }` ou `null` (pas d’URL de téléchargement du fichier).
+`justificatif` : `{ "nom": "certificat.pdf", "url": "/api/conges/demandes/{id}/justificatif" }` ou `null`. Téléchargement : `GET` cette URL (blob + Bearer).
 
 `prochaine_etape` : `"valider-n1"` | `"valider-rh"` | `"valider-dg"` | `null` (terminée ou rejetée). **Afficher uniquement le bouton correspondant.**
 
@@ -203,6 +203,7 @@ Statuts `statut` (snake_case) :
 | Valeur | Label |
 |--------|--------|
 | `soumise` | Soumise |
+| `annulee` | Annulée |
 | `validee_n1` / `rejetee_n1` | Validée / Rejetée N+1 |
 | `validee_rh` / `rejetee_rh` | Validée / Rejetée RH |
 | `validee_dg` / `rejetee_dg` | Validée / Rejetée DG |
@@ -236,7 +237,7 @@ Mauvaise étape (ex. `valider-rh` alors que `prochaine_etape` est `valider-n1`) 
 { "id": 1, "agent_id": 12, "type_conge_id": 1, "type_conge": { }, "annee": 2026, "solde_initial": 30, "solde_actuel": 27 }
 ```
 
-Le solde n’existe qu’après une première demande qui `debite_solde` (création paresseuse). Liste vide = normal. Débit **uniquement à la validation finale** si `debite_solde`.
+Le solde des types `debite_solde` est **créé à la lecture** (`GET …/soldes?annee=`). Liste vide uniquement s’il n’existe aucun type à débit. Débit **uniquement à la validation finale**.
 
 ### PDF
 
@@ -261,24 +262,25 @@ Réponse **binaire** `application/pdf` (pas JSON). Appeler avec le Bearer, `blob
 
 `GET /conges/statistiques` → `{ "total", "par_statut": { "soumise": n, … }, "jours_accordes": n }` (`jours_accordes` = demandes dont le circuit est **entièrement** validé).
 
-### Absences (circuit unique)
+### Absences (N+1)
 
 Types : `GET /types-absences` → `justification_requise` (si true, `motif` obligatoire à la création). Seed : permission d’absence, maladie, formation, mission, syndicale, retard, disponibilité, non justifiée.
 
 | | |
 |--|--|
 | Liste | `GET /absences?agent_id=&type_absence_id=&statut=&justifiee=` |
+| File N+1 | `GET /absences/a-valider` |
 | Par agent | `GET /absences/agents/{id}` |
 | Créer | `POST /absences` `{ "agent_id", "type_absence_id", "date_debut", "date_fin", "motif?" }` |
-| Valider / rejeter | `POST /absences/{id}/valider` · `POST /absences/{id}/rejeter` (`commentaire` obligatoire au rejet) |
+| Valider / rejeter | `POST /absences/{id}/valider` · `POST /absences/{id}/rejeter` (`commentaire` obligatoire au rejet) — **N+1 seulement** (ou `admin`) |
 
-Statuts : `en_attente` · `validee` · `rejetee`. `nb_jours` calculé comme pour les congés. **Pas de N+1/RH/DG** : toute personne avec `valider-absences` peut valider.
+Statuts : `en_attente` · `validee` · `rejetee`. Pas d’étape RH/DG. Un RH avec `valider-absences` reçoit **403** s’il n’est pas le supérieur.
 
 ### Notifications (cloche)
 
 `domaine` : `conge` ou `absence`. Meta : `demande_id` / `absence_id`, `agent_id`.
 
-Actions congé : `soumise`, `validee_n1`, `rejetee_n1`, `validee_rh`, `rejetee_rh`, `validee_dg`, `rejetee_dg`. Absence : `declaree`. Routage : fiche demande / absence.
+Actions congé : `soumise`, `annulee`, `validee_n1`, `rejetee_n1`, `validee_rh`, `rejetee_rh`, `validee_dg`, `rejetee_dg`. Absence : `declaree`, `validee`, `rejetee`.
 
 ### Erreurs à gérer
 
@@ -292,10 +294,9 @@ Actions congé : `soumise`, `validee_n1`, `rejetee_n1`, `validee_rh`, `rejetee_r
 
 ### Hors V1 (ne pas concevoir)
 
-- Édition / retrait d’une demande
-- Téléchargement du justificatif
+- Édition d’une demande déjà soumise
 - Mail / SMS
-- Pagination, solde pré-créé, circuit N+1 sur les absences
+- Pagination, filtre « ma structure seulement »
 
 ---
 
@@ -361,7 +362,7 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | Nominations (menus) | `consulter-nominations`, `gerer-nominations` — **pas encore** de middleware `permission:` sur les routes nomination |
 | Salaires | `consulter-salaires`, `gerer-salaires` (routes protégées) |
 | Congés | `consulter-conges`, `creer-conges`, `valider-conges` — les boutons N+1/RH/DG se jouent **en plus** sur le rôle / le supérieur (§2c) |
-| Absences | `consulter-absences`, `creer-absences`, `valider-absences` (`valider-absences` : pas les chefs en seeder) |
+| Absences | `consulter-absences`, `creer-absences`, `valider-absences` — signer = N+1 |
 | Users | `consulter-utilisateurs`, `creer-utilisateurs`, `modifier-utilisateurs` |
 | Rôles | `consulter-roles`, `creer-roles`, `modifier-roles` |
 
@@ -384,6 +385,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-08 | Annulation, justificatif, soldes pré-créés, absences N+1 | `POST …/annuler`, `GET …/justificatif`, soldes à la lecture, `GET /absences/a-valider` (N+1) |
 | 2026-09-07 | File `GET /conges/demandes/a-valider` + chevauchement DG/absences | Brancher les files N+1/RH/DG sur cet endpoint. 422 si période déjà prise (congé accordé ou absence). |
 | 2026-09-06 | Listes dossiers + affectations : bloc `agent` (identité) | Afficher le nom sans appel extra. `agent_id` conservé. `agent` = `{ id, matricule, nom, prenom, nom_complet }` ou `null`. |
 | 2026-09-05 | `GET /diplomes` : `classe_grille` sur chaque item + `echelon(_id)` | Auto-remplir `categorie_id` / `grade_id` / `echelon_id` au choix du diplôme. Pas de `fonction`. Nullable si pas de classe. |
