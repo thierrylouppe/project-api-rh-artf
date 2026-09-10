@@ -187,6 +187,13 @@ L’API calcule `nb_jours` (week-ends + fériés exclus). **Ne pas** envoyer `nb
 
 Pas de PUT/PATCH après soumission. **Annulation** : `POST /conges/demandes/{id}/annuler` tant que `statut=soumise` (demandeur / `created_by` / `admin`). Ensuite **422**.
 
+**Validations CCN ARTF supplémentaires (422 métier) :**
+
+| Règle | Déclencheur | Message API |
+|-------|------------|-------------|
+| Congé annuel — 12 mois de service requis | `date_prise_service` absente **ou** ancienneté < 12 mois au départ | `"Le congé annuel est acquis après 12 mois de service effectif…"` |
+| Convenances personnelles — min 15 jours | `nb_jours < 15` | `"Le congé pour convenances personnelles ne peut être inférieur à 15 jours ouvrables…"` |
+
 ### Réponse demande
 
 ```json
@@ -253,7 +260,7 @@ Mauvaise étape (ex. `valider-rh` alors que `prochaine_etape` est `valider-n1`) 
 - `GET /conges/soldes` (tous)
 
 ```json
-{ "id": 1, "agent_id": 12, "type_conge_id": 1, "type_conge": { }, "annee": 2026, "solde_initial": 34, "solde_actuel": 31, "jours_anciennete": 4 }
+{ "id": 1, "agent_id": 12, "type_conge_id": 1, "type_conge": { }, "annee": 2026, "solde_initial": 36, "solde_actuel": 33, "jours_anciennete": 6 }
 ```
 
 Le solde des types `debite_solde` est **créé à la lecture** (`GET …/soldes?annee=`). Liste vide uniquement s’il n’existe aucun type à débit. Débit **uniquement à la validation finale**.
@@ -310,7 +317,9 @@ Réponse **binaire** `application/pdf` (pas JSON). Appeler avec le Bearer, `blob
 
 ### Absences (N+1)
 
-Types : `GET /types-absences` → `justification_requise` (si true, `motif` obligatoire à la création). Seed : permission d’absence, maladie, formation, mission, syndicale, retard, disponibilité, non justifiée.
+Types : `GET /types-absences` → `justification_requise` (si true, `motif` obligatoire à la création). Seed **(7 types)** : permission d’absence, maladie, formation, mission, syndicale, retard, non justifiée.
+
+> ⚠️ **« Mise en disponibilité » retiré** de `type_absences` (CCN art. 79) — la disponibilité est désormais un `statut` agent (`disponibilite`), pas un type d’absence.
 
 | | |
 |--|--|
@@ -336,13 +345,39 @@ Actions congé : `soumise`, `annulee`, `validee_n1`, `rejetee_n1`, `validee_rh`,
 | 403 | Permission route **ou** mauvais signataire (N+1 / RH / DG) — `message` |
 | 404 | Id inconnu |
 | 422 validation | `errors` par champ (dates, fichier, `commentaire` rejet) |
-| 422 métier | `message` seul (solde, chevauchement, 0 jour ouvrable, mauvaise étape, pas d’affectation N+1, attestation trop tôt) |
+| 422 métier | `message` seul (solde, chevauchement, 0 jour ouvrable, mauvaise étape, pas d’affectation N+1, attestation trop tôt, **congé annuel < 12 mois de service**, **convenances personnelles < 15 jours**) |
 
 ### Hors V1 (ne pas concevoir)
 
 - Édition d’une demande déjà soumise
 - Mail / SMS
 - Pagination, filtre « ma structure seulement »
+
+---
+
+## 2c-bis. Positions conventionnelles — `statut` agent (CCN art. 76–80)
+
+Le champ `agent.statut` (renvoyé par `GET /personnel/agents/{id}` et les synthèses carrière) peut prendre les valeurs suivantes :
+
+| Valeur `statut` | Label affiché | Art. CCN | Notes FE |
+|-----------------|---------------|----------|----------|
+| `actif` | Actif | Art. 77 | État normal |
+| `stagiaire` | Stagiaire | Art. 77 | Module stage |
+| `detachement` | En détachement | Art. 78 | Rémunération maintenue, avancement maintenu |
+| `disponibilite` | En disponibilité | **Art. 79** 🆕 | Rémunération et avancement suspendus. Max 2 ans renouvelable 2 fois |
+| `position_exceptionnelle` | Position exceptionnelle | Art. 80 | Cabinets ministériels — droits maintenus |
+| `sous_le_drapeau` | Sous le drapeau | **Art. 80** 🆕 | Service national — régime des congés administratifs |
+| `suspendu` | Suspendu | — | Décision disciplinaire |
+| `inactif` | Inactif | — | |
+| `retraite` | Retraité | — | |
+| `archive` | Archivé | — | Voir §2d archivage |
+
+**Modification** : `PUT /personnel/agents/{id}` — champ `statut`. Seul `rh` / `admin` peut modifier.
+Valeurs modifiables : `actif`, `inactif`, `suspendu`, `retraite`, `detachement`, `position_exceptionnelle`, `disponibilite`, `sous_le_drapeau`.
+
+**Impact évaluation** : agents en `detachement`, `disponibilite`, `position_exceptionnelle`, `sous_le_drapeau`, `stagiaire` → **exclus automatiquement** des sessions d'évaluation.
+
+**Impact congés** : un agent doit avoir `date_prise_service` renseignée et ≥ 12 mois de service pour soumettre un congé annuel.
 
 ---
 
@@ -970,7 +1005,7 @@ Format : date · quoi · impact FE (1 ligne).
 | 2026-09-10 | **Module Évaluation Phase 3** : avis hiérarchiques séquentiels (CCN art. 64), variante rattaché DG, envoi RH bloqué si avis manquants | 5 nouveaux endpoints `/avis-hierarchiques`. 26 tests, 173 assertions. `avis_hierarchiques` chargés sur show. |
 | 2026-09-10 | **Module Évaluation Phase 2** : avis N+1 obligatoire (min 10 chars), réclamations (CCN art. 65), envoi RH, `prochaine_etape` | Voir §7b. 4 nouveaux endpoints + `/reclamations` CRUD. `prochaine_etape` sur chaque fiche. `reclamation` chargée sur show. 20 tests, 111 assertions. |
 | 2026-09-10 | Module Évaluation Phase 1 : sessions, grille 24q, fiches, notation /20, mentions, signatures, validation RH | Voir §7b. 21 endpoints `/api/avancements/`. Seeder 24 questions. Éligibilité complète (cycle 24 mois, parité, semestre, exemptions CCN). |
-| 2026-09-08 | Paliers ancienneté + `jours_anciennete` sur le solde | CRUD `/conges/paliers-anciennete`. Solde = 30 + bonus. Seed 0/2/4/6 j. |
+| 2026-09-08 | Paliers ancienneté + `jours_anciennete` sur le solde | CRUD `/conges/paliers-anciennete`. Solde = 30 + bonus. ~~Seed 0/2/4/6 j.~~ → **remplacé par 8 paliers CCN** (voir journal 2026-09-10). |
 | 2026-09-08 | Listes congés/absences : `agent` identité légère | Même contrat que dossiers : `{ id, matricule, nom, prenom, nom_complet }`. `agent_id` conservé. |
 | 2026-09-08 | Annulation, justificatif, soldes pré-créés, absences N+1 | `POST …/annuler`, `GET …/justificatif`, soldes à la lecture, `GET /absences/a-valider` (N+1) |
 | 2026-09-07 | File `GET /conges/demandes/a-valider` + chevauchement DG/absences | Brancher les files N+1/RH/DG sur cet endpoint. 422 si période déjà prise (congé accordé ou absence). |
