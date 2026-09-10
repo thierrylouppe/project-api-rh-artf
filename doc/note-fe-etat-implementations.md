@@ -393,7 +393,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 
 ---
 
-## 7b. Module Évaluation / Notation / Avancement — Phase 1
+## 7b. Module Évaluation / Notation / Avancement — Phase 1 + Phase 2
 
 > Branche : `feature/evaluation-notation-avancement` · Préfixe : `/api/avancements/`
 > Auth : `auth:sanctum` + `permission:consulter-evaluations | creer-evaluations | valider-evaluations`
@@ -407,7 +407,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 | `chef-service`, `chef-bureau` | `consulter-evaluations`, `valider-evaluations` |
 | `agent` | `consulter-evaluations` |
 
-### Endpoints disponibles Phase 1
+### Endpoints disponibles (Phase 1 + Phase 2)
 
 #### Sessions (RH — `creer-evaluations`)
 
@@ -440,8 +440,11 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 | GET | `/avancements/evaluations/agent/mes-evaluations` | Agent | `consulter-evaluations` |
 | **POST** | `/avancements/evaluations/{id}/noter` | N+1 | `valider-evaluations` |
 | PUT | `/avancements/evaluations/{id}/contexte` | N+1 | `valider-evaluations` |
-| **POST** | `/avancements/evaluations/{id}/signer-evaluateur` | N+1 | `valider-evaluations` |
+| POST | `/avancements/evaluations/{id}/signer-evaluateur` | N+1 (sans avis — Phase 1) | `valider-evaluations` |
+| **POST** | `/avancements/evaluations/{id}/avis-et-signer` | N+1 — **Phase 2** | `valider-evaluations` |
 | **POST** | `/avancements/evaluations/{id}/signer-evalue` | Agent | `consulter-evaluations` |
+| **POST** | `/avancements/evaluations/{id}/reclamer` | Agent — **Phase 2** | `consulter-evaluations` |
+| **POST** | `/avancements/evaluations/{id}/envoyer-rh` | Agent/N+1 — **Phase 2** | `consulter-evaluations` |
 | POST | `/avancements/evaluations/{id}/valider-rh` | RH | `valider-evaluations` |
 | POST | `/avancements/evaluations/{id}/annuler` | RH | `valider-evaluations` |
 | **PUT** | `/avancements/evaluations/{id}/superieur` | RH | `creer-evaluations` |
@@ -461,8 +464,11 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
   "mention": "Très bien",
   "statut": "notee",
   "statut_label": "Notée (non signée)",
+  "prochaine_etape": "avis_et_signer",
+  "avis_superieur": null,
   "signe_par_evaluateur_at": null,
   "signe_par_evalue_at": null,
+  "reclamation": null,
   "notes": [
     { "question_id": 1, "question": { "libelle": "Connaissance technique", "type_critere": "competence_pro", "bareme_max": 1 }, "note_obtenue": 0.9 }
   ]
@@ -501,6 +507,53 @@ Un agent reçoit une fiche **si et seulement si** :
 6. Semestre (si `session.semestre` renseigné) : embauché en S1 (jan–juin) → session `semestre = 1`
 7. N+1 identifiable. Sans N+1 → `GET sessions/{id}/sans-superieur`, **pas de fiche créée**.
 
+### Réclamations — Phase 2 (CCN art. 65)
+
+| Méthode | Endpoint | Acteur | Permission |
+|---------|----------|--------|------------|
+| GET | `/avancements/reclamations` | RH | `valider-evaluations` |
+| GET | `/avancements/reclamations/en-attente` | RH | `valider-evaluations` |
+| GET | `/avancements/reclamations/{id}` | RH | `valider-evaluations` |
+| **POST** | `/avancements/reclamations/{id}/traiter` | RH | `valider-evaluations` |
+
+#### Payload `avis-et-signer` (POST)
+
+```json
+{ "avis_superieur": "Agent rigoureux, maîtrise son domaine. Atteint ses objectifs." }
+```
+Contrainte : `avis_superieur` requis, min 10, max 2000 chars.
+
+#### Payload `reclamer` (POST)
+
+```json
+{ "motif": "Je conteste ma note sur le critère de connaissance technique." }
+```
+Contrainte : `motif` requis, min 10 chars.
+
+#### Payload `traiter` (POST `/reclamations/{id}/traiter`)
+
+```json
+{ "acceptee": true, "commentaire": "Examiné et accepté — renvoi au notateur." }
+```
+- `acceptee: true` → fiche revient en `en_cours` (retour au notateur).
+- `acceptee: false` → note maintenue, fiche passe en `en_validation_rh`.
+
+#### Champ `prochaine_etape` (logique FE)
+
+| Valeur | Action à afficher | Qui |
+|--------|-------------------|-----|
+| `noter` | Bouton « Évaluer » | N+1 |
+| `continuer_notation` | Bouton « Continuer la notation » | N+1 |
+| `avis_et_signer` | Bouton « Donner mon avis et signer » | N+1 |
+| `signer_evalue` | Bouton « Prendre connaissance et signer » | Agent |
+| `envoyer_rh` | Bouton « Transmettre à la RH » | Agent |
+| `traiter_reclamation` | Badge réclamation en attente | RH |
+| `valider_rh` | Bouton « Valider » + « Rejeter » | RH |
+| `corriger_notation` | Bouton « Corriger la note » | N+1 |
+| `null` | Fiche terminée — aucun bouton | — |
+
+**Règle FE** : lire `data.prochaine_etape` en premier. Adapter boutons et call-to-action selon rôle de l'utilisateur courant.
+
 ### Mentions /20
 
 | Mention | Note |
@@ -514,11 +567,11 @@ Un agent reçoit une fiche **si et seulement si** :
 ### Statuts fiche
 
 ```
-en_attente → en_cours → notee → signee_evaluateur → signee_evalue → en_validation_rh → finalisee
-                                                                                              ↘ rejetee → retour en_cours
+en_attente → en_cours → notee → signee_evaluateur → signee_evalue ┐ → en_validation_rh → finalisee
+                                                                   │                           ↘ rejetee → retour en_cours
+                                                                   └ → en_reclamation ──────────↗  (si RH rejette la réclamation)
                                        annulee (depuis tout statut non terminal)
 ```
-**Phase 2 ajoutera** : `en_reclamation` entre `signee_evalue` et `en_validation_rh`.
 
 ### Hors Phase 1
 
@@ -535,6 +588,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-10 | **Module Évaluation Phase 2** : avis N+1 obligatoire (min 10 chars), réclamations (CCN art. 65), envoi RH, `prochaine_etape` | Voir §7b. 4 nouveaux endpoints + `/reclamations` CRUD. `prochaine_etape` sur chaque fiche. `reclamation` chargée sur show. 20 tests, 111 assertions. |
 | 2026-09-10 | Module Évaluation Phase 1 : sessions, grille 24q, fiches, notation /20, mentions, signatures, validation RH | Voir §7b. 21 endpoints `/api/avancements/`. Seeder 24 questions. Éligibilité complète (cycle 24 mois, parité, semestre, exemptions CCN). |
 | 2026-09-08 | Paliers ancienneté + `jours_anciennete` sur le solde | CRUD `/conges/paliers-anciennete`. Solde = 30 + bonus. Seed 0/2/4/6 j. |
 | 2026-09-08 | Listes congés/absences : `agent` identité légère | Même contrat que dossiers : `{ id, matricule, nom, prenom, nom_complet }`. `agent_id` conservé. |

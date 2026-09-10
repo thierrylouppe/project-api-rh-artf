@@ -141,14 +141,14 @@ N+1 : extraire / réutiliser un `SuperieurHierarchiqueService` (affectation acti
 
 **Prérequis :** fiche `notee` possible.
 
-- [ ] Avis N+1 : `avis_superieur` 10–2000, signature évaluateur → statut `validee` (notation complète obligatoire)
-- [ ] Signature agent **obligatoire** (art. 63) : prise de connaissance → `signee` (refusée si N+1 non signé)
-- [ ] **Réclamation** (art. 65) : dès que la note est portée à connaissance — **dans cette phase**, pas en satellite P5
-- [ ] Validation RH : prérequis `signee` ; en P2 les avis hiérarchiques **ne sont pas encore là** → transmission RH **sans** avis P3, **ou** chaîne d’avis vide = OK. **Décision :** en P2, transmission RH dès `signee`. En P3, on **ajoute** le prérequis « tous avis requis signés » (non-breaking : champ / règle plus stricte).
-- [ ] RH conforme → `finalisee` ; non conforme + motif → `rejetee`
-- [ ] Endpoints : `avis-et-validation`, `valider-et-signer`, `rh/{id}/valider` \| `rejeter`
-- [ ] Tests Feature workflow complet P1+P2
-- [ ] Note FE : boutons selon statut + rôle (comme `prochaine_etape` congés)
+- [x] Avis N+1 : `avis_superieur` 10–2000, signature évaluateur → statut `signee_evaluateur` (notation complète obligatoire) — endpoint `avis-et-signer`
+- [x] Signature agent **obligatoire** (art. 63) : prise de connaissance → `signee_evalue` (refusée si N+1 non signé)
+- [x] **Réclamation** (art. 65) : endpoint `reclamer`, table `reclamations`, `ReclamationService::traiter()`
+- [x] Validation RH : endpoint `envoyer-rh` depuis `signee_evalue`. En P3 on ajoutera les prérequis avis hiérarchiques.
+- [x] RH conforme → `finalisee` ; non conforme + motif → `rejetee`
+- [x] Endpoints : `avis-et-signer`, `reclamer`, `envoyer-rh`, `valider-rh`, `/reclamations/{id}/traiter`
+- [x] Tests Feature workflow complet P1+P2 — **20 tests, 111 assertions ✅**
+- [x] Note FE : `prochaine_etape` sur chaque fiche + tableau boutons/rôles dans §7b
 
 ---
 

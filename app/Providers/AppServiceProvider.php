@@ -50,6 +50,7 @@ use App\Interfaces\EvaluationInterface;
 use App\Interfaces\NoteEvaluationInterface;
 use App\Interfaces\PalierAncienneteCongeInterface;
 use App\Interfaces\QuestionEvaluationInterface;
+use App\Interfaces\ReclamationInterface;
 use App\Interfaces\RegleAcquisitionCongeInterface;
 use App\Interfaces\SessionEvaluationInterface;
 use App\Interfaces\SituationFamilialeInterface;
@@ -107,6 +108,7 @@ use App\Repositories\EvaluationRepository;
 use App\Repositories\NoteEvaluationRepository;
 use App\Repositories\PalierAncienneteCongeRepository;
 use App\Repositories\QuestionEvaluationRepository;
+use App\Repositories\ReclamationRepository;
 use App\Repositories\RegleAcquisitionCongeRepository;
 use App\Repositories\SessionEvaluationRepository;
 use App\Repositories\SituationFamilialeRepository;
@@ -171,6 +173,7 @@ class AppServiceProvider extends ServiceProvider
         QuestionEvaluationInterface::class    => QuestionEvaluationRepository::class,
         EvaluationInterface::class            => EvaluationRepository::class,
         NoteEvaluationInterface::class        => NoteEvaluationRepository::class,
+        ReclamationInterface::class           => ReclamationRepository::class,
         // Module dossier agent (vie courante)
         InformationsPersonnelleInterface::class     => InformationsPersonnelleRepository::class,
         InformationsProfessionnelleInterface::class => InformationsProfessionnelleRepository::class,

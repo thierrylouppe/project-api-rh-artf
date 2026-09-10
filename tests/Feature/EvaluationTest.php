@@ -303,7 +303,7 @@ class EvaluationTest extends TestCase
     }
 
     // ----------------------------------------------------------------
-    // Test 5 : workflow signatures
+    // Test 5 : workflow signatures Phase 1 (avis non obligatoire)
     // ----------------------------------------------------------------
 
     public function test_workflow_signature_evaluateur_puis_evalue(): void
@@ -316,7 +316,7 @@ class EvaluationTest extends TestCase
         // Notation complète (2 questions)
         $this->noterComplet($fiche);
 
-        // Signature évaluateur
+        // Signature évaluateur (Phase 1 — sans avis)
         $this->postJson("/api/avancements/evaluations/{$fiche->id}/signer-evaluateur")
             ->assertOk()
             ->assertJsonPath('data.statut', StatutEvaluation::SIGNEE_EVALUATEUR->value);
@@ -330,6 +330,184 @@ class EvaluationTest extends TestCase
     }
 
     // ----------------------------------------------------------------
+    // Tests Phase 2 : avis obligatoire, réclamation, envoi RH
+    // ----------------------------------------------------------------
+
+    public function test_avis_et_signer_necessite_avis_superieur(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        Sanctum::actingAs($this->chefUser);
+        $this->noterComplet($fiche);
+
+        // Trop court → 422
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/avis-et-signer", [
+            'avis_superieur' => 'Court',
+        ])->assertUnprocessable()
+            ->assertJsonPath('errors.avis_superieur.0', fn ($m) => str_contains($m, '10'));
+    }
+
+    public function test_avis_et_signer_enregistre_avis_et_signe(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        Sanctum::actingAs($this->chefUser);
+        $this->noterComplet($fiche);
+
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/avis-et-signer", [
+            'avis_superieur' => 'Agent très compétent, bonne maîtrise du domaine.',
+        ])->assertOk()
+            ->assertJsonPath('data.statut', StatutEvaluation::SIGNEE_EVALUATEUR->value)
+            ->assertJsonPath('data.prochaine_etape', 'signer_evalue');
+
+        $this->assertDatabaseHas('evaluations', [
+            'id'             => $fiche->id,
+            'avis_superieur' => 'Agent très compétent, bonne maîtrise du domaine.',
+        ]);
+    }
+
+    public function test_agent_peut_reclamer_apres_signature(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        $this->menerJusquaSigneeEvalue($fiche);
+
+        Sanctum::actingAs($this->agentUser);
+
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/reclamer", [
+            'motif' => 'Je conteste ma note, les critères n\'ont pas été correctement évalués.',
+        ])->assertOk()
+            ->assertJsonPath('data.statut', StatutEvaluation::EN_RECLAMATION->value)
+            ->assertJsonPath('data.prochaine_etape', 'traiter_reclamation');
+
+        $this->assertDatabaseHas('reclamations', [
+            'evaluation_id' => $fiche->id,
+            'statut'        => 'en_attente',
+        ]);
+    }
+
+    public function test_rh_accepte_reclamation_renvoie_au_notateur(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        $this->menerJusquaSigneeEvalue($fiche);
+
+        // Agent réclame
+        Sanctum::actingAs($this->agentUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/reclamer", [
+            'motif' => 'Note injuste sur le critère de connaissance technique.',
+        ])->assertOk();
+
+        // Récupérer la réclamation
+        $reclamationId = \App\Models\Reclamation::where('evaluation_id', $fiche->id)->first()->id;
+
+        // RH accepte → renvoie au notateur (en_cours)
+        Sanctum::actingAs($this->rhUser);
+        $this->postJson("/api/avancements/reclamations/{$reclamationId}/traiter", [
+            'acceptee'    => true,
+            'commentaire' => 'Nous avons examiné votre réclamation, renvoi au notateur.',
+        ])->assertOk()
+            ->assertJsonPath('data.statut', 'acceptee');
+
+        $this->assertDatabaseHas('evaluations', [
+            'id'     => $fiche->id,
+            'statut' => StatutEvaluation::EN_COURS->value,
+        ]);
+    }
+
+    public function test_rh_rejette_reclamation_envoie_en_validation(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        $this->menerJusquaSigneeEvalue($fiche);
+
+        Sanctum::actingAs($this->agentUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/reclamer", [
+            'motif' => 'Je conteste cette note, le notateur n\'a pas été objectif.',
+        ])->assertOk();
+
+        $reclamationId = \App\Models\Reclamation::where('evaluation_id', $fiche->id)->first()->id;
+
+        // RH rejette → note maintenue, envoyée en validation
+        Sanctum::actingAs($this->rhUser);
+        $this->postJson("/api/avancements/reclamations/{$reclamationId}/traiter", [
+            'acceptee'    => false,
+            'commentaire' => 'Réclamation examinée, note maintenue.',
+        ])->assertOk()
+            ->assertJsonPath('data.statut', 'rejetee');
+
+        $this->assertDatabaseHas('evaluations', [
+            'id'     => $fiche->id,
+            'statut' => StatutEvaluation::EN_VALIDATION_RH->value,
+        ]);
+    }
+
+    public function test_workflow_complet_p2_sans_reclamation(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        // N+1 note
+        Sanctum::actingAs($this->chefUser);
+        $this->noterComplet($fiche);
+
+        // N+1 : avis + signature
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/avis-et-signer", [
+            'avis_superieur' => 'Bonne performance générale, atteint les objectifs fixés.',
+        ])->assertOk()
+            ->assertJsonPath('data.statut', StatutEvaluation::SIGNEE_EVALUATEUR->value)
+            ->assertJsonPath('data.prochaine_etape', 'signer_evalue');
+
+        // Agent signe
+        Sanctum::actingAs($this->agentUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/signer-evalue")
+            ->assertOk()
+            ->assertJsonPath('data.statut', StatutEvaluation::SIGNEE_EVALUE->value)
+            ->assertJsonPath('data.prochaine_etape', 'envoyer_rh');
+
+        // Envoi RH
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/envoyer-rh")
+            ->assertOk()
+            ->assertJsonPath('data.statut', StatutEvaluation::EN_VALIDATION_RH->value)
+            ->assertJsonPath('data.prochaine_etape', 'valider_rh');
+
+        // RH valide
+        Sanctum::actingAs($this->rhUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/valider-rh", [
+            'conforme' => true,
+        ])->assertOk()
+            ->assertJsonPath('data.statut', StatutEvaluation::FINALISEE->value)
+            ->assertJsonPath('data.prochaine_etape', null);
+    }
+
+    public function test_prochaine_etape_coherente_avec_statut(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        Sanctum::actingAs($this->rhUser);
+
+        // en_attente
+        $data = $this->getJson("/api/avancements/evaluations/{$fiche->id}")->assertOk()->json('data');
+        $this->assertSame('noter', $data['prochaine_etape']);
+
+        // noter → en_cours
+        Sanctum::actingAs($this->chefUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/noter", [
+            'question_id'  => $this->q1->id,
+            'note_obtenue' => 5.0,
+        ])->assertOk();
+
+        $data = $this->getJson("/api/avancements/evaluations/{$fiche->id}")->assertOk()->json('data');
+        $this->assertSame('continuer_notation', $data['prochaine_etape']);
+    }
+
+    // ----------------------------------------------------------------
     // Test 6 : validation RH
     // ----------------------------------------------------------------
 
@@ -338,18 +516,25 @@ class EvaluationTest extends TestCase
         $session = $this->creerSession();
         $fiche   = $this->fichePourAgent($session);
 
-        // Conduire la fiche jusqu'à en_validation_rh
-        Sanctum::actingAs($this->chefUser);
+        // Workflow complet Phase 2 jusqu'à en_validation_rh
         $this->noterComplet($fiche);
-        $this->postJson("/api/avancements/evaluations/{$fiche->id}/signer-evaluateur")->assertOk();
+
+        Sanctum::actingAs($this->chefUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/avis-et-signer", [
+            'avis_superieur' => 'Agent performant, maîtrise son domaine.',
+        ])->assertOk();
 
         Sanctum::actingAs($this->agentUser);
         $this->postJson("/api/avancements/evaluations/{$fiche->id}/signer-evalue")->assertOk();
-        $this->postJson("/api/avancements/evaluations/{$fiche->id}/signer-evalue")->assertUnprocessable();
 
-        // Envoi en validation RH (via envoyer-en-validation-rh — direct ou via valider-rh)
-        // Ici on met la fiche en en_validation_rh directement via update (car Phase 1)
-        $fiche->update(['statut' => StatutEvaluation::EN_VALIDATION_RH->value]);
+        // Envoi en validation RH
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/envoyer-rh")
+            ->assertOk()
+            ->assertJsonPath('data.statut', StatutEvaluation::EN_VALIDATION_RH->value);
+
+        // Double envoi → 422
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/envoyer-rh")
+            ->assertUnprocessable();
 
         Sanctum::actingAs($this->rhUser);
 
@@ -436,6 +621,24 @@ class EvaluationTest extends TestCase
             'question_id'  => $this->q2->id,
             'note_obtenue' => 7.0,
         ])->assertOk();
+    }
+
+    /**
+     * Amène une fiche jusqu'à statut SIGNEE_EVALUE.
+     * N+1 note + signe (avis-et-signer), agent signe.
+     */
+    private function menerJusquaSigneeEvalue(Evaluation $fiche): void
+    {
+        $this->noterComplet($fiche);
+
+        Sanctum::actingAs($this->chefUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/avis-et-signer", [
+            'avis_superieur' => 'Agent rigoureux, atteint l\'ensemble de ses objectifs.',
+        ])->assertOk();
+
+        Sanctum::actingAs($this->agentUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/signer-evalue")
+            ->assertOk();
     }
 
     private function creerAgent(string $prenom, string $nom): Agent

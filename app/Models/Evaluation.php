@@ -81,6 +81,11 @@ class Evaluation extends Model
         return $this->hasMany(NoteEvaluation::class, 'evaluation_id');
     }
 
+    public function reclamation(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Reclamation::class, 'evaluation_id');
+    }
+
     // ----------------------------------------------------------------
     // Helpers
     // ----------------------------------------------------------------

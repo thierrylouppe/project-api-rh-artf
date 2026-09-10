@@ -31,6 +31,7 @@ use App\Http\Controllers\API\AuditLogController;
 // Module Évaluation / Notation / Avancement
 use App\Http\Controllers\API\EvaluationController;
 use App\Http\Controllers\API\QuestionEvaluationController;
+use App\Http\Controllers\API\ReclamationController;
 use App\Http\Controllers\API\SessionEvaluationController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BureauController;
@@ -440,11 +441,19 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
         ->middleware('permission:valider-evaluations');
     Route::post('evaluations/{id}/signer-evaluateur', [EvaluationController::class, 'signerEvaluateur'])
         ->middleware('permission:valider-evaluations');
+    // Phase 2 : avis obligatoire + signature (remplace signer-evaluateur)
+    Route::post('evaluations/{id}/avis-et-signer', [EvaluationController::class, 'avisEtSigner'])
+        ->middleware('permission:valider-evaluations');
 
     // Vue agent évalué
     Route::get('evaluations/agent/mes-evaluations', [EvaluationController::class, 'mesEvaluationsAgent'])
         ->middleware('permission:consulter-evaluations');
     Route::post('evaluations/{id}/signer-evalue', [EvaluationController::class, 'signerEvalue'])
+        ->middleware('permission:consulter-evaluations');
+    // Phase 2 : réclamation + envoi RH
+    Route::post('evaluations/{id}/reclamer', [EvaluationController::class, 'reclamer'])
+        ->middleware('permission:consulter-evaluations');
+    Route::post('evaluations/{id}/envoyer-rh', [EvaluationController::class, 'envoyerRh'])
         ->middleware('permission:consulter-evaluations');
 
     // Validation RH
@@ -454,4 +463,14 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
         ->middleware('permission:valider-evaluations');
     Route::put('evaluations/{id}/superieur', [EvaluationController::class, 'reattribuerSuperieur'])
         ->middleware('permission:creer-evaluations');
+
+    // ---- Réclamations (RH — `valider-evaluations`) ----
+    Route::get('reclamations', [ReclamationController::class, 'index'])
+        ->middleware('permission:valider-evaluations');
+    Route::get('reclamations/en-attente', [ReclamationController::class, 'enAttente'])
+        ->middleware('permission:valider-evaluations');
+    Route::get('reclamations/{id}', [ReclamationController::class, 'show'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('reclamations/{id}/traiter', [ReclamationController::class, 'traiter'])
+        ->middleware('permission:valider-evaluations');
 });
