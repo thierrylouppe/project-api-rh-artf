@@ -18,6 +18,8 @@ enum StatutAgent: string
     case ARCHIVE                 = 'archive';
     case DETACHEMENT             = 'detachement';
     case POSITION_EXCEPTIONNELLE = 'position_exceptionnelle';
+    case DISPONIBILITE           = 'disponibilite';   // CCN art. 79
+    case SOUS_LE_DRAPEAU         = 'sous_le_drapeau'; // CCN art. 80
 
     public function label(): string
     {
@@ -30,16 +32,24 @@ enum StatutAgent: string
             self::ARCHIVE                 => 'Archivé',
             self::DETACHEMENT             => 'En détachement',
             self::POSITION_EXCEPTIONNELLE => 'Position exceptionnelle',
+            self::DISPONIBILITE           => 'En disponibilité',
+            self::SOUS_LE_DRAPEAU         => 'Sous le drapeau',
         };
     }
 
-    /** Convention collective ARTF, art. 65 : stage, détachement, position exceptionnelle. */
+    /**
+     * Positions exemptes de notation d'avancement.
+     * CCN art. 79 : mise en disponibilité = hors cadre, droits suspendus.
+     * CCN art. 80 : sous le drapeau = régime des congés administratifs.
+     */
     public function exempteDeNotation(): bool
     {
         return in_array($this, [
             self::STAGIAIRE,
             self::DETACHEMENT,
             self::POSITION_EXCEPTIONNELLE,
+            self::DISPONIBILITE,
+            self::SOUS_LE_DRAPEAU,
         ], true);
     }
 
@@ -53,6 +63,8 @@ enum StatutAgent: string
             self::RETRAITE->value,
             self::DETACHEMENT->value,
             self::POSITION_EXCEPTIONNELLE->value,
+            self::DISPONIBILITE->value,
+            self::SOUS_LE_DRAPEAU->value,
         ];
     }
 }

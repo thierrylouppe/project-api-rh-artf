@@ -208,15 +208,22 @@ class SessionEvaluationService extends BaseService
      */
     public function agentsEligibles(SessionEvaluation $session): Collection
     {
-        $statutsExclus = [
-            StatutAgent::STAGIAIRE->value,
-            StatutAgent::DETACHEMENT->value,
-            StatutAgent::POSITION_EXCEPTIONNELLE->value,
-            StatutAgent::INACTIF->value,
-            StatutAgent::RETRAITE->value,
-            StatutAgent::SUSPENDU->value,
-            StatutAgent::ARCHIVE->value,
-        ];
+        // Construire la liste depuis l'enum — inclut automatiquement
+        // les nouvelles positions CCN (disponibilite, sous_le_drapeau…)
+        $statutsExclus = array_merge(
+            // Positions exemptées de notation (exempteDeNotation = true)
+            array_map(
+                fn (StatutAgent $s) => $s->value,
+                array_filter(StatutAgent::cases(), fn (StatutAgent $s) => $s->exempteDeNotation())
+            ),
+            // Statuts "hors activité" non couverts par exempteDeNotation
+            [
+                StatutAgent::INACTIF->value,
+                StatutAgent::RETRAITE->value,
+                StatutAgent::SUSPENDU->value,
+                StatutAgent::ARCHIVE->value,
+            ]
+        );
 
         $anneeSession = (int) $session->debut_session->year;
 

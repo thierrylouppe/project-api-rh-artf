@@ -136,13 +136,32 @@ Rôles : [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md). Comptes démo
 | `jours_max` | Plafond indicatif. `0` (ex. maladie) = pas de plafond côté type. |
 | `necessite_*` | Ne pas afficher les boutons d’étapes inutiles. Source de vérité runtime : `data.prochaine_etape`. |
 
-Seed (noms exacts) :
+Seed (noms exacts — conformes CCN ARTF art. 77) :
 
-| Type | Circuit | Solde | Justificatif |
-|------|---------|-------|--------------|
-| Congé annuel | N+1 → RH | oui | non |
-| Maternité, paternité, exceptionnels (décès / mariage), maladie | RH seule | non | oui |
-| Sans solde, sabbatique | N+1 → RH → DG | non | oui |
+| Type | `jours_max` | Circuit | Solde | Justificatif |
+|------|-------------|---------|-------|--------------|
+| Congé annuel | 30 | N+1 → RH | oui | non |
+| Congé de maternité | **105** (15 sem.) | RH | non | oui |
+| Congé de paternité | **2** | RH | non | oui |
+| Congé exceptionnel — mariage du salarié | 5 | RH | non | oui |
+| Congé exceptionnel — mariage d'un enfant | 2 | RH | non | oui |
+| Congé exceptionnel — baptême d'un enfant | 1 | RH | non | oui |
+| Congé exceptionnel — déménagement | 2 | RH | non | non |
+| Congé exceptionnel — décès du conjoint | **10** | RH | non | oui |
+| Congé exceptionnel — décès d'un parent (père, mère, frère, sœur, enfant) | 5 | RH | non | oui |
+| Congé exceptionnel — retrait de deuil | 2 | RH | non | non |
+| Congé exceptionnel — construction de la pierre tombale | 2 | RH | non | non |
+| Congé maladie — ascendants | 4 | RH | non | oui |
+| Congé maladie — conjoint | 7 | RH | non | oui |
+| Congé maladie — 1 enfant à charge | 5 | RH | non | oui |
+| Congé maladie — 2 enfants à charge | 9 | RH | non | oui |
+| Congé maladie — 3 enfants et plus à charge | 12 | RH | non | oui |
+| Congé maladie | 0 (illimité) | RH | non | oui |
+| Congé pour convenances personnelles | 180 (6 mois) | N+1 → RH | non | non |
+| Congé pour concours | 1 | RH | non | oui |
+| Congé d'éducation et formation syndicale | 0 (variable) | RH | non | oui |
+| Congé sans solde | 90 | N+1 → RH → DG | non | oui |
+| Congé sabbatique | 180 | N+1 → RH → DG | non | oui |
 
 CRUD flags : `POST/PUT /types-conges` (mêmes champs boolean). Règle annuelle : `GET/POST /conges/regles-acquisition` (`type_conge_id`, `jours_par_mois` 2.5, `jours_max` 30).
 
@@ -248,10 +267,23 @@ Même modèle que les fériés. Permission lecture : `consulter-conges` ; écrit
 | | |
 |--|--|
 | Liste | `GET /conges/paliers-anciennete` |
-| Créer | `POST` `{ "anciennete_min": 5, "anciennete_max": 9, "jours_bonus": 2 }` |
+| Créer | `POST` `{ "anciennete_min": 5, "anciennete_max": 9, "jours_bonus": 6 }` |
 | Modifier / supprimer | `PUT` / `DELETE /conges/paliers-anciennete/{id}` |
 
-`anciennete_max` nullable = pas de plafond (ex. 20 ans et +). Chevauchement de paliers → **422**. Seed : 0–4 → +0 · 5–9 → +2 · 10–19 → +4 · 20+ → +6.
+`anciennete_max` nullable = pas de plafond. Chevauchement de paliers → **422**.
+
+**Seed CCN ARTF art. 77 (8 paliers) :**
+
+| Tranche | Jours bonus (s'ajoutent à la base 30j) |
+|---------|----------------------------------------|
+| 0–4 ans | +0 |
+| 5–9 ans | **+6** |
+| 10–14 ans | **+8** |
+| 15–19 ans | **+10** |
+| 20–24 ans | **+12** |
+| 25–29 ans | **+14** |
+| 30–34 ans | **+16** |
+| 35 ans et + | **+18** |
 
 ### PDF
 
@@ -930,6 +962,9 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-10 | **Congés — positions CCN art. 79–80** : `StatutAgent` + 2 valeurs (`disponibilite`, `sous_le_drapeau`), migration ENUM agents, suppression "Mise en disponibilité" de type_absences, `SessionEvaluationService` dynamique | Agents en disponibilité et sous le drapeau exclus de l'évaluation. Enum agents étendu. |
+| 2026-09-10 | **Congés — validations métier CCN art. 77** : congé annuel bloqué avant 12 mois de service, convenances personnelles min 15 jours | API renvoie **422** avec message explicite si règle non respectée. |
+| 2026-09-10 | **Congés — mise en conformité CCN ARTF art. 77** : paliers ancienneté corrigés (8 paliers 0/6/8/10/12/14/16/18j), paternité 2j (était 10j), maternité 105j (était 98j), 14 types de congé ajoutés (exceptionnels, maladie famille, convenances perso, concours, éducation syndicale) | Nouvelle table seed `GET /types-conges`. Noms exacts dans §2c. |
 | 2026-09-10 | **Module Évaluation Phase 5** : stats session, bonification stage art. 71, avancement exceptionnel art. 72, notifications évaluation, connaissances complémentaires | Voir §5. 12 nouveaux endpoints. 7 tests P5, 100 tests total, 728 assertions. |
 | 2026-09-10 | **Module Évaluation Phase 4** : commissions préparatoire + avancement (CCN art. 68–70), clôture session renforcée, `avancerEchelon` idempotent | Voir §4.5. 7 nouveaux endpoints commissions + 1 `avancer-echelon`. `prochaine_etape` : `commission_preparatoire` / `avancer_echelon` / `null`. 33 tests, 314 assertions. |
 | 2026-09-10 | **Module Évaluation Phase 3** : avis hiérarchiques séquentiels (CCN art. 64), variante rattaché DG, envoi RH bloqué si avis manquants | 5 nouveaux endpoints `/avis-hierarchiques`. 26 tests, 173 assertions. `avis_hierarchiques` chargés sur show. |

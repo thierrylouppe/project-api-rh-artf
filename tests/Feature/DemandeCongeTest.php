@@ -504,11 +504,12 @@ class DemandeCongeTest extends TestCase
     private function creerAgent(string $prenom, string $nom): Agent
     {
         return Agent::create([
-            'nom'            => $nom,
-            'prenom'         => $prenom,
-            'date_naissance' => '1990-01-01',
-            'genre'          => 'M',
-            'statut'         => 'actif',
+            'nom'                => $nom,
+            'prenom'             => $prenom,
+            'date_naissance'     => '1990-01-01',
+            'genre'              => 'M',
+            'statut'             => 'actif',
+            'date_prise_service' => '2024-01-01', // > 12 mois — CCN art. 77
         ]);
     }
 }

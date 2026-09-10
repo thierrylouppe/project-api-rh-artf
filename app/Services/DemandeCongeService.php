@@ -11,6 +11,7 @@ use App\Interfaces\UserInterface;
 use App\Models\DemandeConge;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -69,8 +70,8 @@ class DemandeCongeService extends BaseService
     public function create(array $data): DemandeConge
     {
         return DB::transaction(function () use ($data) {
-            $this->agentRepository->findById((int) $data['agent_id']);
-            $type = $this->typeCongeRepository->findById((int) $data['type_conge_id']);
+            $agent = $this->agentRepository->findById((int) $data['agent_id']);
+            $type  = $this->typeCongeRepository->findById((int) $data['type_conge_id']);
 
             abort_unless(
                 $type->necessite_n1 || $type->necessite_rh || $type->necessite_dg,
@@ -80,6 +81,35 @@ class DemandeCongeService extends BaseService
 
             $nbJours = $this->jourFerieService->calculerJoursOuvrables($data['date_debut'], $data['date_fin']);
             abort_if($nbJours < 1, 422, 'La période ne contient aucun jour ouvrable.');
+
+            // ── Règles CCN ARTF art. 77 ─────────────────────────────────────────
+
+            // Congé annuel : droit acquis après 12 mois de service effectif
+            if (str_starts_with(strtolower($type->nom), 'congé annuel')) {
+                abort_unless(
+                    $agent->date_prise_service !== null,
+                    422,
+                    'La date de prise de service est absente du dossier agent. Le droit au congé annuel ne peut être vérifié.'
+                );
+                $moisService = (int) Carbon::parse($agent->date_prise_service)
+                    ->diffInMonths(Carbon::parse($data['date_debut']));
+                abort_unless(
+                    $moisService >= 12,
+                    422,
+                    "Le congé annuel est acquis après 12 mois de service effectif. L'agent en a {$moisService} mois."
+                );
+            }
+
+            // Congé pour convenances personnelles : minimum 15 jours ouvrables (CCN art. 77)
+            if (str_contains(strtolower($type->nom), 'convenances personnelles')) {
+                abort_unless(
+                    $nbJours >= 15,
+                    422,
+                    "Le congé pour convenances personnelles ne peut être inférieur à 15 jours ouvrables (CCN art. 77). Période saisie : {$nbJours} j."
+                );
+            }
+
+            // ────────────────────────────────────────────────────────────────────
 
             $this->assertPeriodeLibre((int) $data['agent_id'], $data['date_debut'], $data['date_fin']);
 
