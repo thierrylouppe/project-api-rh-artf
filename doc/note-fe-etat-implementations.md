@@ -393,7 +393,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 
 ---
 
-## 7b. Module Évaluation / Notation / Avancement — Phase 1 + Phase 2
+## 7b. Module Évaluation / Notation / Avancement — Phase 1, 2 et 3
 
 > Branche : `feature/evaluation-notation-avancement` · Préfixe : `/api/avancements/`
 > Auth : `auth:sanctum` + `permission:consulter-evaluations | creer-evaluations | valider-evaluations`
@@ -407,7 +407,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 | `chef-service`, `chef-bureau` | `consulter-evaluations`, `valider-evaluations` |
 | `agent` | `consulter-evaluations` |
 
-### Endpoints disponibles (Phase 1 + Phase 2)
+### Endpoints disponibles (Phase 1, 2 et 3)
 
 #### Sessions (RH — `creer-evaluations`)
 
@@ -507,6 +507,69 @@ Un agent reçoit une fiche **si et seulement si** :
 6. Semestre (si `session.semestre` renseigné) : embauché en S1 (jan–juin) → session `semestre = 1`
 7. N+1 identifiable. Sans N+1 → `GET sessions/{id}/sans-superieur`, **pas de fiche créée**.
 
+### Avis hiérarchiques — Phase 3 (CCN art. 64)
+
+| Méthode | Endpoint | Acteur | Permission |
+|---------|----------|--------|------------|
+| GET | `/avancements/evaluations/{id}/niveaux-requis` | Tous | `consulter-evaluations` |
+| GET | `/avancements/evaluations/{id}/avis-hierarchiques` | Tous | `consulter-evaluations` |
+| **POST** | `/avancements/evaluations/{id}/avis-hierarchiques` | Hiérarchie | `valider-evaluations` |
+| PUT | `/avancements/avis-hierarchiques/{id}` | Hiérarchie | `valider-evaluations` |
+| **POST** | `/avancements/avis-hierarchiques/{id}/signer` | Hiérarchie | `valider-evaluations` |
+
+#### Chaîne des niveaux
+
+| Niveau | Code | Ordre standard | Ordre variante DG |
+|--------|------|---------------:|------------------:|
+| Chef de Bureau | `chef_bureau` | 1 | 1 |
+| Chef de Service | `chef_service` | 2 | 2 |
+| Directeur | `directeur` | 3 | *sauté* |
+| Directeur Général | `directeur_general` | 4 | 3 |
+
+**Variante DG** : si `direction.rattache_dg = true`, le niveau `directeur` est sauté.
+Le FE peut connaître la chaîne exacte via `GET /niveaux-requis` avant d'afficher les boutons.
+
+#### Payload `poster` / `update` (POST ou PUT)
+
+```json
+{
+  "niveau": "chef_service",
+  "avis": "Bonne maîtrise technique, encadrement efficace.",
+  "approuve": true,
+  "observations": "RAS"
+}
+```
+- `niveau` : obligatoire, enum (`chef_bureau` | `chef_service` | `directeur` | `directeur_general`)
+- `avis` : optionnel, max 2000 chars
+- `approuve` : optionnel, boolean (`true` = favorable, `false` = défavorable)
+- `observations` : optionnel, max 1000 chars
+
+#### Règles FE pour les avis
+
+| Règle | Détail |
+|-------|--------|
+| **Séquentialité** | Afficher le bouton du niveau N seulement si le niveau N−1 est signé (`signe: true`) |
+| **Signature définitive** | Griser le bouton « Modifier » si `signe: true` — PUT retourne 422 |
+| **Envoi RH bloqué** | `POST /envoyer-rh` retourne 422 si un avis requis n'est pas signé — afficher un badge de blocage |
+
+#### Payload réponse avis
+
+```json
+{
+  "id": 3,
+  "evaluation_id": 12,
+  "niveau": "directeur",
+  "niveau_label": "Directeur",
+  "ordre": 1,
+  "avis": "Appréciation favorable.",
+  "approuve": true,
+  "observations": null,
+  "signe": false,
+  "date_signature": null,
+  "signe_par": null
+}
+```
+
 ### Réclamations — Phase 2 (CCN art. 65)
 
 | Méthode | Endpoint | Acteur | Permission |
@@ -550,7 +613,9 @@ Contrainte : `motif` requis, min 10 chars.
 | `traiter_reclamation` | Badge réclamation en attente | RH |
 | `valider_rh` | Bouton « Valider » + « Rejeter » | RH |
 | `corriger_notation` | Bouton « Corriger la note » | N+1 |
-| `null` | Fiche terminée — aucun bouton | — |
+| `commission_preparatoire` | Fiche finalisée, en attente de passage en commission | RH/DG |
+| `avancer_echelon` | Bouton « Appliquer l'avancement » (Phase 4) | RH |
+| `null` | Fiche terminée (échelon avancé ou décision non favorable) | — |
 
 **Règle FE** : lire `data.prochaine_etape` en premier. Adapter boutons et call-to-action selon rôle de l'utilisateur courant.
 
@@ -575,10 +640,287 @@ en_attente → en_cours → notee → signee_evaluateur → signee_evalue ┐ �
 
 ### Hors Phase 1
 
-- Avis hiérarchiques séquentiels (Phase 3)
-- Réclamation (Phase 2)
-- Commissions (Phase 4)
-- Avancement d’échelon après commission (Phase 4)
+- Avis hiérarchiques séquentiels (Phase 3) ✅
+- Réclamation (Phase 2) ✅
+- ~~Commissions (Phase 4)~~ → Implémenté, voir §4.5
+- ~~Avancement d’échelon après commission (Phase 4)~~ → Implémenté, voir §4.5
+
+---
+
+## 5. Phase 5 — Satellites
+
+### 5.6 Stats session
+
+```
+GET /avancements/sessions/{id}/stats
+Permission : consulter-evaluations
+```
+
+Réponse :
+```json
+{
+  "data": {
+    "session_id": 3,
+    "total": 45,
+    "par_statut": {
+      "finalisee": 38,
+      "en_validation_rh": 5,
+      "signee_evalue": 2
+    },
+    "moyenne": 14.72,
+    "mentions": {
+      "Très bien": 18,
+      "Bien": 12,
+      "Excellent": 8
+    }
+  }
+}
+```
+
+### 5.1 Bonification stage (art. 71) — +2 échelons
+
+Parcours **séparé** du cycle 24 mois. Condition : stage ≥ 9 mois autorisé + certificat ou attestation.
+
+| Méthode | URL | Permission | Description |
+|---------|-----|-----------|-------------|
+| `GET` | `/avancements/bonifications-stage` | `valider-evaluations` | Liste toutes les demandes |
+| `GET` | `/avancements/bonifications-stage/en-attente` | `valider-evaluations` | Demandes en attente |
+| `POST` | `/avancements/bonifications-stage` | `consulter-evaluations` | Soumettre une demande |
+| `POST` | `/avancements/bonifications-stage/{id}/traiter` | `valider-evaluations` | Approuver / rejeter |
+| `POST` | `/avancements/bonifications-stage/{id}/appliquer` | `valider-evaluations` | Appliquer en paie (idempotent) |
+
+**Body soumettre :**
+```json
+{
+  "agent_id": 12,
+  "date_debut_stage": "2025-01-01",
+  "date_fin_stage": "2025-11-30",
+  "type_document": "certificat",
+  "reference_document": "CERT-2025-001"
+}
+```
+> `duree_mois` calculé auto. Erreur 422 si < 9 mois.
+
+**Body traiter :**
+```json
+{ "approuver": true, "commentaire": "Stage confirmé." }
+```
+
+**Réponse appliquer (idempotent) :**
+```json
+{ "data": { "avance": true, "message": "+2 échelon(s) appliqué(s) — bonification stage art. 71." } }
+```
+
+### 5.2 Avancement exceptionnel (art. 72)
+
+Commission d'avancement, sur proposition DG, ≤ 2 échelons.
+
+| Méthode | URL | Permission | Description |
+|---------|-----|-----------|-------------|
+| `GET` | `/avancements/avancements-exceptionnels` | `valider-evaluations` | Liste |
+| `GET` | `/avancements/avancements-exceptionnels/en-attente` | `valider-evaluations` | En attente |
+| `POST` | `/avancements/avancements-exceptionnels` | `valider-evaluations` | Proposer (DG) |
+| `POST` | `/avancements/avancements-exceptionnels/{id}/traiter` | `valider-evaluations` | Approuver / rejeter |
+| `POST` | `/avancements/avancements-exceptionnels/{id}/appliquer` | `valider-evaluations` | Appliquer en paie (idempotent) |
+
+**Body proposer :**
+```json
+{
+  "agent_id": 12,
+  "nb_echelons": 2,
+  "motif": "Performances exceptionnelles justifiant l'avancement.",
+  "commission_avancement_id": 5
+}
+```
+> `nb_echelons` : 1 ou 2 uniquement (422 sinon).
+
+### 5.3 Connaissances complémentaires
+
+Besoins de formation identifiés pendant l'évaluation.
+
+| Méthode | URL | Permission | Description |
+|---------|-----|-----------|-------------|
+| `GET` | `/avancements/evaluations/{evaluationId}/connaissances` | `consulter-evaluations` | Liste par fiche |
+| `POST` | `/avancements/evaluations/{evaluationId}/connaissances` | `consulter-evaluations` | Ajouter |
+| `DELETE` | `/avancements/connaissances/{id}` | `consulter-evaluations` | Supprimer |
+
+**Body ajouter :**
+```json
+{
+  "type": "formation",
+  "domaine": "Gestion de projet",
+  "description": "Formation PMP souhaitée.",
+  "urgent": true
+}
+```
+Types valides : `formation` | `certification` | `perfectionnement` | `autre`.
+
+### 5.4 Notifications domaine `evaluation`
+
+Intégrer via la cloche existante (`/notifications`). Le service `EvaluationNotificationService` envoie automatiquement les événements suivants dans le domaine `evaluation` :
+
+| `action` | Déclencheur | Destinataire |
+|----------|------------|--------------|
+| `session_ouverte` | Création session | Tous les N+1 |
+| `fiche_a_noter` | Attribution fiche | N+1 |
+| `fiche_a_signer_evalue` | N+1 signé | Agent |
+| `fiche_en_validation_rh` | Agent transmis RH | Équipe RH |
+| `fiche_finalisee` | Validation RH | Agent |
+| `fiche_rejetee` | Rejet RH | N+1 |
+| `commission_preparatoire_ouverte` | Ouverture commission | DG + RH |
+| `commission_avancement_ouverte` | Ouverture commission | DG + RH |
+| `avancement_accorde` | Échelon appliqué | Agent |
+| `bonification_stage` | Demande stage art. 71 | Équipe RH |
+| `avancement_exceptionnel` | Proposition art. 72 | Équipe RH |
+
+Filtrer côté FE par `meta.domaine === 'evaluation'`.
+
+---
+
+## 4.5. Phase 4 — Commissions (CCN art. 68–70)
+
+### Workflow complet Phase 4
+
+Après finalisation RH d'une fiche (statut `finalisee`) :
+
+```
+finalisee
+  └─ [RH/DG] POST sessions/{sessionId}/commission-preparatoire   (ouvrir)
+     └─ POST commissions-preparatoires/{id}/noter                (harmoniser note + synthèse)
+     └─ GET  commissions-preparatoires/{id}/alertes              (fiches écart > 5)
+     └─ POST commissions-preparatoires/{id}/cloturer
+        └─ [RH/DG] POST sessions/{sessionId}/commission-avancement
+           └─ POST commissions-avancements/{id}/decider          (favorable / défavorable / reporté)
+           └─ POST commissions-avancements/{id}/cloturer
+              └─ [RH] POST evaluations/{evaluationId}/avancer-echelon  (idempotent)
+              └─ [RH] POST sessions/{sessionId}/cloturer               (session fermée)
+```
+
+### Endpoints Phase 4
+
+#### Commission préparatoire (art. 68)
+
+| Méthode | URL | Permission | Description |
+|---------|-----|-----------|-------------|
+| `POST` | `/avancements/sessions/{sessionId}/commission-preparatoire` | `valider-evaluations` | Ouvrir la commission |
+| `GET` | `/avancements/sessions/{sessionId}/commission-preparatoire` | `consulter-evaluations` | Consulter la commission |
+| `POST` | `/avancements/commissions-preparatoires/{id}/noter` | `valider-evaluations` | Harmoniser note + synthèse |
+| `GET` | `/avancements/commissions-preparatoires/{id}/alertes` | `valider-evaluations` | Fiches avec écart > 5 pts |
+| `POST` | `/avancements/commissions-preparatoires/{id}/cloturer` | `valider-evaluations` | Clôturer |
+
+**Body noter :**
+```json
+{
+  "evaluation_id": 42,
+  "commission_note": 15.0,
+  "note_synthese": "Texte de synthèse narrative (art. 67)..."
+}
+```
+
+**Réponse noter :**
+```json
+{
+  "data": {
+    "alerte_ecart": false,
+    "ecart": 1.0,
+    "message": "Note commission enregistrée."
+  }
+}
+```
+> `alerte_ecart = true` si `|commission_note − note_globale| > 5`. Non bloquant — indicatif FE.
+
+#### Commission d'avancement (art. 69–70)
+
+| Méthode | URL | Permission | Description |
+|---------|-----|-----------|-------------|
+| `POST` | `/avancements/sessions/{sessionId}/commission-avancement` | `valider-evaluations` | Ouvrir (prérequis : commission préparatoire clôturée) |
+| `GET` | `/avancements/sessions/{sessionId}/commission-avancement` | `consulter-evaluations` | Consulter |
+| `POST` | `/avancements/commissions-avancements/{id}/decider` | `valider-evaluations` | Décision par fiche |
+| `POST` | `/avancements/commissions-avancements/{id}/cloturer` | `valider-evaluations` | Clôturer |
+| `POST` | `/avancements/evaluations/{evaluationId}/avancer-echelon` | `valider-evaluations` | Appliquer l'échelon (D6) |
+
+**Body décider :**
+```json
+{
+  "evaluation_id": 42,
+  "decision": "favorable",
+  "nombre_echelons": 1,
+  "note_avancement": 15.5,
+  "commentaire": "Bons résultats."
+}
+```
+
+- `decision` : `favorable` | `defavorable` | `reporte`
+- `nombre_echelons` : `1` ou `2` si favorable, `0` sinon (même classe — **pas** de reclassement)
+- `note_avancement` : optionnel, peut différer de `note_globale` N+1
+
+**Réponse décider** : `EvaluationResource` enrichi :
+```json
+{
+  "data": {
+    "commission_decision": "favorable",
+    "commission_decision_label": "Favorable (avancement accordé)",
+    "nombre_echelons": 1,
+    "note_avancement": 15.5,
+    "echelon_avance": false,
+    "prochaine_etape": "avancer_echelon"
+  }
+}
+```
+
+**Réponse avancer-echelon (idempotent) :**
+```json
+{
+  "data": {
+    "avance": true,
+    "echelon_precedent_id": 5,
+    "echelon_nouveau_id": 6,
+    "message": "Échelon appliqué avec succès."
+  }
+}
+```
+> Si déjà appliqué : `"avance": false, "message": "Échelon déjà appliqué (idempotent)."`.
+
+### Nouveaux champs sur `EvaluationResource`
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `commission_note` | `float|null` | Note harmonisée par la commission préparatoire |
+| `note_synthese` | `string|null` | Appréciation narrative (art. 67) |
+| `commission_decision` | `string|null` | `favorable` / `defavorable` / `reporte` |
+| `commission_decision_label` | `string|null` | Libellé lisible |
+| `nombre_echelons` | `int|null` | Échelons accordés (0-2) |
+| `note_avancement` | `float|null` | Note définitive retenue (art. 70) |
+| `echelon_avance` | `boolean` | `true` si l'échelon a déjà été appliqué en paie |
+
+### Ressource Commission
+
+```json
+{
+  "id": 1,
+  "session_id": 3,
+  "session": { "id": 3, "debut_session": "2026-09-01", "statut": "ouverte" },
+  "statut": "en_cours",
+  "statut_label": "En cours",
+  "date_ouverture": "2026-09-15",
+  "date_cloture": null,
+  "observations": null,
+  "created_at": "2026-09-15T10:00:00"
+}
+```
+
+### Gestion des erreurs Phase 4
+
+| Cas | Code | `errors.xxx` |
+|-----|------|--------------|
+| Commission préparatoire inexistante pour ouvrir l'avancement | 422 | `commission_preparatoire` |
+| Commission préparatoire non clôturée avant clôture session | 422 | `commission_preparatoire` |
+| Commission avancement non clôturée avant clôture session | 422 | `commission_avancement` |
+| Décision `favorable` sans échelons | 422 | `nombre_echelons` |
+| `nombre_echelons > 2` | 422 | `nombre_echelons` |
+| Fiche non finalisée passée en commission | 422 | `evaluation` |
+| Commission déjà clôturée | 422 | `statut` |
+| Avancer échelon sans décision favorable | 422 | `commission_decision` |
 
 ---
 
@@ -588,6 +930,9 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-10 | **Module Évaluation Phase 5** : stats session, bonification stage art. 71, avancement exceptionnel art. 72, notifications évaluation, connaissances complémentaires | Voir §5. 12 nouveaux endpoints. 7 tests P5, 100 tests total, 728 assertions. |
+| 2026-09-10 | **Module Évaluation Phase 4** : commissions préparatoire + avancement (CCN art. 68–70), clôture session renforcée, `avancerEchelon` idempotent | Voir §4.5. 7 nouveaux endpoints commissions + 1 `avancer-echelon`. `prochaine_etape` : `commission_preparatoire` / `avancer_echelon` / `null`. 33 tests, 314 assertions. |
+| 2026-09-10 | **Module Évaluation Phase 3** : avis hiérarchiques séquentiels (CCN art. 64), variante rattaché DG, envoi RH bloqué si avis manquants | 5 nouveaux endpoints `/avis-hierarchiques`. 26 tests, 173 assertions. `avis_hierarchiques` chargés sur show. |
 | 2026-09-10 | **Module Évaluation Phase 2** : avis N+1 obligatoire (min 10 chars), réclamations (CCN art. 65), envoi RH, `prochaine_etape` | Voir §7b. 4 nouveaux endpoints + `/reclamations` CRUD. `prochaine_etape` sur chaque fiche. `reclamation` chargée sur show. 20 tests, 111 assertions. |
 | 2026-09-10 | Module Évaluation Phase 1 : sessions, grille 24q, fiches, notation /20, mentions, signatures, validation RH | Voir §7b. 21 endpoints `/api/avancements/`. Seeder 24 questions. Éligibilité complète (cycle 24 mois, parité, semestre, exemptions CCN). |
 | 2026-09-08 | Paliers ancienneté + `jours_anciennete` sur le solde | CRUD `/conges/paliers-anciennete`. Solde = 30 + bonus. Seed 0/2/4/6 j. |

@@ -240,22 +240,34 @@ class SalaireAgentService extends BaseService
      */
     public function avancerEchelon(int $agentId, ?string $motif = null): SalaireAgent
     {
-        return DB::transaction(function () use ($agentId, $motif) {
+        return $this->avancerEchelons($agentId, 1, $motif);
+    }
+
+    /**
+     * Avance l'agent de N échelons (1 ou 2) dans sa classe (plafonné par echelon_fin).
+     * Utilisé par Phase 4 (commission), Phase 5.1 (art. 71) et Phase 5.2 (art. 72).
+     * Idempotent : ne fait rien si déjà au dernier échelon.
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+     */
+    public function avancerEchelons(int $agentId, int $n = 1, ?string $motif = null): SalaireAgent
+    {
+        return DB::transaction(function () use ($agentId, $n, $motif) {
             $actuel = $this->repository->getActuel($agentId);
 
             abort_if($actuel === null, 422, 'Aucun salaire actif pour cet agent.');
 
-            $echelonFin = (int) $this->parametreGrilleRepository->getCurrent()->echelon_fin;
-            $nouvelEchelon = $actuel->echelon + 1;
+            $echelonFin    = (int) $this->parametreGrilleRepository->getCurrent()->echelon_fin;
+            $nouvelEchelon = min($actuel->echelon + max(1, $n), $echelonFin); // plafonné
 
             abort_if(
-                $nouvelEchelon > $echelonFin,
+                $nouvelEchelon <= $actuel->echelon,
                 422,
                 "L'agent est déjà au dernier échelon ({$actuel->echelon})."
             );
 
             $ligneGrille = $this->trouverLigneGrille($actuel->classegrillesalariale_id, $nouvelEchelon);
-            $dateDebut = now()->toDateString();
+            $dateDebut   = now()->toDateString();
 
             $this->repository->cloturerActifs($agentId, $dateDebut);
 

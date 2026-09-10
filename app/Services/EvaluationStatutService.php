@@ -7,6 +7,7 @@ use App\Interfaces\EvaluationInterface;
 use App\Interfaces\ReclamationInterface;
 use App\Models\Evaluation;
 use App\Models\User;
+use App\Services\AvisHierarchiqueService;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -23,6 +24,7 @@ class EvaluationStatutService
     public function __construct(
         private readonly EvaluationInterface   $evaluationRepository,
         private readonly ReclamationInterface  $reclamationRepository,
+        private readonly AvisHierarchiqueService $avisService,
     ) {}
 
     // ----------------------------------------------------------------
@@ -140,8 +142,8 @@ class EvaluationStatutService
 
     /**
      * Envoi en validation RH (art. 66).
-     * En Phase 2 : depuis SIGNEE_EVALUE (sans avis hiérarchiques).
-     * En Phase 3 : ce prérequis sera renforcé (tous avis requis signés).
+     * Phase 3 : tous les avis hiérarchiques requis doivent être signés.
+     * Phase 2 : depuis SIGNEE_EVALUE (sans avis hiérarchiques → tousAvisSignes = true si liste vide).
      *
      * @throws ValidationException
      */
@@ -150,6 +152,13 @@ class EvaluationStatutService
         $evaluation = $this->findEvaluation($evaluationId);
 
         $this->assertPeutTransitionner($evaluation, StatutEvaluation::EN_VALIDATION_RH);
+
+        // Phase 3 : vérifier que tous les avis requis sont signés
+        if (! $this->avisService->tousAvisSignes($evaluationId)) {
+            throw ValidationException::withMessages([
+                'avis_hierarchiques' => 'Tous les avis hiérarchiques requis doivent être signés avant de transmettre à la RH.',
+            ]);
+        }
 
         return $this->evaluationRepository->update($evaluationId, [
             'statut' => StatutEvaluation::EN_VALIDATION_RH->value,

@@ -154,14 +154,13 @@ N+1 : extraire / réutiliser un `SuperieurHierarchiqueService` (affectation acti
 
 ## 6. Phase 3 — Avis hiérarchiques
 
-- [ ] Table `avis_hierarchiques` — un avis par niveau et par évaluation
-- [ ] Niveaux CCN art. 64 : `chef_bureau` → `chef_service` → `directeur_departemental` / `directeur_central` → `directeur_general`  
-  Mapper sur nos structures (Bureau, Service, Direction). Distinguer directeur **départemental** vs **central** (D4).
-- [ ] Séquentialité : N seulement si N−1 signé ; signature définitive
-- [ ] Variante « service rattaché à la DG » : sauter `directeur` — **règle projet à figer** (nom / flag sur `Direction`, pas `id = 1`)
-- [ ] Transmission RH (P2) : exiger tous les avis **requis** signés
-- [ ] Tests : ordre, skip DG, avis non signé non modifiable après signature
-- [ ] Note FE : qui peut poster quel niveau (`user.agent_id` vs nomination)
+- [x] Table `avis_hierarchiques` — migration + Enum `NiveauAvisHierarchique` + Model + Interface + Repository + binding
+- [x] Niveaux : `chef_bureau`(1) → `chef_service`(2) → `directeur`(3) → `directeur_general`(4) — Enum `NiveauAvisHierarchique`, service `chaineDepuisDirection/Service/Bureau`.
+- [x] Séquentialité : N seulement si N−1 signé ; signature définitive (validé en `AvisHierarchiqueService`)
+- [x] Variante DG : `direction.rattache_dg = true` → saute `directeur` ; migration `add_rattache_dg_to_directions_table`
+- [x] Transmission RH : `EvaluationStatutService::envoyerEnValidationRh` bloque si `AvisHierarchiqueService::tousAvisSignes() = false`
+- [x] Tests : ordre, skip DG, avis non signé non modifiable après signature — **26 tests, 173 assertions ✅**
+- [x] Note FE : endpoints, chaîne, règles séquentialité, payload dans §7b
 
 ---
 

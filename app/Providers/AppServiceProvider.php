@@ -46,6 +46,12 @@ use App\Interfaces\DocumentAgentInterface;
 use App\Interfaces\InformationsPersonnelleInterface;
 use App\Interfaces\InformationsProfessionnelleInterface;
 use App\Interfaces\JourFerieInterface;
+use App\Interfaces\AvisHierarchiqueInterface;
+use App\Interfaces\AvancementExceptionnelInterface;
+use App\Interfaces\BonificationStageInterface;
+use App\Interfaces\CommissionAvancementInterface;
+use App\Interfaces\CommissionPreparatoireInterface;
+use App\Interfaces\ConnaissanceComplementaireInterface;
 use App\Interfaces\EvaluationInterface;
 use App\Interfaces\NoteEvaluationInterface;
 use App\Interfaces\PalierAncienneteCongeInterface;
@@ -104,6 +110,12 @@ use App\Repositories\DocumentAgentRepository;
 use App\Repositories\InformationsPersonnelleRepository;
 use App\Repositories\InformationsProfessionnelleRepository;
 use App\Repositories\JourFerieRepository;
+use App\Repositories\AvisHierarchiqueRepository;
+use App\Repositories\AvancementExceptionnelRepository;
+use App\Repositories\BonificationStageRepository;
+use App\Repositories\CommissionAvancementRepository;
+use App\Repositories\CommissionPreparatoireRepository;
+use App\Repositories\ConnaissanceComplementaireRepository;
 use App\Repositories\EvaluationRepository;
 use App\Repositories\NoteEvaluationRepository;
 use App\Repositories\PalierAncienneteCongeRepository;
@@ -169,7 +181,13 @@ class AppServiceProvider extends ServiceProvider
         DemandeCongeInterface::class          => DemandeCongeRepository::class,
         AbsenceInterface::class               => AbsenceRepository::class,
         // Module Évaluation / Notation / Avancement
-        SessionEvaluationInterface::class     => SessionEvaluationRepository::class,
+        AvisHierarchiqueInterface::class          => AvisHierarchiqueRepository::class,
+        AvancementExceptionnelInterface::class    => AvancementExceptionnelRepository::class,
+        BonificationStageInterface::class         => BonificationStageRepository::class,
+        CommissionPreparatoireInterface::class    => CommissionPreparatoireRepository::class,
+        CommissionAvancementInterface::class      => CommissionAvancementRepository::class,
+        ConnaissanceComplementaireInterface::class => ConnaissanceComplementaireRepository::class,
+        SessionEvaluationInterface::class         => SessionEvaluationRepository::class,
         QuestionEvaluationInterface::class    => QuestionEvaluationRepository::class,
         EvaluationInterface::class            => EvaluationRepository::class,
         NoteEvaluationInterface::class        => NoteEvaluationRepository::class,

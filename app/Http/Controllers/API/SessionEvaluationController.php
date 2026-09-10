@@ -163,4 +163,20 @@ class SessionEvaluationController extends BaseController
             \App\Http\Resources\AgentIdentiteResource::collection($agents)
         );
     }
+
+    #[OA\Get(
+        path: '/api/avancements/sessions/{id}/stats',
+        operationId: 'statsSession',
+        tags: ['Évaluation'],
+        summary: 'Statistiques d\'une session : compteurs par statut, moyenne /20, répartition mentions',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'Statistiques de la session')]
+    )]
+    public function stats(int $id): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->sessionService->stats($id),
+        ]);
+    }
 }

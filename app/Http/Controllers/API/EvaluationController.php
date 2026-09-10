@@ -43,7 +43,7 @@ class EvaluationController extends BaseController
 
     protected function showRelations(): array
     {
-        return ['agent', 'superieur', 'session', 'notes.question', 'reclamation.agent'];
+        return ['agent', 'superieur', 'session', 'notes.question', 'reclamation.agent', 'avisHierarchiques.signePar'];
     }
 
     // ----------------------------------------------------------------

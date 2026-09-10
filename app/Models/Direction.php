@@ -12,7 +12,9 @@ class Direction extends Model
 {
     use HasAutoSigle, HasFilterScope;
 
-    protected $fillable = ['nom', 'sigle', 'description', 'administration_id'];
+    protected $fillable = ['nom', 'sigle', 'description', 'rattache_dg', 'administration_id'];
+
+    protected $casts = ['rattache_dg' => 'boolean'];
 
     protected array $filterable = ['nom', 'administration_id'];
 

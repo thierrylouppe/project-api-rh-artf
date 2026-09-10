@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DecisionCommission;
 use App\Enums\StatutEvaluation;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,15 @@ class Evaluation extends Model
         'avis_superieur',
         'note_globale',
         'mention',
+        // Phase 4 — Commission préparatoire
+        'commission_note',
+        'note_synthese',
+        // Phase 4 — Commission d'avancement
+        'commission_decision',
+        'nombre_echelons',
+        'note_avancement',
+        'echelon_avance',
+        // Circuit
         'statut',
         'signe_par_evaluateur_at',
         'signe_par_evalue_at',
@@ -38,6 +48,11 @@ class Evaluation extends Model
         'date_evaluation'             => 'date',
         'jours_absence_non_justifiee' => 'integer',
         'note_globale'                => 'float',
+        'commission_note'             => 'float',
+        'note_avancement'             => 'float',
+        'nombre_echelons'             => 'integer',
+        'commission_decision'         => DecisionCommission::class,
+        'echelon_avance'              => 'boolean',
         'statut'                      => StatutEvaluation::class,
         'signe_par_evaluateur_at'     => 'datetime',
         'signe_par_evalue_at'         => 'datetime',
@@ -84,6 +99,11 @@ class Evaluation extends Model
     public function reclamation(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Reclamation::class, 'evaluation_id');
+    }
+
+    public function avisHierarchiques(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AvisHierarchique::class, 'evaluation_id')->orderBy('ordre');
     }
 
     // ----------------------------------------------------------------

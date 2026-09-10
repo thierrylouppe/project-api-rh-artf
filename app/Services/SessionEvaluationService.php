@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\StatutCommission;
 use App\Enums\StatutSessionEvaluation;
 use App\Enums\StatutAgent;
 use App\Interfaces\AffectationInterface;
@@ -53,7 +54,12 @@ class SessionEvaluationService extends BaseService
         return $session->fresh(['evaluations']);
     }
 
-    /** Clôturer la session. */
+    /** Clôturer la session.
+     *
+     * Phase 4 : prérequis = toutes les fiches finalisées + deux commissions clôturées.
+     *
+     * @throws ValidationException
+     */
     public function cloturer(int $id, int $userId): SessionEvaluation
     {
         /** @var SessionEvaluation $session */
@@ -63,6 +69,29 @@ class SessionEvaluationService extends BaseService
             throw ValidationException::withMessages([
                 'statut' => "La session est déjà {$session->statut->label()} et ne peut pas être clôturée.",
             ]);
+        }
+
+        // Phase 4 — Vérifier que les deux commissions sont clôturées
+        // (uniquement si la session contient des fiches finalisées)
+        $fichesFinaliseesExistent = \App\Models\Evaluation::where('session_id', $id)
+            ->where('statut', \App\Enums\StatutEvaluation::FINALISEE->value)
+            ->exists();
+
+        if ($fichesFinaliseesExistent) {
+            $prep = \App\Models\CommissionPreparatoire::where('session_id', $id)->first();
+            $avan = \App\Models\CommissionAvancement::where('session_id', $id)->first();
+
+            if (! $prep || $prep->statut !== StatutCommission::CLOTUREE) {
+                throw ValidationException::withMessages([
+                    'commission_preparatoire' => 'La commission préparatoire doit être clôturée avant de clôturer la session.',
+                ]);
+            }
+
+            if (! $avan || $avan->statut !== StatutCommission::CLOTUREE) {
+                throw ValidationException::withMessages([
+                    'commission_avancement' => 'La commission d\'avancement doit être clôturée avant de clôturer la session.',
+                ]);
+            }
         }
 
         return $this->repository->update($id, [
@@ -249,6 +278,48 @@ class SessionEvaluationService extends BaseService
             });
 
         return $agents->values();
+    }
+
+    /**
+     * Statistiques d'une session (Phase 5 — lot 5.6).
+     *
+     * Retourne :
+     *  - `total` : total des fiches
+     *  - `par_statut` : compteur par valeur de StatutEvaluation
+     *  - `moyenne` : note globale moyenne (fiches notées uniquement)
+     *  - `mentions` : répartition par mention (fiches avec note_globale)
+     */
+    public function stats(int $sessionId): array
+    {
+        $fiches = \App\Models\Evaluation::query()
+            ->where('session_id', $sessionId)
+            ->select(['statut', 'note_globale', 'mention'])
+            ->get();
+
+        // Compteurs par statut
+        $parStatut = $fiches->groupBy('statut')
+            ->map(fn ($groupe) => $groupe->count())
+            ->toArray();
+
+        // Moyenne note globale (seulement fiches avec note)
+        $avecNote  = $fiches->whereNotNull('note_globale');
+        $moyenne   = $avecNote->count() > 0
+            ? round($avecNote->avg('note_globale'), 2)
+            : null;
+
+        // Répartition mentions
+        $mentions  = $fiches->whereNotNull('mention')
+            ->groupBy('mention')
+            ->map(fn ($g) => $g->count())
+            ->toArray();
+
+        return [
+            'session_id' => $sessionId,
+            'total'      => $fiches->count(),
+            'par_statut' => $parStatut,
+            'moyenne'    => $moyenne,
+            'mentions'   => $mentions,
+        ];
     }
 
     /** Résout le superieur_id (agent_id du N+1) depuis l'affectation active. */

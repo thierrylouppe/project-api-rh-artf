@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\AvisHierarchiqueResource;
 use App\Http\Resources\ReclamationResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -24,6 +25,15 @@ class EvaluationResource extends JsonResource
             'avis_superieur'                => $this->avis_superieur,
             'note_globale'                  => $this->note_globale,
             'mention'                       => $this->mention,
+            // Phase 4 — Commission préparatoire
+            'commission_note'               => $this->commission_note,
+            'note_synthese'                 => $this->note_synthese,
+            // Phase 4 — Commission d'avancement
+            'commission_decision'           => $this->commission_decision?->value,
+            'commission_decision_label'     => $this->commission_decision?->label(),
+            'nombre_echelons'               => $this->nombre_echelons,
+            'note_avancement'               => $this->note_avancement,
+            'echelon_avance'                => $this->echelon_avance,
             'statut'                        => $this->statut->value,
             'statut_label'                  => $this->statut->label(),
             'prochaine_etape'               => $this->prochainEtape(),
@@ -33,10 +43,12 @@ class EvaluationResource extends JsonResource
             'commentaire_rh'                => $this->commentaire_rh,
             'conforme_rh'                   => $this->conforme_rh,
             // réclamation (chargée seulement sur show)
-            'reclamation'    => $this->whenLoaded('reclamation', fn () => new ReclamationResource($this->reclamation)),
+            'reclamation'           => $this->whenLoaded('reclamation', fn () => new ReclamationResource($this->reclamation)),
+            // avis hiérarchiques (chargés seulement sur show)
+            'avis_hierarchiques'    => $this->whenLoaded('avisHierarchiques', fn () => AvisHierarchiqueResource::collection($this->avisHierarchiques)),
             // notes du critère (chargées seulement sur show)
-            'notes'          => $this->whenLoaded('notes', fn () => NoteEvaluationResource::collection($this->notes)),
-            'created_at'     => $this->created_at?->toDateTimeString(),
+            'notes'                 => $this->whenLoaded('notes', fn () => NoteEvaluationResource::collection($this->notes)),
+            'created_at'            => $this->created_at?->toDateTimeString(),
         ];
     }
 
@@ -54,8 +66,20 @@ class EvaluationResource extends JsonResource
             'signee_evalue'     => 'envoyer_rh',
             'en_reclamation'    => 'traiter_reclamation',
             'en_validation_rh'  => 'valider_rh',
+            'finalisee'         => $this->nextEtapeApresFinalisee(),
             'rejetee'           => 'corriger_notation',
-            default             => null, // finalisee, annulee
+            default             => null, // annulee
         };
+    }
+
+    private function nextEtapeApresFinalisee(): ?string
+    {
+        if (! $this->commission_decision) {
+            return 'commission_preparatoire';
+        }
+        if ($this->commission_decision->value === 'favorable' && ! $this->echelon_avance) {
+            return 'avancer_echelon';
+        }
+        return null;
     }
 }

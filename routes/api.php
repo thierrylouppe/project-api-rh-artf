@@ -29,6 +29,12 @@ use App\Http\Controllers\API\SalaireController;
 use App\Http\Controllers\API\AdministrationController;
 use App\Http\Controllers\API\AuditLogController;
 // Module Évaluation / Notation / Avancement
+use App\Http\Controllers\API\AvisHierarchiqueController;
+use App\Http\Controllers\API\AvancementExceptionnelController;
+use App\Http\Controllers\API\BonificationStageController;
+use App\Http\Controllers\API\CommissionAvancementController;
+use App\Http\Controllers\API\CommissionPreparatoireController;
+use App\Http\Controllers\API\ConnaissanceComplementaireController;
 use App\Http\Controllers\API\EvaluationController;
 use App\Http\Controllers\API\QuestionEvaluationController;
 use App\Http\Controllers\API\ReclamationController;
@@ -423,6 +429,8 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
         ->middleware('permission:creer-evaluations');
     Route::get('sessions/{id}/sans-superieur', [SessionEvaluationController::class, 'sansSupereur'])
         ->middleware('permission:creer-evaluations');
+    Route::get('sessions/{id}/stats', [SessionEvaluationController::class, 'stats'])
+        ->middleware('permission:consulter-evaluations');
 
     // ---- Fiches d'évaluation ----
 
@@ -473,4 +481,72 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
         ->middleware('permission:valider-evaluations');
     Route::post('reclamations/{id}/traiter', [ReclamationController::class, 'traiter'])
         ->middleware('permission:valider-evaluations');
+
+    // ---- Avis hiérarchiques Phase 3 (CCN art. 64) ----
+    Route::get('evaluations/{evaluationId}/avis-hierarchiques', [AvisHierarchiqueController::class, 'indexParEvaluation'])
+        ->middleware('permission:consulter-evaluations');
+    Route::get('evaluations/{evaluationId}/niveaux-requis', [AvisHierarchiqueController::class, 'niveauxRequis'])
+        ->middleware('permission:consulter-evaluations');
+    Route::post('evaluations/{evaluationId}/avis-hierarchiques', [AvisHierarchiqueController::class, 'poster'])
+        ->middleware('permission:valider-evaluations');
+    Route::put('avis-hierarchiques/{id}', [AvisHierarchiqueController::class, 'update'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('avis-hierarchiques/{id}/signer', [AvisHierarchiqueController::class, 'signer'])
+        ->middleware('permission:valider-evaluations');
+
+    // ---- Commission préparatoire Phase 4 (CCN art. 68) ----
+    Route::post('sessions/{sessionId}/commission-preparatoire', [CommissionPreparatoireController::class, 'ouvrir'])
+        ->middleware('permission:valider-evaluations');
+    Route::get('sessions/{sessionId}/commission-preparatoire', [CommissionPreparatoireController::class, 'parSession'])
+        ->middleware('permission:consulter-evaluations');
+    Route::post('commissions-preparatoires/{id}/noter', [CommissionPreparatoireController::class, 'noter'])
+        ->middleware('permission:valider-evaluations');
+    Route::get('commissions-preparatoires/{id}/alertes', [CommissionPreparatoireController::class, 'alertes'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('commissions-preparatoires/{id}/cloturer', [CommissionPreparatoireController::class, 'cloturer'])
+        ->middleware('permission:valider-evaluations');
+
+    // ---- Commission d'avancement Phase 4 (CCN art. 69-70) ----
+    Route::post('sessions/{sessionId}/commission-avancement', [CommissionAvancementController::class, 'ouvrir'])
+        ->middleware('permission:valider-evaluations');
+    Route::get('sessions/{sessionId}/commission-avancement', [CommissionAvancementController::class, 'parSession'])
+        ->middleware('permission:consulter-evaluations');
+    Route::post('commissions-avancements/{id}/decider', [CommissionAvancementController::class, 'decider'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('evaluations/{evaluationId}/avancer-echelon', [CommissionAvancementController::class, 'avancerEchelon'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('commissions-avancements/{id}/cloturer', [CommissionAvancementController::class, 'cloturer'])
+        ->middleware('permission:valider-evaluations');
+
+    // ---- Phase 5.1 — Bonifications stage (CCN art. 71) ----
+    Route::get('bonifications-stage', [BonificationStageController::class, 'index'])
+        ->middleware('permission:valider-evaluations');
+    Route::get('bonifications-stage/en-attente', [BonificationStageController::class, 'enAttente'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('bonifications-stage', [BonificationStageController::class, 'store'])
+        ->middleware('permission:consulter-evaluations');
+    Route::post('bonifications-stage/{id}/traiter', [BonificationStageController::class, 'traiter'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('bonifications-stage/{id}/appliquer', [BonificationStageController::class, 'appliquer'])
+        ->middleware('permission:valider-evaluations');
+
+    // ---- Phase 5.2 — Avancements exceptionnels (CCN art. 72) ----
+    Route::get('avancements-exceptionnels', [AvancementExceptionnelController::class, 'index'])
+        ->middleware('permission:valider-evaluations');
+    Route::get('avancements-exceptionnels/en-attente', [AvancementExceptionnelController::class, 'enAttente'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('avancements-exceptionnels', [AvancementExceptionnelController::class, 'store'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('avancements-exceptionnels/{id}/traiter', [AvancementExceptionnelController::class, 'traiter'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('avancements-exceptionnels/{id}/appliquer', [AvancementExceptionnelController::class, 'appliquer'])
+        ->middleware('permission:valider-evaluations');
+
+    // ---- Phase 5.3 — Connaissances complémentaires ----
+    Route::get('evaluations/{evaluationId}/connaissances', [ConnaissanceComplementaireController::class, 'parEvaluation'])
+        ->middleware('permission:consulter-evaluations');
+    Route::post('evaluations/{evaluationId}/connaissances', [ConnaissanceComplementaireController::class, 'store'])
+        ->middleware('permission:consulter-evaluations');
+    Route::delete('connaissances/{id}', [ConnaissanceComplementaireController::class, 'destroy'])
+        ->middleware('permission:consulter-evaluations');
 });
