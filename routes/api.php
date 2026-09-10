@@ -28,6 +28,10 @@ use App\Http\Controllers\API\SalaireAgentController;
 use App\Http\Controllers\API\SalaireController;
 use App\Http\Controllers\API\AdministrationController;
 use App\Http\Controllers\API\AuditLogController;
+// Module Évaluation / Notation / Avancement
+use App\Http\Controllers\API\EvaluationController;
+use App\Http\Controllers\API\QuestionEvaluationController;
+use App\Http\Controllers\API\SessionEvaluationController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BureauController;
 use App\Http\Controllers\API\CategorieController;
@@ -385,4 +389,65 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('parametres-application', ParametreApplicationController::class)
         ->middleware('role:admin');
+});
+
+// ============================================================
+// MODULE ÉVALUATION / NOTATION / AVANCEMENT — CCN ARTF art. 60-75
+// ============================================================
+Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
+
+    // ---- Grille de critères (référentiel RH) ----
+    Route::apiResource('questions-evaluation', QuestionEvaluationController::class)->middleware([
+        'index'   => 'permission:consulter-evaluations',
+        'show'    => 'permission:consulter-evaluations',
+        'store'   => 'permission:creer-evaluations',
+        'update'  => 'permission:creer-evaluations',
+        'destroy' => 'permission:creer-evaluations',
+    ]);
+
+    // ---- Sessions d'évaluation (cycle annuel) ----
+    Route::get('sessions', [SessionEvaluationController::class, 'index'])
+        ->middleware('permission:consulter-evaluations');
+    Route::get('sessions/{id}', [SessionEvaluationController::class, 'show'])
+        ->middleware('permission:consulter-evaluations');
+    Route::post('sessions', [SessionEvaluationController::class, 'store'])
+        ->middleware('permission:creer-evaluations');
+    Route::put('sessions/{id}', [SessionEvaluationController::class, 'update'])
+        ->middleware('permission:creer-evaluations');
+    Route::post('sessions/{id}/cloturer', [SessionEvaluationController::class, 'cloturer'])
+        ->middleware('permission:creer-evaluations');
+    Route::post('sessions/{id}/annuler', [SessionEvaluationController::class, 'annuler'])
+        ->middleware('permission:creer-evaluations');
+    Route::post('sessions/{id}/generer-fiches', [SessionEvaluationController::class, 'genererFiches'])
+        ->middleware('permission:creer-evaluations');
+
+    // ---- Fiches d'évaluation ----
+
+    // Vue RH — toutes les fiches
+    Route::get('evaluations', [EvaluationController::class, 'index'])
+        ->middleware('permission:consulter-evaluations');
+    Route::get('evaluations/{id}', [EvaluationController::class, 'show'])
+        ->middleware('permission:consulter-evaluations');
+
+    // Vue notateur (N+1)
+    Route::get('evaluations/superieur/mes-evaluations', [EvaluationController::class, 'mesEvaluationsSuperieur'])
+        ->middleware('permission:consulter-evaluations');
+    Route::post('evaluations/{id}/noter', [EvaluationController::class, 'noter'])
+        ->middleware('permission:valider-evaluations');
+    Route::put('evaluations/{id}/contexte', [EvaluationController::class, 'updateContexte'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('evaluations/{id}/signer-evaluateur', [EvaluationController::class, 'signerEvaluateur'])
+        ->middleware('permission:valider-evaluations');
+
+    // Vue agent évalué
+    Route::get('evaluations/agent/mes-evaluations', [EvaluationController::class, 'mesEvaluationsAgent'])
+        ->middleware('permission:consulter-evaluations');
+    Route::post('evaluations/{id}/signer-evalue', [EvaluationController::class, 'signerEvalue'])
+        ->middleware('permission:consulter-evaluations');
+
+    // Validation RH
+    Route::post('evaluations/{id}/valider-rh', [EvaluationController::class, 'validerRh'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('evaluations/{id}/annuler', [EvaluationController::class, 'annulerFiche'])
+        ->middleware('permission:valider-evaluations');
 });

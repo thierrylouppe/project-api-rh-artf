@@ -49,12 +49,15 @@ class DatabaseSeeder extends Seeder
             PalierAncienneteCongeSeeder::class,
             MotifAdministratifSeeder::class,
 
-            // ── 5. Recrutement / intégration ────────────────────────────
+            // ── 5. Module Évaluation / Notation / Avancement ────────────
+            QuestionEvaluationSeeder::class,
+
+            // ── 6. Recrutement / intégration ────────────────────────────
             TypeDocumentSeeder::class,
             TypeIntegrationSeeder::class,  // depends: TypeDocument
             CircuitValidationSeeder::class, // depends: TypeIntegration
 
-            // ── 6. Utilisateurs & paramètres applicatifs ────────────────
+            // ── 7. Utilisateurs & paramètres applicatifs ────────────────
             UserSeeder::class,                  // depends: Role
             ParametreApplicationSeeder::class,
         ]);

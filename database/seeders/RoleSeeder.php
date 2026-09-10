@@ -24,7 +24,9 @@ class RoleSeeder extends Seeder
                 'consulter-nominations', 'gerer-nominations',
                 'consulter-salaires', 'gerer-salaires',
                 'consulter-conges', 'creer-conges', 'valider-conges', 'consulter-absences', 'creer-absences', 'valider-absences',
-                'consulter-evaluations', 'consulter-reporting',
+                // Évaluations : la DRHL ouvre les sessions et contrôle la conformité (CCN art. 66-70)
+                'consulter-evaluations', 'creer-evaluations', 'valider-evaluations',
+                'consulter-reporting',
             ],
             // Hiérarchie : lecture structure / agents + validations d'équipe (pas le métier RH)
             'directeur-general' => [
@@ -41,19 +43,24 @@ class RoleSeeder extends Seeder
                 'consulter-absences', 'valider-absences',
                 'consulter-evaluations', 'valider-evaluations',
             ],
+            // Notateurs au sens CCN art. 64 : ils notent et signent les fiches de leur équipe
             'chef-service' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
                 'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
+                'consulter-evaluations', 'valider-evaluations',
             ],
             'chef-bureau' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
                 'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
+                'consulter-evaluations', 'valider-evaluations',
             ],
+            // L'agent consulte sa fiche, la signe (art. 63) et peut réclamer (art. 65)
             'agent' => [
                 'consulter-referentiels', 'consulter-conges', 'creer-conges',
                 'consulter-absences', 'creer-absences',
+                'consulter-evaluations',
             ],
         ];
 

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Agent;
 
+use App\Enums\StatutAgent;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateRequest extends FormRequest
 {
@@ -28,7 +30,7 @@ class UpdateRequest extends FormRequest
             'categorie_id'      => ['nullable', 'integer', 'exists:categories,id'],
             'echelon_id'        => ['nullable', 'integer', 'exists:echelons,id'],
             'fonction_id'       => ['nullable', 'integer', 'exists:fonctions,id'],
-            'statut'            => ['sometimes', 'in:actif,inactif,suspendu,retraite'],
+            'statut'            => ['sometimes', Rule::in(StatutAgent::modifiablesParRh())],
         ];
     }
 }
