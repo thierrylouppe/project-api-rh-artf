@@ -240,4 +240,39 @@ class EvaluationController extends BaseController
 
         return $this->respond($evaluation, 'Fiche annulée.');
     }
+
+    #[OA\Put(
+        path: '/api/avancements/evaluations/{id}/superieur',
+        operationId: 'reattribuerSuperieur',
+        tags: ['Évaluation'],
+        summary: 'Réattribuer le notateur (N+1) d\'une fiche — RH uniquement, session ouverte',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'Notateur réattribué')]
+    )]
+    public function reattribuerSuperieur(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'superieur_id' => ['required', 'integer', 'exists:agents,id'],
+        ]);
+
+        /** @var \App\Models\Evaluation $evaluation */
+        $evaluation = $this->service->findById($id);
+
+        abort_unless(
+            $evaluation->session->statut === \App\Enums\StatutSessionEvaluation::OUVERTE,
+            422,
+            'La réattribution n\'est possible que tant que la session est ouverte.'
+        );
+
+        abort_unless(
+            ! $evaluation->statut->estTerminee(),
+            422,
+            'Impossible de réattribuer le notateur d\'une fiche terminée ou annulée.'
+        );
+
+        $evaluation = $this->service->update($id, ['superieur_id' => $request->input('superieur_id')]);
+
+        return $this->respond($evaluation, 'Notateur réattribué.');
+    }
 }

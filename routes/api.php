@@ -420,6 +420,8 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
         ->middleware('permission:creer-evaluations');
     Route::post('sessions/{id}/generer-fiches', [SessionEvaluationController::class, 'genererFiches'])
         ->middleware('permission:creer-evaluations');
+    Route::get('sessions/{id}/sans-superieur', [SessionEvaluationController::class, 'sansSupereur'])
+        ->middleware('permission:creer-evaluations');
 
     // ---- Fiches d'évaluation ----
 
@@ -450,4 +452,6 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
         ->middleware('permission:valider-evaluations');
     Route::post('evaluations/{id}/annuler', [EvaluationController::class, 'annulerFiche'])
         ->middleware('permission:valider-evaluations');
+    Route::put('evaluations/{id}/superieur', [EvaluationController::class, 'reattribuerSuperieur'])
+        ->middleware('permission:creer-evaluations');
 });

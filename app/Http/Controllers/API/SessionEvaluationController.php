@@ -143,4 +143,24 @@ class SessionEvaluationController extends BaseController
             "{$fiches->count()} fiche(s) créée(s)."
         );
     }
+
+    #[OA\Get(
+        path: '/api/avancements/sessions/{id}/sans-superieur',
+        operationId: 'agentsSansSuperieur',
+        tags: ['Évaluation'],
+        summary: 'Agents éligibles sans N+1 identifiable (vue RH — affectations à corriger)',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'Liste des agents sans notateur')]
+    )]
+    public function sansSupereur(int $id): JsonResponse
+    {
+        /** @var \App\Models\SessionEvaluation $session */
+        $session = $this->service->findById($id);
+        $agents  = $this->sessionService->agentsSansSuperieur($session);
+
+        return $this->collectionResponse(
+            \App\Http\Resources\AgentIdentiteResource::collection($agents)
+        );
+    }
 }

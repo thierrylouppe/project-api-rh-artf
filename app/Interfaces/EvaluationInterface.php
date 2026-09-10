@@ -18,4 +18,10 @@ interface EvaluationInterface extends BaseInterface
 
     /** Trouve la fiche d'un agent pour une session précise, ou null. */
     public function trouverParAgentSession(int $agentId, int $sessionId): ?Evaluation;
+
+    /**
+     * Retourne la date de la dernière évaluation finalisée d'un agent.
+     * Utilisé pour calculer le cycle 24 mois (D2).
+     */
+    public function dateDerniereEvaluationFinalisee(int $agentId): ?\Illuminate\Support\Carbon;
 }

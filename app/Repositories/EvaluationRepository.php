@@ -57,4 +57,15 @@ class EvaluationRepository extends BaseRepository implements EvaluationInterface
             ->with(['notes.question'])
             ->first();
     }
+
+    public function dateDerniereEvaluationFinalisee(int $agentId): ?\Illuminate\Support\Carbon
+    {
+        $fiche = Evaluation::query()
+            ->where('agent_id', $agentId)
+            ->where('statut', 'finalisee')
+            ->orderByDesc('date_validation_rh')
+            ->first();
+
+        return $fiche?->date_validation_rh;
+    }
 }

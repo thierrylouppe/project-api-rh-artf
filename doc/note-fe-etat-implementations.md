@@ -386,10 +386,146 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 
 ## 6. Hors périmètre actuel (ne pas concevoir d’écrans API)
 
-- Campagnes et fiches d’évaluation
+- ~~Campagnes et fiches d’évaluation~~ → **livré Phase 1** (voir §7b ci-dessous)
 - Catalogue formations, discipline, GED **versioning / recherche** (la GED agent légère est livrée, §2d)
 - Dashboard / exports reporting
 - Mail / SMS (canal `database` uniquement pour l’instant)
+
+---
+
+## 7b. Module Évaluation / Notation / Avancement — Phase 1
+
+> Branche : `feature/evaluation-notation-avancement` · Préfixe : `/api/avancements/`
+> Auth : `auth:sanctum` + `permission:consulter-evaluations | creer-evaluations | valider-evaluations`
+
+### Permissions par rôle (seeder mis à jour)
+
+| Rôle | Permissions évaluation |
+|------|------------------------|
+| `rh` | `consulter-evaluations`, **`creer-evaluations`**, `valider-evaluations` |
+| `directeur-general`, `directeur` | `consulter-evaluations`, `valider-evaluations` |
+| `chef-service`, `chef-bureau` | `consulter-evaluations`, `valider-evaluations` |
+| `agent` | `consulter-evaluations` |
+
+### Endpoints disponibles Phase 1
+
+#### Sessions (RH — `creer-evaluations`)
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/avancements/sessions` | Liste des sessions (filtrables par `statut`) |
+| GET | `/avancements/sessions/{id}` | Détail + évaluations chargées |
+| **POST** | `/avancements/sessions` | **Ouvrir une session** → génère automatiquement les fiches éligibles |
+| PUT | `/avancements/sessions/{id}` | Modifier description / dates |
+| **POST** | `/avancements/sessions/{id}/cloturer` | Clôturer |
+| **POST** | `/avancements/sessions/{id}/annuler` | Annuler (annule les fiches `en_attente`/`en_cours`) |
+| POST | `/avancements/sessions/{id}/generer-fiches` | Regénérer fiches manquantes |
+| GET | `/avancements/sessions/{id}/sans-superieur` | Agents éligibles **sans N+1** (à corriger en affectation) |
+
+#### Grille de critères (RH — `creer-evaluations` pour CRUD)
+
+| Méthode | Endpoint |
+|---------|----------|
+| GET / POST / PUT / DELETE | `/avancements/questions-evaluation[/{id}]` |
+
+**Seeder 24 questions** : 12 compétences pro (/10) + 3 assiduité (/3) + 9 relations sociales (/7) = **20 pts**.
+
+#### Fiches d’évaluation
+
+| Méthode | Endpoint | Acteur | Permission |
+|---------|----------|--------|------------|
+| GET | `/avancements/evaluations` | RH | `consulter-evaluations` |
+| GET | `/avancements/evaluations/{id}` | Tous | `consulter-evaluations` |
+| GET | `/avancements/evaluations/superieur/mes-evaluations` | N+1 | `consulter-evaluations` |
+| GET | `/avancements/evaluations/agent/mes-evaluations` | Agent | `consulter-evaluations` |
+| **POST** | `/avancements/evaluations/{id}/noter` | N+1 | `valider-evaluations` |
+| PUT | `/avancements/evaluations/{id}/contexte` | N+1 | `valider-evaluations` |
+| **POST** | `/avancements/evaluations/{id}/signer-evaluateur` | N+1 | `valider-evaluations` |
+| **POST** | `/avancements/evaluations/{id}/signer-evalue` | Agent | `consulter-evaluations` |
+| POST | `/avancements/evaluations/{id}/valider-rh` | RH | `valider-evaluations` |
+| POST | `/avancements/evaluations/{id}/annuler` | RH | `valider-evaluations` |
+| **PUT** | `/avancements/evaluations/{id}/superieur` | RH | `creer-evaluations` |
+
+### Payload fiche (GET show)
+
+```json
+{
+  "id": 1,
+  "session_id": 1,
+  "session": { "id": 1, "debut_session": "2026-09-01", "statut": "ouverte", "statut_label": "Ouverte" },
+  "agent_id": 5,
+  "agent": { "id": 5, "matricule": "AG005", "nom": "DUPONT", "prenom": "Jean", "nom_complet": "Jean DUPONT" },
+  "superieur_id": 3,
+  "superieur": { "id": 3, "matricule": "AG003", "nom": "MARTIN", "prenom": "Marie", "nom_complet": "Marie MARTIN" },
+  "note_globale": 15.5,
+  "mention": "Très bien",
+  "statut": "notee",
+  "statut_label": "Notée (non signée)",
+  "signe_par_evaluateur_at": null,
+  "signe_par_evalue_at": null,
+  "notes": [
+    { "question_id": 1, "question": { "libelle": "Connaissance technique", "type_critere": "competence_pro", "bareme_max": 1 }, "note_obtenue": 0.9 }
+  ]
+}
+```
+
+### Payload noter (POST `/noter`)
+
+```json
+{ "question_id": 3, "note_obtenue": 0.8, "commentaire": "Très bon niveau" }
+```
+Réponse : fiche complète recalculée (même payload que `show`).
+
+### Payload valider-rh (POST `/valider-rh`)
+
+```json
+{ "conforme": true, "commentaire": "Dossier complet et conforme." }
+```
+`conforme: true` → `finalisee` · `conforme: false` → `rejetee` + retour notateur.
+
+### Payload réattribution N+1 (PUT `/superieur`)
+
+```json
+{ "superieur_id": 4 }
+```
+Condition : session `ouverte` + fiche non terminée.
+
+### Éligibilité automatique (lors de la création de session)
+
+Un agent reçoit une fiche **si et seulement si** :
+1. Statut `actif` (pas stagiaire, détachement, position_exceptionnelle, inactif, retraité, suspendu, archivé)
+2. Pas DG (nomination active `poste = Directeur Général`)
+3. `date_prise_service` renseignée
+4. Cycle 24 mois : `année(session) − année(dernière notation finalisée ou embauche) ≥ 2`
+5. Parité d’année (si `session.type_annee` renseigné) : embauché année paire → session `type_annee = paire`
+6. Semestre (si `session.semestre` renseigné) : embauché en S1 (jan–juin) → session `semestre = 1`
+7. N+1 identifiable. Sans N+1 → `GET sessions/{id}/sans-superieur`, **pas de fiche créée**.
+
+### Mentions /20
+
+| Mention | Note |
+|---------|------|
+| Excellent | ≥ 16 |
+| Très bien | 14 – 15,99 |
+| Bien | 12 – 13,99 |
+| Moyen | 10 – 11,99 |
+| Insuffisant | < 10 |
+
+### Statuts fiche
+
+```
+en_attente → en_cours → notee → signee_evaluateur → signee_evalue → en_validation_rh → finalisee
+                                                                                              ↘ rejetee → retour en_cours
+                                       annulee (depuis tout statut non terminal)
+```
+**Phase 2 ajoutera** : `en_reclamation` entre `signee_evalue` et `en_validation_rh`.
+
+### Hors Phase 1
+
+- Avis hiérarchiques séquentiels (Phase 3)
+- Réclamation (Phase 2)
+- Commissions (Phase 4)
+- Avancement d’échelon après commission (Phase 4)
 
 ---
 
@@ -399,6 +535,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-10 | Module Évaluation Phase 1 : sessions, grille 24q, fiches, notation /20, mentions, signatures, validation RH | Voir §7b. 21 endpoints `/api/avancements/`. Seeder 24 questions. Éligibilité complète (cycle 24 mois, parité, semestre, exemptions CCN). |
 | 2026-09-08 | Paliers ancienneté + `jours_anciennete` sur le solde | CRUD `/conges/paliers-anciennete`. Solde = 30 + bonus. Seed 0/2/4/6 j. |
 | 2026-09-08 | Listes congés/absences : `agent` identité légère | Même contrat que dossiers : `{ id, matricule, nom, prenom, nom_complet }`. `agent_id` conservé. |
 | 2026-09-08 | Annulation, justificatif, soldes pré-créés, absences N+1 | `POST …/annuler`, `GET …/justificatif`, soldes à la lecture, `GET /absences/a-valider` (N+1) |

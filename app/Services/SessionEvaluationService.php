@@ -137,6 +137,28 @@ class SessionEvaluationService extends BaseService
         return $creees;
     }
 
+    /**
+     * Retourne les agents éligibles pour la session mais sans N+1 identifiable.
+     * Vue RH : permet de corriger les affectations manquantes avant de perdre des évaluations.
+     */
+    public function agentsSansSuperieur(SessionEvaluation $session): Collection
+    {
+        // IDs des agents qui ont déjà une fiche dans cette session
+        $agentsAvecFiche = $this->evaluationRepository->getBySession($session->id)
+            ->pluck('agent_id');
+
+        return $this->agentsEligibles($session)
+            ->filter(function (Agent $agent) use ($agentsAvecFiche) {
+                // Éligible, mais pas de fiche = pas de N+1 trouvé
+                if ($agentsAvecFiche->contains($agent->id)) {
+                    return false;
+                }
+                // Double vérification : vraiment pas de supérieur ?
+                return $this->resoudreSuperieurId($agent->id) === null;
+            })
+            ->values();
+    }
+
     // ----------------------------------------------------------------
     // Éligibilité (CCN art. 60–62, D9)
     // ----------------------------------------------------------------
@@ -147,7 +169,8 @@ class SessionEvaluationService extends BaseService
      * Règles (doc/REFERENTIELS-EVALUATION-NOTATION.md §5) :
      *   1. Pas Directeur Général (D9)
      *   2. `date_prise_service` connue (obligatoire pour calculer parité + ancienneté)
-     *   3. Ancienneté ≥ 2 ans  : année(session.debut_session) − année(date_prise_service) ≥ 2
+     *   3. Cycle 24 mois (D2) : écart en années ≥ 2 depuis la **date de dernière notation finalisée**
+     *      (ou `date_prise_service` au 1er cycle). Calcul sur années calendaires.
      *   4. Parité d'année       : année de prise de service paire ↔ session.type_annee = 'paire'
      *                             (filtre ignoré si session.type_annee est null)
      *   5. Semestre             : mois 1–6 → semestre 1 ; mois 7–12 → semestre 2
@@ -195,8 +218,14 @@ class SessionEvaluationService extends BaseService
                 $anneeEmbauche    = (int) $agent->date_prise_service->year;
                 $moisEmbauche     = (int) $agent->date_prise_service->month;
 
-                // Règle 3 : ancienneté ≥ 2 ans (calcul sur les années calendaires)
-                if (($anneeSession - $anneeEmbauche) < 2) {
+                // Règle 3 : cycle 24 mois (D2)
+                // Référence = date de dernière notation finalisée, ou date_prise_service si 1er cycle
+                $dateRef = $this->evaluationRepository->dateDerniereEvaluationFinalisee($agent->id)
+                    ?? $agent->date_prise_service;
+
+                $anneeRef = (int) $dateRef->year;
+
+                if (($anneeSession - $anneeRef) < 2) {
                     return false;
                 }
 
