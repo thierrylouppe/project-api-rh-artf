@@ -95,7 +95,7 @@ Permissions nouvelles seulement (ne pas durcir les routes existantes).
 
 | Vague | Module | Contenu | Statut |
 |-------|--------|---------|--------|
-| D.1 | Évaluations & avancements | Sessions → notation /20 → avis → commissions → lien `avancerEchelon` | ⬜ |
+| D.1 | Évaluations & avancements | Sessions → notation /20 → avis → commissions → lien `avancerEchelon` | ✅ API P1–P5 (hors PDF). Restes : [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) |
 | D.2 | Discipline | Types, sanctions, valider / rejeter, historique | ⬜ |
 | D.3 | Sécurité sociale | Organismes + affiliations | ⬜ |
 | D.4 | Reporting / GED / formation | Backlog | ⬜ |
@@ -125,4 +125,5 @@ A Notifications  →  C Congés  →  D.1 Évaluations
 | 2026-09-01 | — | Création de ce suivi |
 | 2026-09-01 | A | Inbox API, branchements intégration/carrière, job stage |
 | 2026-09-01 | C | Congés & absences (demandes, soldes, workflow, PDF) |
+| 2026-09-14 | D.1 | Lots A–C livrés (art. 62, tableau D5, PDF) — `feature/evaluation-complements`. Lot D art. 73–75 ouvert. |
 | 2026-09-01 | B | Fiche personnel, GED agent, archivage |

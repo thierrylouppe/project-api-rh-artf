@@ -2,13 +2,14 @@
 
 > Document **vivant** : à mettre à jour à chaque livraison API qui impacte le front.  
 > Objectif : un seul point d’entrée pour les échanges FE (quoi appeler, quoi ne plus attendre, où lire le détail).  
-> Dernière mise à jour : **2026-09-06**
+> Dernière mise à jour : **2026-09-14**
 
 Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste résumé.**
 
 | Sujet | Fichier |
 |-------|---------|
 | Suivi implémentation (vagues A–D) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) |
+| Restes évaluation (PDF, art. 62, D5, art. 73–75) | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
 | Routes carrière, lots, checklist 14/15 | [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md) |
 | Workflow intégration par type | [`workflow-integration-par-type.md`](./workflow-integration-par-type.md) |
@@ -482,6 +483,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 |---------|----------|-------------|
 | GET | `/avancements/sessions` | Liste des sessions (filtrables par `statut`) |
 | GET | `/avancements/sessions/{id}` | Détail + évaluations chargées |
+| GET | `/avancements/sessions/{id}/tableau` | Fiches `finalisee` **inscrites** au tableau d’avancement (D5) |
 | **POST** | `/avancements/sessions` | **Ouvrir une session** → génère automatiquement les fiches éligibles |
 | PUT | `/avancements/sessions/{id}` | Modifier description / dates |
 | **POST** | `/avancements/sessions/{id}/cloturer` | Clôturer |
@@ -513,6 +515,9 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 | **POST** | `/avancements/evaluations/{id}/reclamer` | Agent — **Phase 2** | `consulter-evaluations` |
 | **POST** | `/avancements/evaluations/{id}/envoyer-rh` | Agent/N+1 — **Phase 2** | `consulter-evaluations` |
 | POST | `/avancements/evaluations/{id}/valider-rh` | RH | `valider-evaluations` |
+| POST | `/avancements/evaluations/{id}/inscrire-tableau` | RH | `valider-evaluations` |
+| POST | `/avancements/evaluations/{id}/retirer-tableau` | RH | `valider-evaluations` |
+| **GET** | `/avancements/evaluations/{id}/fiche-pdf` | Agent / N+1 / RH-DG | `consulter-evaluations` |
 | POST | `/avancements/evaluations/{id}/annuler` | RH | `valider-evaluations` |
 | **PUT** | `/avancements/evaluations/{id}/superieur` | RH | `creer-evaluations` |
 
@@ -527,11 +532,19 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
   "agent": { "id": 5, "matricule": "AG005", "nom": "DUPONT", "prenom": "Jean", "nom_complet": "Jean DUPONT" },
   "superieur_id": 3,
   "superieur": { "id": 3, "matricule": "AG003", "nom": "MARTIN", "prenom": "Marie", "nom_complet": "Marie MARTIN" },
+  "affectation_notation_id": 12,
+  "affectation_notation": {
+    "id": 12,
+    "date_affectation": "2024-01-01",
+    "date_fin": null,
+    "structure": { "id": 2, "nom": "DRHL", "type": "Direction" }
+  },
   "note_globale": 15.5,
   "mention": "Très bien",
   "statut": "notee",
   "statut_label": "Notée (non signée)",
   "prochaine_etape": "avis_et_signer",
+  "inscrit_tableau": false,
   "avis_superieur": null,
   "signe_par_evaluateur_at": null,
   "signe_par_evalue_at": null,
@@ -554,7 +567,22 @@ Réponse : fiche complète recalculée (même payload que `show`).
 ```json
 { "conforme": true, "commentaire": "Dossier complet et conforme." }
 ```
-`conforme: true` → `finalisee` · `conforme: false` → `rejetee` + retour notateur.
+`conforme: true` → `finalisee` **et** `inscrit_tableau: true` (défaut D5).  
+`conforme: false` → `rejetee` + retour notateur (`inscrit_tableau` inchangé, reste `false`).
+
+### Tableau d’avancement (D5) et PDF
+
+Ne pas casser la liste `GET /avancements/evaluations` (toutes les fiches). Écran « tableau » = `GET /avancements/sessions/{id}/tableau`. Filtre optionnel sur la liste : `?inscrit_tableau=1`.
+
+| Méthode | URL | Quand | Qui |
+|---------|-----|--------|-----|
+| `GET` | `/avancements/sessions/{id}/tableau` | Fiches `finalisee` + `inscrit_tableau=true` | `consulter-evaluations` |
+| `POST` | `/avancements/evaluations/{id}/inscrire-tableau` | Fiche `finalisee` ; **422** si commission d’avancement clôturée | `valider-evaluations` |
+| `POST` | `/avancements/evaluations/{id}/retirer-tableau` | Idem ; **422** si `commission_decision` déjà posée | `valider-evaluations` |
+| `GET` | `/avancements/evaluations/{id}/fiche-pdf` | Dès `signee_evalue` (**422** avant). Stream `application/pdf` | Agent de la fiche, N+1 notateur, `rh` / `admin` / `directeur-general`. **403** sinon (un chef d’un autre agent ne télécharge pas) |
+| `GET` | `/avancements/commissions-preparatoires/{id}/synthese-pdf` | Commission préparatoire **clôturée** (**422** si `en_cours`) | `rh` / `admin` / `directeur-general` seulement (**403** sinon) |
+
+`decider` en commission d’avancement → **422** `inscrit_tableau` si la fiche a été retirée.
 
 ### Payload réattribution N+1 (PUT `/superieur`)
 
@@ -572,7 +600,7 @@ Un agent reçoit une fiche **si et seulement si** :
 4. Cycle 24 mois : `année(session) − année(dernière notation finalisée ou embauche) ≥ 2`
 5. Parité d’année (si `session.type_annee` renseigné) : embauché année paire → session `type_annee = paire`
 6. Semestre (si `session.semestre` renseigné) : embauché en S1 (jan–juin) → session `semestre = 1`
-7. N+1 identifiable. Sans N+1 → `GET sessions/{id}/sans-superieur`, **pas de fiche créée**.
+7. N+1 identifiable **sur le poste dominant** des 24 mois précédant `debut_session` (art. 62), pas seulement l’affectation active du jour. Sans N+1 (ou si l’agent est son propre chef) → `GET sessions/{id}/sans-superieur`, **pas de fiche créée**. Champ optionnel `affectation_notation` = poste retenu.
 
 ### Avis hiérarchiques — Phase 3 (CCN art. 64)
 
@@ -679,8 +707,9 @@ Contrainte : `motif` requis, min 10 chars.
 | `envoyer_rh` | Bouton « Transmettre à la RH » | Agent |
 | `traiter_reclamation` | Badge réclamation en attente | RH |
 | `valider_rh` | Bouton « Valider » + « Rejeter » | RH |
+| `inscrire_tableau` | Fiche finalisée **retirée** du tableau — bouton « Inscrire au tableau » | RH |
 | `corriger_notation` | Bouton « Corriger la note » | N+1 |
-| `commission_preparatoire` | Fiche finalisée, en attente de passage en commission | RH/DG |
+| `commission_preparatoire` | Fiche finalisée **inscrite**, en attente de passage en commission | RH/DG |
 | `avancer_echelon` | Bouton « Appliquer l'avancement » (Phase 4) | RH |
 | `null` | Fiche terminée (échelon avancé ou décision non favorable) | — |
 
@@ -851,13 +880,16 @@ Filtrer côté FE par `meta.domaine === 'evaluation'`.
 Après finalisation RH d'une fiche (statut `finalisee`) :
 
 ```
-finalisee
-  └─ [RH/DG] POST sessions/{sessionId}/commission-preparatoire   (ouvrir)
+finalisee (inscrit_tableau = true par défaut)
+  └─ [RH] optionnel : POST evaluations/{id}/retirer-tableau   (hors tableau, toujours notée)
+  └─ [RH] optionnel : POST evaluations/{id}/inscrire-tableau  (si retirée ; 422 si commission d’avancement clôturée)
+  └─ [RH/DG] POST sessions/{sessionId}/commission-preparatoire   (ouvrir — toutes les finalisee)
      └─ POST commissions-preparatoires/{id}/noter                (harmoniser note + synthèse)
      └─ GET  commissions-preparatoires/{id}/alertes              (fiches écart > 5)
      └─ POST commissions-preparatoires/{id}/cloturer
+        └─ GET commissions-preparatoires/{id}/synthese-pdf       (note art. 67, RH/admin/DG)
         └─ [RH/DG] POST sessions/{sessionId}/commission-avancement
-           └─ POST commissions-avancements/{id}/decider          (favorable / défavorable / reporté)
+           └─ POST commissions-avancements/{id}/decider          (422 si inscrit_tableau = false)
            └─ POST commissions-avancements/{id}/cloturer
               └─ [RH] POST evaluations/{evaluationId}/avancer-echelon  (idempotent)
               └─ [RH] POST sessions/{sessionId}/cloturer               (session fermée)
@@ -874,6 +906,7 @@ finalisee
 | `POST` | `/avancements/commissions-preparatoires/{id}/noter` | `valider-evaluations` | Harmoniser note + synthèse |
 | `GET` | `/avancements/commissions-preparatoires/{id}/alertes` | `valider-evaluations` | Fiches avec écart > 5 pts |
 | `POST` | `/avancements/commissions-preparatoires/{id}/cloturer` | `valider-evaluations` | Clôturer |
+| **GET** | `/avancements/commissions-preparatoires/{id}/synthese-pdf` | `consulter-evaluations` | PDF note de synthèse (art. 67) — **après clôture** ; RH / `admin` / `directeur-general` seulement (**403** sinon) |
 
 **Body noter :**
 ```json
@@ -986,6 +1019,12 @@ finalisee
 | Décision `favorable` sans échelons | 422 | `nombre_echelons` |
 | `nombre_echelons > 2` | 422 | `nombre_echelons` |
 | Fiche non finalisée passée en commission | 422 | `evaluation` |
+| Fiche non inscrite au tableau (`decider`) | 422 | `inscrit_tableau` |
+| Inscrire / retirer après clôture commission d’avancement | 422 | `commission_avancement` |
+| Inscrire / retirer si déjà une `commission_decision` | 422 | `commission_decision` |
+| PDF fiche avant signature agent | 422 | `statut` |
+| PDF synthèse avant clôture préparatoire | 422 | `statut` |
+| PDF fiche par un tiers (ni agent, ni N+1, ni RH/DG) | 403 | — |
 | Commission déjà clôturée | 422 | `statut` |
 | Avancer échelon sans décision favorable | 422 | `commission_decision` |
 
@@ -997,6 +1036,8 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-14 | **Évaluation lots A–C** : N+1 = poste dominant 24 mois (art. 62), tableau d’avancement (`inscrit_tableau`), PDF fiche + note de synthèse | Champs optionnels `affectation_notation`, `inscrit_tableau`. Nouveaux : `GET sessions/{id}/tableau`, `POST …/inscrire-tableau` / `retirer-tableau`, `GET …/fiche-pdf`, `GET …/synthese-pdf`. `prochaine_etape` : `inscrire_tableau`. **Lot D (art. 73–75) toujours hors API.** |
+| 2026-09-14 | Plan restes évaluation (PDF fiche/synthèse, N+1 art. 62, tableau D5, art. 73–75) | Voir [`plan-evaluation-complements.md`](./plan-evaluation-complements.md). Lots A–C livrés ; lot D (reclassement) pas encore. |
 | 2026-09-10 | **Congés — positions CCN art. 79–80** : `StatutAgent` + 2 valeurs (`disponibilite`, `sous_le_drapeau`), migration ENUM agents, suppression "Mise en disponibilité" de type_absences, `SessionEvaluationService` dynamique | Agents en disponibilité et sous le drapeau exclus de l'évaluation. Enum agents étendu. |
 | 2026-09-10 | **Congés — validations métier CCN art. 77** : congé annuel bloqué avant 12 mois de service, convenances personnelles min 15 jours | API renvoie **422** avec message explicite si règle non respectée. |
 | 2026-09-10 | **Congés — mise en conformité CCN ARTF art. 77** : paliers ancienneté corrigés (8 paliers 0/6/8/10/12/14/16/18j), paternité 2j (était 10j), maternité 105j (était 98j), 14 types de congé ajoutés (exceptionnels, maladie famille, convenances perso, concours, éducation syndicale) | Nouvelle table seed `GET /types-conges`. Noms exacts dans §2c. |

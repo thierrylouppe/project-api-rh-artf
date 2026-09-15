@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\StatutCommission;
 use App\Enums\StatutSessionEvaluation;
 use App\Enums\StatutAgent;
-use App\Interfaces\AffectationInterface;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\EvaluationInterface;
 use App\Interfaces\NominationInterface;
@@ -28,11 +27,11 @@ use Illuminate\Validation\ValidationException;
 class SessionEvaluationService extends BaseService
 {
     public function __construct(
-        SessionEvaluationInterface        $repository,
-        private readonly AgentInterface        $agentRepository,
-        private readonly AffectationInterface  $affectationRepository,
-        private readonly NominationInterface   $nominationRepository,
-        private readonly EvaluationInterface   $evaluationRepository,
+        SessionEvaluationInterface                 $repository,
+        private readonly AgentInterface            $agentRepository,
+        private readonly NominationInterface       $nominationRepository,
+        private readonly EvaluationInterface       $evaluationRepository,
+        private readonly SuperieurHierarchiqueService $superieurService,
     ) {
         parent::__construct($repository);
     }
@@ -145,19 +144,20 @@ class SessionEvaluationService extends BaseService
                 continue;
             }
 
-            $superieurId = $this->resoudreSuperieurId((int) $agent->id);
+            $notateur = $this->resoudreNotateur($session, (int) $agent->id);
 
-            // CCN §8 : si aucun N+1 identifiable, on liste l'agent « sans supérieur »
+            // CCN art. 62 : si aucun N+1 identifiable, on liste l'agent « sans supérieur »
             // mais on NE crée PAS de fiche (pas de notateur = pas d'évaluation possible)
-            if ($superieurId === null) {
+            if ($notateur === null) {
                 continue;
             }
 
             $evaluation = $this->evaluationRepository->create([
-                'session_id'   => $session->id,
-                'agent_id'     => $agent->id,
-                'superieur_id' => $superieurId,
-                'statut'       => 'en_attente',
+                'session_id'              => $session->id,
+                'agent_id'                => $agent->id,
+                'superieur_id'            => $notateur['superieur_id'],
+                'affectation_notation_id' => $notateur['affectation']->id,
+                'statut'                  => 'en_attente',
             ]);
 
             $creees->push($evaluation);
@@ -177,13 +177,13 @@ class SessionEvaluationService extends BaseService
             ->pluck('agent_id');
 
         return $this->agentsEligibles($session)
-            ->filter(function (Agent $agent) use ($agentsAvecFiche) {
+            ->filter(function (Agent $agent) use ($agentsAvecFiche, $session) {
                 // Éligible, mais pas de fiche = pas de N+1 trouvé
                 if ($agentsAvecFiche->contains($agent->id)) {
                     return false;
                 }
                 // Double vérification : vraiment pas de supérieur ?
-                return $this->resoudreSuperieurId($agent->id) === null;
+                return $this->resoudreNotateur($session, (int) $agent->id) === null;
             })
             ->values();
     }
@@ -329,12 +329,22 @@ class SessionEvaluationService extends BaseService
         ];
     }
 
-    /** Résout le superieur_id (agent_id du N+1) depuis l'affectation active. */
-    private function resoudreSuperieurId(int $agentId): ?int
+    /**
+     * CCN art. 62 : notateur = poste où l'agent a servi le plus longtemps
+     * sur les 24 mois précédant l'ouverture de session.
+     *
+     * @return array{superieur_id: int, affectation: \App\Models\Affectation, duree_jours: int}|null
+     */
+    private function resoudreNotateur(SessionEvaluation $session, int $agentId): ?array
     {
-        $affectation = $this->affectationRepository->getActive($agentId);
+        [$debut, $fin] = $this->superieurService->periodeNotation($session);
 
-        return $affectation?->superieur_hierarchique_id;
+        $priseService = $this->agentRepository->findById($agentId)?->date_prise_service;
+        if ($priseService && Carbon::parse($priseService)->greaterThan($debut)) {
+            $debut = Carbon::parse($priseService)->startOfDay();
+        }
+
+        return $this->superieurService->resoudreNotateurPourPeriode($agentId, $debut, $fin);
     }
 
     // ----------------------------------------------------------------

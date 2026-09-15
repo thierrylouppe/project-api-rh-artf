@@ -8,8 +8,11 @@ use App\Http\Requests\Commission\OuvrirRequest;
 use App\Http\Resources\CommissionPreparatoireResource;
 use App\Http\Resources\EvaluationResource;
 use App\Services\CommissionPreparatoireService;
+use App\Services\EvaluationPdfService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Commission préparatoire (CCN ARTF art. 68).
@@ -17,8 +20,10 @@ use OpenApi\Attributes as OA;
  */
 class CommissionPreparatoireController extends BaseController
 {
-    public function __construct(private readonly CommissionPreparatoireService $commService)
-    {
+    public function __construct(
+        private readonly CommissionPreparatoireService $commService,
+        private readonly EvaluationPdfService          $pdfService,
+    ) {
         parent::__construct($commService);
     }
 
@@ -134,5 +139,19 @@ class CommissionPreparatoireController extends BaseController
         );
 
         return $this->respond($commission, 'Commission préparatoire clôturée. Vous pouvez ouvrir la commission d\'avancement.');
+    }
+
+    #[OA\Get(
+        path: '/api/avancements/commissions-preparatoires/{id}/synthese-pdf',
+        operationId: 'synthesePreparatoirePdf',
+        tags: ['Commissions'],
+        summary: 'PDF de la note de synthèse (art. 67) — commission clôturée',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'PDF')]
+    )]
+    public function synthesePdf(Request $request, int $id): Response
+    {
+        return $this->pdfService->synthesePdf($id, $request->user());
     }
 }

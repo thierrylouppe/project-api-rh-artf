@@ -10,6 +10,9 @@ interface EvaluationInterface extends BaseInterface
     /** Toutes les fiches d'une session. */
     public function getBySession(int $sessionId): Collection;
 
+    /** Fiches finalisées inscrites au tableau d'avancement d'une session. */
+    public function getTableau(int $sessionId): Collection;
+
     /** Toutes les fiches dont le N+1 est ce supérieur. */
     public function getBySuperieur(int $superieurId): Collection;
 

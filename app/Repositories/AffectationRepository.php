@@ -53,6 +53,21 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
             ->get();
     }
 
+    public function getPourAgentSurPeriode(int $agentId, $debut, $fin): Collection
+    {
+        return Affectation::query()
+            ->where('agent_id', $agentId)
+            ->whereIn('statut', [StatutAffectation::ACTIVE, StatutAffectation::TERMINEE])
+            ->whereDate('date_affectation', '<', $fin)
+            ->where(function ($query) use ($debut) {
+                $query->whereNull('date_fin')
+                    ->orWhereDate('date_fin', '>=', $debut);
+            })
+            ->with('structure')
+            ->orderBy('date_affectation')
+            ->get();
+    }
+
     public function terminer(int $id, ?string $dateFin): Affectation
     {
         $affectation = $this->findById($id);

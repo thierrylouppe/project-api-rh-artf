@@ -11,10 +11,12 @@ use App\Http\Resources\EvaluationResource;
 use App\Http\Resources\NoteEvaluationResource;
 use App\Services\EvaluationService;
 use App\Services\EvaluationStatutService;
+use App\Services\EvaluationPdfService;
 use App\Services\NoteCalculationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Gestion des fiches d'évaluation individuelles.
@@ -29,9 +31,10 @@ use OpenApi\Attributes as OA;
 class EvaluationController extends BaseController
 {
     public function __construct(
-        EvaluationService                       $evaluationService,
-        private readonly NoteCalculationService $noteService,
+        EvaluationService                        $evaluationService,
+        private readonly NoteCalculationService  $noteService,
         private readonly EvaluationStatutService $statutService,
+        private readonly EvaluationPdfService    $pdfService,
     ) {
         parent::__construct($evaluationService);
     }
@@ -43,7 +46,7 @@ class EvaluationController extends BaseController
 
     protected function showRelations(): array
     {
-        return ['agent', 'superieur', 'session', 'notes.question', 'reclamation.agent', 'avisHierarchiques.signePar'];
+        return ['agent', 'superieur', 'session', 'affectationNotation.structure', 'notes.question', 'reclamation.agent', 'avisHierarchiques.signePar'];
     }
 
     // ----------------------------------------------------------------
@@ -337,5 +340,64 @@ class EvaluationController extends BaseController
         $evaluation = $this->service->update($id, ['superieur_id' => $request->input('superieur_id')]);
 
         return $this->respond($evaluation, 'Notateur réattribué.');
+    }
+
+    #[OA\Get(
+        path: '/api/avancements/sessions/{sessionId}/tableau',
+        operationId: 'tableauAvancement',
+        tags: ['Évaluation'],
+        summary: 'Fiches inscrites au tableau d\'avancement (D5)',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'sessionId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'Tableau')]
+    )]
+    public function tableau(int $sessionId): JsonResponse
+    {
+        /** @var EvaluationService $svc */
+        $svc = $this->service;
+
+        return $this->collectionResponse(EvaluationResource::collection($svc->getTableau($sessionId)));
+    }
+
+    #[OA\Post(
+        path: '/api/avancements/evaluations/{id}/inscrire-tableau',
+        operationId: 'inscrireTableauAvancement',
+        tags: ['Évaluation'],
+        summary: 'Inscrire une fiche finalisée au tableau d\'avancement',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'Inscrite')]
+    )]
+    public function inscrireTableau(int $id): JsonResponse
+    {
+        return $this->respond($this->statutService->inscrireTableau($id), 'Fiche inscrite au tableau d\'avancement.');
+    }
+
+    #[OA\Post(
+        path: '/api/avancements/evaluations/{id}/retirer-tableau',
+        operationId: 'retirerTableauAvancement',
+        tags: ['Évaluation'],
+        summary: 'Retirer une fiche du tableau d\'avancement',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'Retirée')]
+    )]
+    public function retirerTableau(int $id): JsonResponse
+    {
+        return $this->respond($this->statutService->retirerTableau($id), 'Fiche retirée du tableau d\'avancement.');
+    }
+
+    #[OA\Get(
+        path: '/api/avancements/evaluations/{id}/fiche-pdf',
+        operationId: 'ficheEvaluationPdf',
+        tags: ['Évaluation'],
+        summary: 'PDF de la fiche d\'évaluation (après signature agent)',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'PDF')]
+    )]
+    public function fichePdf(Request $request, int $id): Response
+    {
+        return $this->pdfService->fichePdf($id, $request->user());
     }
 }

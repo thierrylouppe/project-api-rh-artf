@@ -64,6 +64,8 @@ Phase 1  Grille + session + fiches + notation /20
 **Hors module V1 (ch. 5 CCN) :** reclassement de classe, hors classe, reconversion (art. 73–75).  
 Hors scope aussi : concours, reporting dashboard, mail.
 
+**Restes (PDF, art. 62 mutation, D5, ch. 5) :** plan dédié [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — branche `feature/evaluation-complements`.
+
 ---
 
 ## 3. Permissions (menus)
@@ -99,7 +101,7 @@ Rôles seeder actuel : `rh` a `consulter` seulement ; hiérarchie (`directeur`, 
 - [ ] **Hors DG** (décision RH 2026-09-10) : exclure l’agent porteur d’une nomination active `poste = Directeur Général`
 - [ ] Rythme : **tous les 24 mois** (art. 62). Les filtres parité année / semestre du référentiel = **mécanique de cohorte** optionnelle, à valider (D8) : ils doivent servir le 24 mois, pas le remplacer.
 - [ ] `date_prise_service` (ou date de dernière notation) pour dater le cycle
-- [ ] Mutation en cours d’année (art. 62) : notateur = N+1 du poste où l’agent a **servi le plus longtemps** sur la période (pas seulement l’affectation active du jour)
+- [x] Mutation en cours d’année (art. 62) : notateur = N+1 du poste où l’agent a **servi le plus longtemps** sur la période (pas seulement l’affectation active du jour)
 - [ ] N+1 identifiable ; liste « sans supérieur » si affecté mais chef introuvable
 - [ ] Création de session → génération auto des fiches (éligibles **avec** N+1)
 - [ ] Liste « sans supérieur » (éligibles sans fiche) — lecture RH
@@ -187,7 +189,7 @@ N+1 : extraire / réutiliser un `SuperieurHierarchiqueService` (affectation acti
 | 5.2 Art. 72 | Avancement exceptionnel, proposition DG, **plafond +2 échelons** | Haute métier, après P4 |
 | 5.3 Connaissances complémentaires | Demandes de formation liées à la fiche | Basse |
 | 5.4 Notifications | `domaine: evaluation` (session créée, à noter, à signer, RH, commission) | Haute dès P2 si le FE a la cloche |
-| 5.5 PDF | Fiche d’évaluation, note de synthèse | Moyenne |
+| 5.5 PDF | Fiche d’évaluation, note de synthèse | ✅ Livré [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot C |
 | 5.6 Stats session | Compteurs par statut, moyenne /20, répartition mentions | Haute pour écran RH |
 
 ---
@@ -212,7 +214,7 @@ Ne pas mettre le calcul de `note_globale` dans le Controller.
 | D2 | Date du cycle 24 mois | 1 | `date_prise_service` puis date de **dernière notation** |
 | D3 | Transmission RH sans tous les notateurs art. 64 | 2 vs 3 | P2 : N+1 + agent ; P3 : chaîne complète |
 | D4 | Directeur départemental vs central | 3 | ✅ Utiliser `nominations.poste` (déjà distingué) |
-| D5 | Qui inscrit au tableau d’avancement | 4 | Tous les notés `finalisee` vs filtre RH |
+| D5 | Qui inscrit au tableau d’avancement | 4 | ✅ Livré (2026-09-14) : toutes les `finalisee` en préparatoire ; tableau = `inscrit_tableau` (défaut oui à `valider-rh`). [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot B |
 | D6 | Passage d’échelon | 4 | **Bouton RH** après art. 70 (pas d’auto sur la note N+1) |
 | D7 | Statuts agent « détachement » / « position exceptionnelle » | 1 | À créer : `statut` agent ne connaît que `actif`, `inactif`, `stagiaire`, `archive`, `BROUILLON` |
 | D8 | Parité année + semestre du référentiel | 1 | **Optionnel** ; le légal est 24 mois + affecté |
@@ -225,6 +227,8 @@ Ne pas mettre le calcul de `note_globale` dans le Controller.
 
 | Date | Phase | Fait |
 |------|-------|------|
+| 2026-09-14 | A–C | Lots A–C livrés (art. 62, D5, PDF). Lot D art. 73–75 ouvert. |
+| 2026-09-14 | — | Restes (PDF 5.5, art. 62, D5, art. 73–75) → [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) |
 | 2026-09-10 | — | D9 tranché : **DG non évalué**. D4 résolu via `nominations.poste`. D10 ouvert (+2 échelons) |
 | 2026-09-10 | — | Alignement CCN ARTF art. 60–75 ([`convention-artf-avancement.md`](./convention-artf-avancement.md)) |
 | 2026-09-09 | — | Création de ce plan + branche `feature/evaluation-notation-avancement` |

@@ -92,6 +92,12 @@ class CommissionAvancementService extends BaseService
 
         $this->assertFicheFinalisee($evaluation);
 
+        if (! $evaluation->inscrit_tableau) {
+            throw ValidationException::withMessages([
+                'inscrit_tableau' => 'Cette fiche n\'est pas inscrite au tableau d\'avancement.',
+            ]);
+        }
+
         // Validation métier
         if ($decision->donneDroitAvancement() && $nombreEchelons < 1) {
             throw ValidationException::withMessages([

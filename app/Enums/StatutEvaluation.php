@@ -76,4 +76,16 @@ enum StatutEvaluation: string
     {
         return in_array($this, [self::FINALISEE, self::ANNULEE], true);
     }
+
+    /** La note a été portée à la connaissance de l'agent (art. 63–65) : PDF fiche autorisé. */
+    public function peutTelechargerFichePdf(): bool
+    {
+        return in_array($this, [
+            self::SIGNEE_EVALUE,
+            self::EN_RECLAMATION,
+            self::EN_VALIDATION_RH,
+            self::FINALISEE,
+            self::REJETEE,
+        ], true);
+    }
 }

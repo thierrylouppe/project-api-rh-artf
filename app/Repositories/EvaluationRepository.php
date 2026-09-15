@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\StatutEvaluation;
 use App\Interfaces\EvaluationInterface;
 use App\Models\Evaluation;
 use Illuminate\Support\Collection;
@@ -16,7 +17,7 @@ class EvaluationRepository extends BaseRepository implements EvaluationInterface
     public function getAll(array $filters = []): Collection
     {
         return Evaluation::query()
-            ->with(['agent', 'superieur', 'session'])
+            ->with(['agent', 'superieur', 'session', 'affectationNotation.structure'])
             ->filter($filters)
             ->orderByDesc('created_at')
             ->get();
@@ -25,8 +26,19 @@ class EvaluationRepository extends BaseRepository implements EvaluationInterface
     public function getBySession(int $sessionId): Collection
     {
         return Evaluation::query()
-            ->with(['agent', 'superieur'])
+            ->with(['agent', 'superieur', 'affectationNotation.structure'])
             ->where('session_id', $sessionId)
+            ->orderBy('agent_id')
+            ->get();
+    }
+
+    public function getTableau(int $sessionId): Collection
+    {
+        return Evaluation::query()
+            ->with(['agent', 'superieur', 'session', 'affectationNotation.structure'])
+            ->where('session_id', $sessionId)
+            ->where('statut', StatutEvaluation::FINALISEE)
+            ->where('inscrit_tableau', true)
             ->orderBy('agent_id')
             ->get();
     }
@@ -34,7 +46,7 @@ class EvaluationRepository extends BaseRepository implements EvaluationInterface
     public function getBySuperieur(int $superieurId): Collection
     {
         return Evaluation::query()
-            ->with(['agent', 'session'])
+            ->with(['agent', 'session', 'affectationNotation.structure'])
             ->where('superieur_id', $superieurId)
             ->orderByDesc('created_at')
             ->get();
@@ -43,7 +55,7 @@ class EvaluationRepository extends BaseRepository implements EvaluationInterface
     public function getByAgent(int $agentId): Collection
     {
         return Evaluation::query()
-            ->with(['superieur', 'session'])
+            ->with(['superieur', 'session', 'affectationNotation.structure'])
             ->where('agent_id', $agentId)
             ->orderByDesc('created_at')
             ->get();

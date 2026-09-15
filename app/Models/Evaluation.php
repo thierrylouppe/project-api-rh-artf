@@ -19,6 +19,7 @@ class Evaluation extends Model
         'session_id',
         'agent_id',
         'superieur_id',
+        'affectation_notation_id',
         'date_evaluation',
         'jours_absence_non_justifiee',
         'sanctions',
@@ -41,6 +42,7 @@ class Evaluation extends Model
         'validateur_rh_id',
         'commentaire_rh',
         'conforme_rh',
+        'inscrit_tableau',
         'created_by',
     ];
 
@@ -58,9 +60,10 @@ class Evaluation extends Model
         'signe_par_evalue_at'         => 'datetime',
         'date_validation_rh'          => 'datetime',
         'conforme_rh'                 => 'boolean',
+        'inscrit_tableau'             => 'boolean',
     ];
 
-    protected array $filterable = ['session_id', 'agent_id', 'superieur_id', 'statut'];
+    protected array $filterable = ['session_id', 'agent_id', 'superieur_id', 'statut', 'inscrit_tableau'];
 
     // ----------------------------------------------------------------
     // Relations
@@ -79,6 +82,11 @@ class Evaluation extends Model
     public function superieur(): BelongsTo
     {
         return $this->belongsTo(Agent::class, 'superieur_id');
+    }
+
+    public function affectationNotation(): BelongsTo
+    {
+        return $this->belongsTo(Affectation::class, 'affectation_notation_id');
     }
 
     public function validateurRh(): BelongsTo

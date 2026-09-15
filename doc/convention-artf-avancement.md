@@ -91,4 +91,4 @@ Reclassement **hors classe** : ancienneté ≥ 25 ans, grade d’inspecteur prin
 | Note à l’avancement (art. 70) | Note **fixée par la commission d’avancement**, distincte de la note N+1 |
 | +2 échelons stage 9 mois (art. 71) | Parcours **séparé** (pas le cycle 24 mois) |
 | +2 échelons max exceptionnel (art. 72) | Décision commission, proposition DG |
-| Art. 73–75 | **Pas** dans `/avancements` V1 |
+| Art. 73–75 | **Pas** dans `/avancements` V1 — plan [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot D (`/carriere/reclassements`) |

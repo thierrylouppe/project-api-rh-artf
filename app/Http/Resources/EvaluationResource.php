@@ -19,6 +19,27 @@ class EvaluationResource extends JsonResource
             'agent'          => $this->whenLoaded('agent', fn () => new AgentIdentiteResource($this->agent)),
             'superieur_id'   => $this->superieur_id,
             'superieur'      => $this->whenLoaded('superieur', fn () => new AgentIdentiteResource($this->superieur)),
+            'affectation_notation_id' => $this->affectation_notation_id,
+            'affectation_notation'    => $this->whenLoaded('affectationNotation', function () {
+                if (! $this->affectationNotation) {
+                    return null;
+                }
+
+                $structure = $this->affectationNotation->relationLoaded('structure')
+                    ? $this->affectationNotation->structure
+                    : null;
+
+                return [
+                    'id'               => $this->affectationNotation->id,
+                    'date_affectation' => $this->affectationNotation->date_affectation?->toDateString(),
+                    'date_fin'         => $this->affectationNotation->date_fin?->toDateString(),
+                    'structure'        => $structure ? [
+                        'id'   => $structure->id,
+                        'nom'  => $structure->nom ?? null,
+                        'type' => class_basename($this->affectationNotation->structurable_type),
+                    ] : null,
+                ];
+            }),
             'date_evaluation'               => $this->date_evaluation?->toDateString(),
             'jours_absence_non_justifiee'   => $this->jours_absence_non_justifiee,
             'sanctions'                     => $this->sanctions,
@@ -42,6 +63,7 @@ class EvaluationResource extends JsonResource
             'date_validation_rh'            => $this->date_validation_rh?->toDateTimeString(),
             'commentaire_rh'                => $this->commentaire_rh,
             'conforme_rh'                   => $this->conforme_rh,
+            'inscrit_tableau'               => (bool) $this->inscrit_tableau,
             // réclamation (chargée seulement sur show)
             'reclamation'           => $this->whenLoaded('reclamation', fn () => new ReclamationResource($this->reclamation)),
             // avis hiérarchiques (chargés seulement sur show)
@@ -74,6 +96,9 @@ class EvaluationResource extends JsonResource
 
     private function nextEtapeApresFinalisee(): ?string
     {
+        if (! $this->inscrit_tableau) {
+            return 'inscrire_tableau';
+        }
         if (! $this->commission_decision) {
             return 'commission_preparatoire';
         }

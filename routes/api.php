@@ -431,6 +431,8 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
         ->middleware('permission:creer-evaluations');
     Route::get('sessions/{id}/stats', [SessionEvaluationController::class, 'stats'])
         ->middleware('permission:consulter-evaluations');
+    Route::get('sessions/{id}/tableau', [EvaluationController::class, 'tableau'])
+        ->middleware('permission:consulter-evaluations');
 
     // ---- Fiches d'évaluation ----
 
@@ -471,6 +473,12 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
         ->middleware('permission:valider-evaluations');
     Route::put('evaluations/{id}/superieur', [EvaluationController::class, 'reattribuerSuperieur'])
         ->middleware('permission:creer-evaluations');
+    Route::post('evaluations/{id}/inscrire-tableau', [EvaluationController::class, 'inscrireTableau'])
+        ->middleware('permission:valider-evaluations');
+    Route::post('evaluations/{id}/retirer-tableau', [EvaluationController::class, 'retirerTableau'])
+        ->middleware('permission:valider-evaluations');
+    Route::get('evaluations/{id}/fiche-pdf', [EvaluationController::class, 'fichePdf'])
+        ->middleware('permission:consulter-evaluations');
 
     // ---- Réclamations (RH — `valider-evaluations`) ----
     Route::get('reclamations', [ReclamationController::class, 'index'])
@@ -505,6 +513,8 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
         ->middleware('permission:valider-evaluations');
     Route::post('commissions-preparatoires/{id}/cloturer', [CommissionPreparatoireController::class, 'cloturer'])
         ->middleware('permission:valider-evaluations');
+    Route::get('commissions-preparatoires/{id}/synthese-pdf', [CommissionPreparatoireController::class, 'synthesePdf'])
+        ->middleware('permission:consulter-evaluations');
 
     // ---- Commission d'avancement Phase 4 (CCN art. 69-70) ----
     Route::post('sessions/{sessionId}/commission-avancement', [CommissionAvancementController::class, 'ouvrir'])

@@ -462,6 +462,7 @@ Ne pas recalculer la note globale dans le contrôleur : toujours via `NoteCalcul
 
 Voir aussi : [REFERENTIELS-RH.md](./REFERENTIELS-RH.md) (grades, fonctions, absences liées à `jours_absence_non_justifiee`).  
 **Phasage dans ce projet :** [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notation.md).  
+**Lots A–C livrés (PDF, mutation art. 62, tableau D5).** Art. 73–75 encore ouvert : [`plan-evaluation-complements.md`](./plan-evaluation-complements.md).  
 **Convention collective ARTF (ch. 4–5) :** [`convention-artf-avancement.md`](./convention-artf-avancement.md) — **prime** sur les règles d’éligibilité / commissions de ce document.
 
 ---

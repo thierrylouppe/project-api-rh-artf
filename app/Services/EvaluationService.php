@@ -42,4 +42,13 @@ class EvaluationService extends BaseService
 
         return $repo->getBySession($sessionId);
     }
+
+    /** Tableau d'avancement : fiches finalisées inscrites. */
+    public function getTableau(int $sessionId): \Illuminate\Support\Collection
+    {
+        /** @var EvaluationInterface $repo */
+        $repo = $this->repository;
+
+        return $repo->getTableau($sessionId);
+    }
 }
