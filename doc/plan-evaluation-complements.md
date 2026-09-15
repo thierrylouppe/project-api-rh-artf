@@ -1,15 +1,15 @@
 # Plan — Compléments évaluation / avancement
 
 > Branche : `feature/evaluation-complements` (depuis `develop`)  
-> Date : **2026-09-14**  
+> Date : **2026-09-14** · **Close : 2026-09-15**  
 > Document **vivant** : cocher à chaque livraison.  
-> Socle déjà livré (P1–P5 hors PDF) : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notation.md)  
+> Socle déjà livré (P1–P5) : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notation.md)  
 > Droit ARTF : [`convention-artf-avancement.md`](./convention-artf-avancement.md) — art. 62, 67, 73–75  
 > Contrat FE : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md)
 
 **Objectif :** fermer les **trous du tableau d’avancement V1** (PDF, notateur art. 62, inscription D5), puis poser le **ch. 5 CCN** (reclassement / hors classe / reconversion) **hors** `/avancements`.
 
-Ne pas relancer P1–P5 déjà en production API. Extension uniquement.
+**État :** lots **A–D livrés**. Ne pas relancer P1–P5 ni A–D. Hors lot : catalogue formations, concours, PDF acte de reclassement. Test optionnel A.6 (chef de structure sans `superieur_hierarchique_id`).
 
 ---
 
@@ -26,7 +26,7 @@ Chaîne : Route → FormRequest → Controller → **Service** → **Interface**
 
 ---
 
-## 2. État actuel (constat code, 2026-09-14 — lots A–C livrés)
+## 2. État actuel (constat code, 2026-09-15 — lots A–D livrés)
 
 | Sujet | Code aujourd’hui | Écart CCN / plan |
 |--------|------------------|------------------|
@@ -56,8 +56,7 @@ Lot A  Art. 62 — notateur = affectation dominante
 | **C** | Télécharger fiche PDF + PDF synthèse préparatoire | Moyenne (plan 5.5) | ✅ |
 | **D** | Demandes de reclassement / hors classe / reconversion + effet paie **classe** | Hors notation V1 | ✅ |
 
-Ne pas commencer le lot N+1 tant que le lot N n’est pas **testé + noté FE**.  
-Exception : C peut démarrer en parallèle de B si le FE a besoin des PDF tout de suite (pas de dépendance métier).
+Ne pas relancer A–D. Suite hors évaluation : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) **D.2 Discipline**.
 
 ---
 
@@ -340,6 +339,7 @@ Lot D    /api/carriere/reclassements
 
 | Date | Lot | Fait |
 |------|-----|------|
+| 2026-09-15 | — | Lots A–D **close**. Suite projet : D.2 Discipline. |
 | 2026-09-15 | D | API `/carriere/reclassements` (art. 73–75). D11–D14 figés. `changerClasse`. Tests `ReclassementTest`. |
-| 2026-09-14 | A–C | API livrée : notateur art. 62, `inscrit_tableau`, PDF fiche + synthèse. Tests `EvaluationComplementsTest`. Lot D non commencé. |
+| 2026-09-14 | A–C | API livrée : notateur art. 62, `inscrit_tableau`, PDF fiche + synthèse. Tests `EvaluationComplementsTest`. |
 | 2026-09-14 | — | Branche `feature/evaluation-complements` + création de ce plan. D5 proposé : inscription par défaut à `finalisee`, filtre RH avant commission d’avancement. |

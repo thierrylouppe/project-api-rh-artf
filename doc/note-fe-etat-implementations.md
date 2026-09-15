@@ -8,7 +8,7 @@ Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste ré
 
 | Sujet | Fichier |
 |-------|---------|
-| Suivi implémentation (vagues A–D) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) |
+| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.2 prochain ; cloisonnement **plus tard** |
 | Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
 | Routes carrière, lots, checklist 14/15 | [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md) |
@@ -45,7 +45,11 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | `consulter-salaires` / `gerer-salaires`. Historique : `type_changement` peut valoir `reclassement`, `hors_classe`, `reconversion` (art. 73–75). |
 | Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
 | Évaluations | `/avancements/…` | **Livré** | P1–P5 + lots A–C (art. 62, tableau D5, PDF). Contrat : §7b. Reclassement de **classe** : §4 (`/carriere/reclassements`), pas ici. |
-| Reporting / dashboard | — | **Pas livré** | Permission `consulter-reporting` seedée, pas d’API. |
+| Discipline | `/discipline` | **Pas livré** | Vague D.2 — ne pas concevoir d’écrans tant que l’API n’est pas là. |
+| Affaires sociales | `/affaires-sociales` | **Pas livré** | Vague D.3. Rôle `rh` global (pas de menu par bureau). |
+| Formation | `/formations` | **Pas livré** | Vague D.4. Stages d’accueil déjà sous `/integration/stages`. |
+| Paie (lots / éléments) | `/paie` | **Pas livré** | Vague D.5. Grille + salaire indiciaire **déjà** sous `/salaires-agents`. |
+| Reporting / dashboard | `/reporting` | **Pas livré** | Vague D.6. Permission `consulter-reporting` seedée, pas d’API. |
 | Inbox notifications | `/notifications` | **Livré** | Inbox utilisateur (`auth:sanctum`). Voir §2b. |
 
 ---
@@ -551,11 +555,12 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 
 ## 6. Hors périmètre actuel (ne pas concevoir d’écrans API)
 
-- ~~Campagnes et fiches d’évaluation~~ → **livré** P1–P5 + lots A–C (§7b)
+- ~~Campagnes et fiches d’évaluation~~ → **livré** P1–P5 + lots A–D (§7b + §4)
 - ~~Reclassement / hors classe / reconversion (art. 73–75)~~ → **livré** §4
-- Catalogue formations, concours, PDF **acte** de reclassement
-- Discipline, GED **versioning / recherche** (la GED agent légère est livrée, §2d)
-- Dashboard / exports reporting
+- Catalogue formations, concours, PDF **acte** de reclassement → formations = Vague D.4 (ne pas brancher avant API)
+- Discipline, affaires sociales, paie lots, dashboard → vagues D.2–D.6 (ne pas concevoir d’écrans avant l’API)
+- GED **versioning / recherche** (la GED agent légère est livrée, §2d)
+- Cloisonnement menus par bureau DRHL → Vague F, **après** D.2–D.6
 - Mail / SMS (canal `database` uniquement pour l’instant)
 
 ---
@@ -1137,6 +1142,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-15 | **Plans d’implémentation recalés** : V1–V4 close, prochain = discipline D.2 | Doc seule. Consommer `/avancements` + `/carriere/reclassements`. |
 | 2026-09-15 | **Carrière art. 73–75** : `/carriere/reclassements` (formation, exceptionnel, hors classe, reconversion) + `changerClasse` | Écran fiche agent, **pas** commission. DG : `consulter-salaires` + `POST …/approuver` (74/75). RH : créer / art. 73 / `appliquer`. Voir §4. |
 | 2026-09-14 | **Évaluation lots A–C** : N+1 = poste dominant 24 mois (art. 62), tableau d’avancement (`inscrit_tableau`), PDF fiche + note de synthèse | Champs optionnels `affectation_notation`, `inscrit_tableau`. Nouveaux : `GET sessions/{id}/tableau`, `POST …/inscrire-tableau` / `retirer-tableau`, `GET …/fiche-pdf`, `GET …/synthese-pdf`. `prochaine_etape` : `inscrire_tableau`. |
 | 2026-09-10 | **Congés — positions CCN art. 79–80** : `StatutAgent` + 2 valeurs (`disponibilite`, `sous_le_drapeau`), migration ENUM agents, suppression "Mise en disponibilité" de type_absences, `SessionEvaluationService` dynamique | Agents en disponibilité et sous le drapeau exclus de l'évaluation. Enum agents étendu. |

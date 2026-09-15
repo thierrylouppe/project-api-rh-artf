@@ -8,8 +8,8 @@
 
 **Nom :** Gestion RH API  
 **Type :** API REST pour la gestion des ressources humaines d'une administration publique  
-**Objectif :** Couvrir le cycle de vie complet d'un agent : recrutement → contrat → affectation/nomination → évaluation → avancement → congés → salaires → sanctions  
-**Statut actuel :** ~90–95 % complet sur les fonctionnalités principales
+**Objectif :** Couvrir le cycle de vie complet d'un agent : recrutement → contrat → affectation/nomination → évaluation → avancement → congés → salaires → sanctions → affaires sociales → formation → paie  
+**Statut actuel :** cœur « vie de l’agent » API livré. Prochain : discipline (D.2), puis affaires sociales, formation, paie, reporting — **modules globaux, pas de cloisonnement par bureau**. Voir [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).
 
 ---
 
@@ -485,11 +485,8 @@ POST             /api/agents/{agent}/documents/{document}/deplacer
 /api/avancements/validation-rh/*
 ```
 
-**TODOs connus (à implémenter) :**
-- Notification du supérieur lors d'une réclamation
-- Notification du supérieur lors d'une signature
-- Notification de l'agent lors de la validation
-- Suppression de session d'évaluation (actuellement commentée)
+**Livré :** notifications évaluation (`EvaluationNotificationService`), PDF fiche + synthèse.  
+**Hors V1 :** PDF acte de reclassement ; suppression de session (annulation via statut `annulee`).
 
 ---
 
@@ -534,11 +531,7 @@ POST                 /api/demandes-conges/{id}/rejeter-rh
 GET                  /api/statistiques-conges/*  [auth:sanctum]
 ```
 
-**TODOs connus (à implémenter) :**
-- Génération de fiche PDF pour congés
-- Génération d'attestation de congé
-- Vérification des rôles RH
-- Notifications dans le workflow
+**Livré :** PDF fiche + attestation, notifications workflow, circuit par type (N+1 / RH / DG).
 
 ---
 
@@ -863,36 +856,23 @@ Schedule::job(new ContractEnFinDateJob(15)) // alerte 15 jours avant échéance
 
 ---
 
-## 9. Fonctionnalités partiellement implémentées (TODOs)
+## 9. Restes (hors cœur livré)
 
-Ces éléments doivent être complétés dans une prochaine itération :
+Les notifications congés / évaluations et les PDF congés / fiches d’évaluation sont **livrés**.
 
-### Notifications manquantes
-
-| Événement | Fichier | Ligne approx. |
+| Sujet | Statut | Doc |
 |---|---|---|
-| Réclamation d'évaluation → notifier supérieur | `EvaluationService.php` | 279 |
-| Signature d'évaluation → notifier supérieur | `EvaluationService.php` | 314 |
-| Validation d'évaluation → notifier agent | `SuperieurHierarchiqueService.php` | 186 |
-| Validation N+1 congé → notifier agent | `DemandeCongeService.php` | 1196 |
-| Rejet N+1 congé → notifier agent | `DemandeCongeService.php` | 1205 |
-| Validation RH congé → notifier agent | `DemandeCongeService.php` | 1214 |
-| Rejet RH congé → notifier agent | `DemandeCongeService.php` | 1223 |
-
-### PDF manquants
-
-| Document | Fichier | Ligne approx. |
-|---|---|---|
-| Fiche de congé PDF | `DemandeCongeService.php` | 374 |
-| PDF congé (général) | `DemandeCongeService.php` | 890 |
-| Attestation de congé | `DemandeCongeService.php` | 900 |
-
-### Autres TODOs
-
-- Suppression de session d'évaluation (commentée dans `SessionEvaluationController.php` ligne 432)
-- Documentation Swagger complète (annotations partielles)
-- Tests automatisés Pest (~20 % de couverture actuelle)
-- Vérification des rôles RH dans `DemandeCongeService.php` ligne 1132
+| Discipline | ⬜ prochain | Vague D.2 |
+| Affaires sociales | ⬜ | Vague D.3 (organismes, affiliations, ayants droit) |
+| Formation | ⬜ | Vague D.4 (+ `convertir-agent`) |
+| Paie (éléments + lots) | ⬜ | Vague D.5 |
+| Reporting | ⬜ | Vague D.6 |
+| Cloisonnement par bureau | ⬜ plus tard | Vague F — ne pas ouvrir maintenant |
+| PDF actes d’intégration | ⏸ | `plan_complet.md` Phase 1.B |
+| Recrutement amont (concours) | ⏸ | Phase 8 |
+| Logistique | ⏸ | Hors RH |
+| Mail / SMS | ⏸ | Hors MVP |
+| Pest | ⏸ | PHPUnit conservé |
 
 ---
 
@@ -1003,4 +983,4 @@ Pour reconstruire ce projet de façon cohérente, implémenter dans cet ordre :
 
 ---
 
-*Dernière mise à jour : Mai 2026*
+*Dernière mise à jour : 2026-09-15 — modules D.2–D.6 au plan ; cloisonnement Vague F plus tard*

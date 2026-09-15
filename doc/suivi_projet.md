@@ -1,11 +1,13 @@
 # Suivi de projet — Gestion RH API
 
-> Dernière mise à jour : 2026-06-17  
-> Références : [`roadmap.md`](./roadmap.md) · [`structuration_par_module.md`](./structuration_par_module.md) · [`REFERENTIELS-RH.md`](./REFERENTIELS-RH.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md)
+> Dernière mise à jour : 2026-09-15  
+> Références : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) · [`plan_complet.md`](./plan_complet.md) · [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md) · [`roadmap.md`](./roadmap.md) · [`structuration_par_module.md`](./structuration_par_module.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md)
 
 **Légende :** ⬜ À réaliser · 🔄 En cours · ✅ Réalisé · ⏸ Non réalisé (reporté)
 
 **Base de données :** MySQL `bd_api_rh_artf` (utf8mb4_unicode_ci) sur `127.0.0.1:3306`
+
+**État :** cœur « vie de l’agent » API **livré**. Prochain : **Module 9 Discipline** (D.2). Modules DRHL suivants **globaux** (pas de cloison bureau).
 
 ---
 
@@ -14,7 +16,7 @@
 | # | Tâche | Statut | Résumé |
 |---|-------|--------|--------|
 | 0.1 | Dépendances Sanctum, Spatie, DomPDF | ✅ | Packages installés et publiés |
-| 0.1 | Dépendances Swagger (l5-swagger) | ✅ | `darkaonline/l5-swagger` 11.1 — UI `/api/documentation` |
+| 0.1 | Dépendances Swagger (l5-swagger) | ✅ | `darkaonline/l5-swagger` — UI `/api/documentation` |
 | 0.1 | Dépendances Pest | ⏸ | Incompatible Laravel 13 / PHPUnit 12 — PHPUnit conservé |
 | 0.1 | Config `.env` (queue, cache, session) | ✅ | Queue, cache et session configurés en `database` |
 | 0.1 | Config `sanctum.php` et `permission.php` | ✅ | Guard `api`, expiration token 480 min, cache Spatie actif |
@@ -23,9 +25,9 @@
 | 0.3 | `BaseInterface`, `BaseRepository`, `BaseService`, `BaseController` | ✅ | CRUD générique prêt pour héritage par module |
 | 0.4 | Traits `HasAutoSigle`, `HasFilterScope` | ✅ | Sigle auto depuis le nom et scope de filtrage générique |
 | 0.5 | `OpenApiDefinition` Swagger | ✅ | Annotations `@OA\Info` et schéma bearer Sanctum |
-| 0.6 | `AppServiceProvider` (bindings + observers) | ✅ | Tableau `$repositoryBindings` — 24 interfaces liées |
+| 0.6 | `AppServiceProvider` (bindings + observers) | ✅ | Tableau `$repositoryBindings` — interfaces liées |
 
-**Phase 0 : terminée** (hors Swagger package et Pest, reportés)
+**Phase 0 : terminée** (hors Pest, reporté)
 
 ---
 
@@ -33,9 +35,9 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 1.1 Structures organisationnelles | ✅ | Hiérarchie Localite → Administration → Direction → Service → Bureau avec CRUD, sigles auto, endpoints `byParent` et seeders (4/3/7/9/8 lignes) |
-| 1.2 Référentiels RH | ✅ | 11 référentiels CRUD + seeders alignés sur [`REFERENTIELS-RH.md`](./REFERENTIELS-RH.md) : 29 diplômes (Classe I–IX), 10 grades FP Congo, 10 catégories (Classe I–X), 12 échelons, 8 fonctions, 4 types contrat, 9 types document, 9 types recrutement, 8 types absence, 8 types congé, 24 motifs administratifs |
-| 1.3 Administration système | ✅ | Auth Sanctum, users/rôles/permissions, audit logs, paramètres app — 36 permissions, 5 rôles, 2 utilisateurs seedés |
+| 1.1 Structures organisationnelles | ✅ | Hiérarchie Localite → Administration → Direction → Service → Bureau |
+| 1.2 Référentiels RH | ✅ | Diplômes, grades, catégories (Classe I–X dont Hors Classe), échelons, fonctions, types… |
+| 1.3 Administration système | ✅ | Auth Sanctum, users/rôles/permissions, audit logs, paramètres app |
 
 ---
 
@@ -43,9 +45,9 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 2.1 Fiche agent | ⬜ | — |
-| 2.2 Documents d'entrée | ⬜ | — |
-| 2.3 Compte utilisateur lié | ⬜ | — |
+| 2.1 Fiche agent | ✅ | `/personnel/agents/{id}` + fiche wizard `/integration/agents/{id}` |
+| 2.2 Documents d'entrée | ✅ | Documents dossier d’intégration + GED agent légère (`/personnel/agents/{id}/documents`) |
+| 2.3 Compte utilisateur lié | ✅ | Provisionnement à l’entrée (`/integration/comptes`) |
 
 ---
 
@@ -53,9 +55,9 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 3.1 Recrutement externe | ⬜ | — |
-| 3.2 Autres modes d'intégration | ⬜ | — |
-| 3.3 Workflow d'intégration | ⬜ | — |
+| 3.1 Recrutement externe | ⏸ | Concours / candidatures — Phase 8, hors chemin critique |
+| 3.2 Autres modes d'intégration | ✅ | Types d’intégration + circuit par type (`/integration/…`) |
+| 3.3 Workflow d'intégration | ✅ | Dossier, transitions, acte métier, stage, matériel, PDS. **Hors V1 :** PDF actes (1.B), `convertir-agent` (1.D) |
 
 ---
 
@@ -63,10 +65,10 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 4.1 Contrats | ⬜ | — |
-| 4.2 Carrière | ⬜ | — |
-| 4.3 Affectations | ⬜ | — |
-| 4.4 Notes administratives | ⬜ | — |
+| 4.1 Contrats | ✅ | `/carriere/contrats` (alias intégration). Salaire initial auto CDI/CDD |
+| 4.2 Carrière | ✅ | Affectations, nominations, lots, synthèse, **reclassements art. 73–75** |
+| 4.3 Affectations | ✅ | Unitaire + groupée, notes de service |
+| 4.4 Notes administratives | ⬜ | Module dédié non livré (les notes de service d’affectation existent) |
 
 ---
 
@@ -74,8 +76,9 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 5.1 Grilles & barèmes | ✅ | Tables `classegrillesalariales`, `parametregrilles`, `salaires` — génération (plage `echelon_depart`→`echelon_fin`), formule validée (Classe I éch.1 → 147 000). Routes protégées (`auth:sanctum` + `consulter-salaires` / `gerer-salaires`). |
-| 5.2 Bulletins & historique | ✅ | `salaires_agents` (auto CDI/CDD), clôture, avancement, historique chronologique, bulletin PDF DomPDF. Routes : `.../salaires/historique`, `.../salaires/bulletin`, `salaires-agents/{id}/bulletin`. |
+| 5.1 Grilles & barèmes | ✅ | Génération HTTP `POST /salaires/generation`. Permissions `consulter-salaires` / `gerer-salaires`. |
+| 5.2 Bulletins & historique | ✅ | `salaires_agents`, clôture, `avancerEchelon` / `avancerEchelons`, `changerClasse`, bulletin PDF |
+| 5.3 Éléments de paie + lots mensuels | ⬜ | Vague **D.5** — primes, retenues, lot, bulletin enrichi |
 
 **Référence :** [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md)
 
@@ -85,10 +88,10 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 6.1 Demandes de congé | ⬜ | — |
-| 6.2 Solde congés | ⬜ | — |
-| 6.3 Absences | ⬜ | — |
-| 6.4 Planning | ⬜ | — |
+| 6.1 Demandes de congé | ✅ | `/conges/demandes`, circuit par type (N+1 / RH / DG), PDF |
+| 6.2 Solde congés | ✅ | Acquisition, paliers ancienneté CCN, débit à l’accord |
+| 6.3 Absences | ✅ | `/absences`, file N+1 |
+| 6.4 Planning | ⬜ | Vue calendrier agrégée non livrée |
 
 ---
 
@@ -96,10 +99,12 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 7.1 Campagnes d'évaluation | ⬜ | — |
-| 7.2 Fiches d'évaluation | ⬜ | — |
-| 7.3 Notation | ⬜ | — |
-| 7.4 Résultats | ⬜ | — |
+| 7.1 Campagnes d'évaluation | ✅ | Sessions `/avancements/sessions`, éligibilité CCN 24 mois |
+| 7.2 Fiches d'évaluation | ✅ | Génération auto, N+1 art. 62, réattribution, `sans-superieur` |
+| 7.3 Notation | ✅ | Grille 24 q /20, avis, signatures, réclamation, chaîne art. 64 |
+| 7.4 Résultats | ✅ | Commissions, tableau D5, PDF, art. 71–72, reclassements 73–75 |
+
+Détail : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notation.md) · [`plan-evaluation-complements.md`](./plan-evaluation-complements.md)
 
 ---
 
@@ -107,10 +112,11 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 8.1 Catalogue formations | ⬜ | — |
-| 8.2 Plans de formation | ⬜ | — |
-| 8.3 Inscriptions & suivi | ⬜ | — |
-| 8.4 Certifications | ⬜ | — |
+| 8.1 Catalogue formations | ⬜ | Vague **D.4** — formation continue (les stages d’accueil restent `/integration/stages`) |
+| 8.2 Plans de formation | ⬜ | D.4.2 |
+| 8.3 Inscriptions & suivi | ⬜ | D.4.3 |
+| 8.4 Certifications | ⬜ | D.4.4 |
+| 8.5 Conversion stagiaire → agent | ⬜ | D.4.5 `convertir-agent` |
 
 ---
 
@@ -118,9 +124,9 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 9.1 Sanctions & avertissements | ⬜ | — |
-| 9.2 Procédures disciplinaires | ⬜ | — |
-| 9.3 Historique disciplinaire | ⬜ | — |
+| 9.1 Sanctions & avertissements | ⬜ | **Prochain module** (Vague D.2) |
+| 9.2 Procédures disciplinaires | ⬜ | Hors D.2 MVP (contentieux long) |
+| 9.3 Historique disciplinaire | ⬜ | D.2.2 |
 
 ---
 
@@ -128,9 +134,9 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 10.1 Dashboard RH | ⬜ | — |
-| 10.2 Statistiques | ⬜ | — |
-| 10.3 Rapports PDF/Excel | ⬜ | — |
+| 10.1 Dashboard RH | ⬜ | Vague **D.6** — permission `consulter-reporting` déjà seedée |
+| 10.2 Statistiques | ⬜ | Stats **session d’évaluation** livrées — pas le dashboard RH |
+| 10.3 Rapports PDF/Excel | ⬜ | PDF métier livrés ; reporting agrégé = D.6.3 |
 
 ---
 
@@ -138,9 +144,9 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 11.1 Notifications système | ⬜ | — |
-| 11.2 Emails | ⬜ | — |
-| 11.3 Alertes échéances | ⬜ | — |
+| 11.1 Notifications système | ✅ | Inbox `/notifications`, canal `database` |
+| 11.2 Emails | ⏸ | Hors MVP |
+| 11.3 Alertes échéances | ✅ | `ConventionStageEnFinDateJob` (et jobs contrats) |
 
 ---
 
@@ -148,12 +154,30 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 12.1 Classement documents | ⬜ | — |
+| 12.1 Classement documents | ✅ partiel | GED **légère** dossier agent — pas de GED RH versionnée |
 | 12.2 Archivage & recherche | ⬜ | — |
 | 12.3 Historique versions | ⬜ | — |
 
 ---
 
+## Module 13 — Affaires sociales
+
+| Sous-module | Statut | Résumé |
+|-------------|--------|--------|
+| 13.1 Organismes | ⬜ | Vague **D.3.1** — CNSS, mutuelle, complémentaire |
+| 13.2 Affiliations | ⬜ | D.3.2 — n°, dates, alerte sans affiliation |
+| 13.3 Ayants droit | ⬜ | D.3.3 — nominatif (la fiche `situation-familiale` actuelle est trop pauvre) |
+| 13.4 Prestations / allocations | ⬜ | D.3.4 — après éléments de paie D.5 |
+| 13.5 Santé / AT-MP / retraite | ⬜ | D.3.5 — plus tard |
+
+Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vague F, plus tard.
+
+---
+
 ## Prochaine étape recommandée
 
-**Module 2 — Gestion du Personnel / Dossier Agent** (fiche agent, documents d'entrée, compte utilisateur lié).
+**Module 9 — Discipline & Contentieux** (types, sanctions, valider / rejeter, historique agent).
+
+Puis D.3 Affaires sociales P1 → D.4 Formation → D.5 Paie → D.6 Reporting. **Pas** de cloisonnement avant Vague F.
+
+Suivi opérationnel : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).

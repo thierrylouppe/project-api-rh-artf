@@ -1,15 +1,17 @@
 # Plan — Module Évaluation, notation et avancement
 
-> Branche : `feature/evaluation-notation-avancement`  
-> Date : 2026-09-09  
+> Branche : `feature/evaluation-complements` (P1–P5 + lots A–D livrés)  
+> Date : 2026-09-09 · **Close V1 : 2026-09-15**  
 > Document **vivant** : cocher les cases à chaque livraison.  
 > Métier logiciel (grille /20, statuts) : [`REFERENTIELS-EVALUATION-NOTATION.md`](./REFERENTIELS-EVALUATION-NOTATION.md)  
 > **Droit ARTF (prioritaire)** : [`convention-artf-avancement.md`](./convention-artf-avancement.md) — CCN ch. 4–5, art. 60–75  
-> Contrat FE : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md) (§ à créer à la 1re livraison)  
-> Permissions déjà seedées : `consulter-evaluations`, `creer-evaluations`, `valider-evaluations`
+> Contrat FE : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md) §7b  
+> Permissions : `consulter-evaluations`, `creer-evaluations`, `valider-evaluations` — reclassements : `consulter-salaires` / `gerer-salaires`
 
 **Objectif :** livrer le **tableau d’avancement ARTF** (notation → préparatoire → commission), par lots, sans casser le FE.  
 La CCN **prime** sur le référentiel d’un autre dépôt (éligibilité, exemptions, commissions, +2 échelons).
+
+**État :** API V1 **close** (P1–P5 + lots A–D). Restes hors V1 : PDF acte de reclassement, catalogue formations, concours. Test optionnel A.6 (chef de structure sans `superieur_hierarchique_id`).
 
 ---
 
@@ -43,7 +45,7 @@ Chaîne : Route → FormRequest → Controller → **Service** → **Interface**
 
 ## 2. Vue d’ensemble des phases
 
-Ne pas commencer la phase N+1 tant que la phase N n’est pas **testée + notée FE**.
+Toutes les phases ci-dessous sont **livrées** (tests Feature + note FE).
 
 ```
 Phase 1  Grille + session + fiches + notation /20
@@ -55,15 +57,15 @@ Phase 1  Grille + session + fiches + notation /20
 
 | Phase | Livrable FE | Statut |
 |-------|-------------|--------|
-| 1 | Session, mes fiches N+1, saisie notes, total /20 | ⬜ |
-| 2 | Avis + signatures notateurs **et** agent (art. 63), **réclamation** (art. 65), validation DRHL | ⬜ |
-| 3 | Chaîne art. 64 : bureau → service → dir. dép. / central → DG | ⬜ |
-| 4 | Préparatoire + synthèse (art. 66–68), commission + note d’avancement (art. 69–70), `avancerEchelon` | ⬜ |
-| 5 | Avancement auto stage 9 mois (art. 71), exceptionnel +2 max (art. 72), cloche, PDF | ⬜ |
+| 1 | Session, mes fiches N+1, saisie notes, total /20 | ✅ |
+| 2 | Avis + signatures notateurs **et** agent (art. 63), **réclamation** (art. 65), validation DRHL | ✅ |
+| 3 | Chaîne art. 64 : bureau → service → dir. dép. / central → DG | ✅ |
+| 4 | Préparatoire + synthèse (art. 66–68), commission + note d’avancement (art. 69–70), `avancerEchelon` | ✅ |
+| 5 | Avancement auto stage 9 mois (art. 71), exceptionnel +2 max (art. 72), cloche, PDF | ✅ |
 
 **Art. 73–75 livré** (`/api/carriere/reclassements`) : [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot D.
 
-**Restes (PDF, art. 62 mutation, D5, ch. 5) :** plan dédié [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — branche `feature/evaluation-complements`.
+**Lots A–D close** : [`plan-evaluation-complements.md`](./plan-evaluation-complements.md).
 
 ---
 
@@ -89,26 +91,26 @@ Rôles seeder actuel : `rh` a `consulter` seulement ; hiérarchie (`directeur`, 
 
 ### 4.1 Données
 
-- [ ] Tables : `session_evaluations`, `question_evaluations`, `evaluations`, `note_evaluations` (unicité `evaluation_id` + `question_id`)
-- [ ] Enums : statut session (`ouverte` \| `cloturee` \| `annulee`), statut fiche (§ 6 référentiel — stocker dès maintenant, transitions limitées en P1)
-- [ ] Seeder **24 questions** (10 + 3 + 7 = 20), `QuestionEvaluationSeeder`
-- [ ] Une seule session `ouverte` à la fois
+- [x] Tables : `session_evaluations`, `question_evaluations`, `evaluations`, `note_evaluations` (unicité `evaluation_id` + `question_id`)
+- [x] Enums : statut session (`ouverte` \| `cloturee` \| `annulee`), statut fiche (§ 6 référentiel — stocker dès maintenant, transitions limitées en P1)
+- [x] Seeder **24 questions** (10 + 3 + 7 = 20), `QuestionEvaluationSeeder`
+- [x] Une seule session `ouverte` à la fois
 
 ### 4.2 Métier
 
-- [ ] Éligibilité **CCN** : en **activité** (`statut = actif`), **affecté** à un poste (affectation active), **pas** stage / détachement / position exceptionnelle (art. 62, 65)
-- [ ] **Hors DG** (décision RH 2026-09-10) : exclure l’agent porteur d’une nomination active `poste = Directeur Général`
-- [ ] Rythme : **tous les 24 mois** (art. 62). Les filtres parité année / semestre du référentiel = **mécanique de cohorte** optionnelle, à valider (D8) : ils doivent servir le 24 mois, pas le remplacer.
-- [ ] `date_prise_service` (ou date de dernière notation) pour dater le cycle
+- [x] Éligibilité **CCN** : en **activité** (`statut = actif`), **affecté** à un poste (affectation active), **pas** stage / détachement / position exceptionnelle (art. 62, 65). Positions `disponibilite` / `sous_le_drapeau` exclues.
+- [x] **Hors DG** (décision RH 2026-09-10) : exclure l’agent porteur d’une nomination active `poste = Directeur Général`
+- [x] Rythme : **tous les 24 mois** (art. 62). Les filtres parité année / semestre du référentiel = **mécanique de cohorte** optionnelle (D8) : ils servent le 24 mois, pas le remplacer.
+- [x] `date_prise_service` (ou date de dernière notation) pour dater le cycle
 - [x] Mutation en cours d’année (art. 62) : notateur = N+1 du poste où l’agent a **servi le plus longtemps** sur la période (pas seulement l’affectation active du jour)
-- [ ] N+1 identifiable ; liste « sans supérieur » si affecté mais chef introuvable
-- [ ] Création de session → génération auto des fiches (éligibles **avec** N+1)
-- [ ] Liste « sans supérieur » (éligibles sans fiche) — lecture RH
-- [ ] Notation : upsert notes, `note_obtenue` ≤ `bareme_max`, au moins une note
-- [ ] `NoteCalculationService` : `note_globale` = somme, complétude = toutes questions `actif`
-- [ ] Statuts auto : `en_attente` → `en_cours` → `notee` (`EvaluationStatutService` **seule** porte)
-- [ ] Mentions dérivées /20 (Excellent ≥ 16, …) — champ calculé, pas une 2ᵉ grille
-- [ ] Réattribution N+1 tant que session ouverte
+- [x] N+1 identifiable ; liste « sans supérieur » si affecté mais chef introuvable
+- [x] Création de session → génération auto des fiches (éligibles **avec** N+1)
+- [x] Liste « sans supérieur » (éligibles sans fiche) — lecture RH
+- [x] Notation : upsert notes, `note_obtenue` ≤ `bareme_max`, au moins une note
+- [x] `NoteCalculationService` : `note_globale` = somme, complétude = toutes questions `actif`
+- [x] Statuts auto : `en_attente` → `en_cours` → `notee` (`EvaluationStatutService` **seule** porte)
+- [x] Mentions dérivées /20 (Excellent ≥ 16, …) — champ calculé, pas une 2ᵉ grille
+- [x] Réattribution N+1 tant que session ouverte
 
 ### 4.3 API minimale
 
@@ -130,9 +132,9 @@ N+1 : extraire / réutiliser un `SuperieurHierarchiqueService` (affectation acti
 
 ### 4.5 Tests + FE
 
-- [ ] Feature : unicité session ouverte, éligibilité, génération fiches, barème, complétude, mentions
-- [ ] Note FE : § évaluations (statuts, payload notes, `note_globale`)
-- [ ] Ajuster seeder rôles : `rh` + `creer-evaluations` si confirmé
+- [x] Feature : unicité session ouverte, éligibilité, génération fiches, barème, complétude, mentions
+- [x] Note FE : § évaluations (statuts, payload notes, `note_globale`)
+- [x] Ajuster seeder rôles : `rh` + `creer-evaluations` si confirmé
 
 **Hors P1 :** avis, signatures, RH, commissions, PDF.
 
@@ -167,29 +169,29 @@ N+1 : extraire / réutiliser un `SuperieurHierarchiqueService` (affectation acti
 
 ## 7. Phase 4 — Commissions, clôture, avancement
 
-- [ ] Tables : `commissions_preparatoires` (+ commentaires / débat), `note_syntheses` (art. 67), `commissions_avancements`
-- [ ] Préparatoire **présidée DG** (art. 68) : cohérence appréciations/notes, motivations des notateurs, **note de synthèse** — pas un simple recalcul « écart > 5 » (règle logiciel, à garder en alerte UI seulement)
-- [ ] Commission d’avancement présidée DG (art. 69) : **fixe la note à l’avancement** (art. 70) — champ distinct de `note_globale` N+1
-- [ ] Décision d’avancement (échelon, **même classe**) : 0, 1, … selon la session ; **pas** de reclassement de classe ici
-- [ ] Seuil /20 du référentiel (≥ 12) : **indicatif logiciel**, à confirmer — la CCN dit que la note d’avancement est **déterminée en commission** (art. 70)
-- [ ] Clôture session si notation close **et** les deux commissions `cloturee`
-- [ ] Lien paie : après décision de la commission, `avancerEchelon` (bouton RH, D6) — idempotent
-- [ ] Tests + note FE commissions
+- [x] Tables : `commissions_preparatoires` (+ commentaires / débat), `note_syntheses` (art. 67), `commissions_avancements`
+- [x] Préparatoire **présidée DG** (art. 68) : cohérence appréciations/notes, motivations des notateurs, **note de synthèse** — pas un simple recalcul « écart > 5 » (règle logiciel, à garder en alerte UI seulement)
+- [x] Commission d’avancement présidée DG (art. 69) : **fixe la note à l’avancement** (art. 70) — champ distinct de `note_globale` N+1
+- [x] Décision d’avancement (échelon, **même classe**) : 0, 1, … selon la session ; **pas** de reclassement de classe ici
+- [x] Seuil /20 du référentiel (≥ 12) : **indicatif logiciel** — la CCN dit que la note d’avancement est **déterminée en commission** (art. 70)
+- [x] Clôture session si notation close **et** les deux commissions `cloturee`
+- [x] Lien paie : après décision de la commission, `avancerEchelon` (bouton RH, D6) — idempotent
+- [x] Tests + note FE commissions
 
 ---
 
 ## 8. Phase 5 — Satellites
 
-À faire **après** qu’un cycle P1–P4 tourne avec le FE.
+Livré **après** P1–P4 (2026-09-10), PDF en lot C (2026-09-14).
 
-| Sous-lot | Contenu | Priorité |
-|----------|---------|----------|
-| 5.1 Art. 71 | +2 échelons après stage ≥ 9 mois (certificat / attestation) — **hors** cycle 24 mois | Haute métier, après P4 |
-| 5.2 Art. 72 | Avancement exceptionnel, proposition DG, **plafond +2 échelons** | Haute métier, après P4 |
-| 5.3 Connaissances complémentaires | Demandes de formation liées à la fiche | Basse |
-| 5.4 Notifications | `domaine: evaluation` (session créée, à noter, à signer, RH, commission) | Haute dès P2 si le FE a la cloche |
-| 5.5 PDF | Fiche d’évaluation, note de synthèse | ✅ Livré [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot C |
-| 5.6 Stats session | Compteurs par statut, moyenne /20, répartition mentions | Haute pour écran RH |
+| Sous-lot | Contenu | Statut |
+|----------|---------|--------|
+| 5.1 Art. 71 | +2 échelons après stage ≥ 9 mois (certificat / attestation) — **hors** cycle 24 mois | ✅ `BonificationStageService` + `avancerEchelons` |
+| 5.2 Art. 72 | Avancement exceptionnel, proposition DG, **plafond +2 échelons** | ✅ `AvancementExceptionnelService` |
+| 5.3 Connaissances complémentaires | Demandes de formation liées à la fiche | ✅ CRUD |
+| 5.4 Notifications | `domaine: evaluation` (session créée, à noter, à signer, RH, commission) | ✅ `EvaluationNotificationService` |
+| 5.5 PDF | Fiche d’évaluation, note de synthèse | ✅ [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot C |
+| 5.6 Stats session | Compteurs par statut, moyenne /20, répartition mentions | ✅ `GET …/sessions/{id}/stats` |
 
 ---
 
@@ -209,16 +211,16 @@ Ne pas mettre le calcul de `note_globale` dans le Controller.
 
 | # | Sujet | Phase | Proposition |
 |---|--------|-------|-------------|
-| D1 | `rh` a-t-il `creer-evaluations` ? | 1 | **Oui** (sessions = métier DRHL) |
+| D1 | `rh` a-t-il `creer-evaluations` ? | 1 | ✅ **Oui** (sessions = métier DRHL) |
 | D2 | Date du cycle 24 mois | 1 | `date_prise_service` puis date de **dernière notation** |
 | D3 | Transmission RH sans tous les notateurs art. 64 | 2 vs 3 | P2 : N+1 + agent ; P3 : chaîne complète |
 | D4 | Directeur départemental vs central | 3 | ✅ Utiliser `nominations.poste` (déjà distingué) |
 | D5 | Qui inscrit au tableau d’avancement | 4 | ✅ Livré (2026-09-14) : toutes les `finalisee` en préparatoire ; tableau = `inscrit_tableau` (défaut oui à `valider-rh`). [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot B |
 | D6 | Passage d’échelon | 4 | **Bouton RH** après art. 70 (pas d’auto sur la note N+1) |
-| D7 | Statuts agent « détachement » / « position exceptionnelle » | 1 | À créer : `statut` agent ne connaît que `actif`, `inactif`, `stagiaire`, `archive`, `BROUILLON` |
-| D8 | Parité année + semestre du référentiel | 1 | **Optionnel** ; le légal est 24 mois + affecté |
+| D7 | Statuts agent « détachement » / « position exceptionnelle » | 1 | ✅ Positions CCN : `disponibilite`, `sous_le_drapeau` (2026-09-10). Exclus de la notation. |
+| D8 | Parité année + semestre du référentiel | 1 | **Optionnel** ; le légal est 24 mois + affecté — implémenté comme filtre de cohorte |
 | D9 | Le DG est-il noté ? | 1 | ✅ **Non** (RH, 2026-09-10) — il note et préside |
-| D10 | Bonification de +2 échelons (art. 71/72) | 5 | Étendre `SalaireAgentService` : `avancerEchelons(int)` idempotent, plafonné `echelon_fin` |
+| D10 | Bonification de +2 échelons (art. 71/72) | 5 | ✅ `SalaireAgentService::avancerEchelons(int)` idempotent, plafonné `echelon_fin` |
 
 ---
 
@@ -226,9 +228,11 @@ Ne pas mettre le calcul de `note_globale` dans le Controller.
 
 | Date | Phase | Fait |
 |------|-------|------|
+| 2026-09-15 | — | **V1 close.** P1–P5 + lots A–D cochés. Prochain module hors évaluation : discipline ([`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) D.2). |
 | 2026-09-15 | D | `/carriere/reclassements` art. 73–75. D11–D14 figés. |
-| 2026-09-14 | A–C | Lots A–C livrés (art. 62, D5, PDF). Lot D art. 73–75 ouvert. |
+| 2026-09-14 | A–C | Lots A–C livrés (art. 62, D5, PDF). |
 | 2026-09-14 | — | Restes (PDF 5.5, art. 62, D5, art. 73–75) → [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) |
-| 2026-09-10 | — | D9 tranché : **DG non évalué**. D4 résolu via `nominations.poste`. D10 ouvert (+2 échelons) |
+| 2026-09-10 | 1–5 | P1–P5 livrés (sessions → commissions → art. 71–72, stats, notifs). |
+| 2026-09-10 | — | D9 tranché : **DG non évalué**. D4 résolu via `nominations.poste`. D10 : `avancerEchelons`. |
 | 2026-09-10 | — | Alignement CCN ARTF art. 60–75 ([`convention-artf-avancement.md`](./convention-artf-avancement.md)) |
 | 2026-09-09 | — | Création de ce plan + branche `feature/evaluation-notation-avancement` |

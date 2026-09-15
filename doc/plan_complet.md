@@ -1,9 +1,10 @@
 # Plan complet — Gestion RH API (ARTF)
 
-> Dernière mise à jour : 2026-08-08  
-> Références : [`suivi_projet.md`](./suivi_projet.md) · [`integration.md`](./integration.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md) · [`architecture.md`](./architecture.md) · [`structuration_par_module.md`](./structuration_par_module.md)
+> Dernière mise à jour : 2026-09-15  
+> Références : [`suivi_projet.md`](./suivi_projet.md) · [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) · [`integration.md`](./integration.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md) · [`architecture.md`](./architecture.md) · [`structuration_par_module.md`](./structuration_par_module.md)
 
-**État de départ :** socle + référentiels + module intégration (~85–90 %) + grille barème.  
+**État au 2026-09-15 :** V1–V4 livrées (intégration, salaires, dossier agent, notifications, congés, évaluations P1–P5 + reclassements art. 73–75).  
+**Prochain :** Phase 7.1 — Discipline. Puis affaires sociales, formation, paie, reporting — **sans cloisonnement** par bureau.  
 **Objectif :** API RH opérationnelle de bout en bout, architecture inchangée (Controller → Service → Interface → Repository).
 
 **Contrainte frontend :** tout ce qui est déjà livré côté API est **déjà consommé par le frontend**. Toute évolution backend doit préserver (ou versionner) le contrat existant ; les correctifs / ajouts se font en **extension**, pas en rupture.
@@ -17,6 +18,7 @@
 3. **Un module = une livraison testable** — guide de test + seeders + permissions.
 4. **Doc synchronisée** — `suivi_projet.md` et `instruction_projet.md` mis à jour à chaque phase.
 5. **Compatibilité frontend d’abord** — ne pas casser les écrans déjà branchés (voir section dédiée).
+6. **Fonctionnalités d’abord, cloisonnement ensuite** — modules globaux (rôle `rh`) ; pas de filtre par service / bureau tant que la Vague F n’est pas ouverte. Détail : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).
 
 ---
 
@@ -111,22 +113,22 @@ Le frontend consomme déjà les endpoints et formes de réponse des modules livr
 | 1.6 | Signature / stockage fichier + téléchargement | ⏸ Reporté |
 | 1.7 | PDF convention stage à la création | ⏸ Reporté |
 
-### 1.C — Sécurité fine (1 j) — coordination FE obligatoire
+### 1.C — Sécurité fine — coordination FE obligatoire — ⬜ restant
 
-| # | Tâche | Détail |
+| # | Tâche | Statut |
 |---|---|---|
-| 1.8 | Permissions Spatie par action | Ex. `valider-dossiers-rh`, `valider-dossiers-dg`, `generer-actes`, `affecter-agents`… |
-| 1.9 | Middleware sur routes `/integration/*` | Activer `permission:` **uniquement** après seed + FE prêt à gérer les 403 (sinon soft launch) |
-| 1.10 | Seeder permissions + rôles | Aligné sur le circuit réel **et** sur les comptes utilisés par le FE en dev |
+| 1.8 | Permissions Spatie par action | ⬜ |
+| 1.9 | Middleware `permission:` sur `/integration/*` | ⬜ (soft launch : auth:sanctum seulement) |
+| 1.10 | Seeder aligné FE | ⬜ |
 
-### 1.D — Stage L2/L3 (optionnel, 3–4 j)
+### 1.D — Stage L2/L3 (optionnel)
 
-| # | Tâche | Priorité |
+| # | Tâche | Statut |
 |---|---|---|
-| 1.11 | Prolongation avancée / suspension | L2 |
-| 1.12 | `POST .../stages/{id}/convertir-agent` | L3 |
-| 1.13 | Job échéance stage → vraie notification | Dépend Phase 2 |
-| 1.14 | Archivage GED stage | Reporter → Module 12 |
+| 1.11 | Prolongation avancée / suspension | ⬜ L2 |
+| 1.12 | `POST .../stages/{id}/convertir-agent` | ⬜ L3 |
+| 1.13 | Job échéance stage → vraie notification | ✅ Phase 2 |
+| 1.14 | Archivage GED stage | ⏸ → Module 12 |
 
 ### 1.E — Qualité intégration (2 j)
 
@@ -136,22 +138,21 @@ Le frontend consomme déjà les endpoints et formes de réponse des modules livr
 | 1.16 | Annotations Swagger des endpoints `/integration` |
 | 1.17 | Critère de fin : 1 parcours permanent + 1 parcours stage verts en CI |
 
-**Fin Phase 1 (périmètre actuel) :** workflow + sécurité + qualité OK.  
-**Hors scope immédiat :** 1.B PDF / génération documents (reprise ultérieure).
+**Fin Phase 1 (périmètre actuel) :** workflow 1.A livré. **Restes :** 1.B PDF actes, 1.C permissions fines (coordonner FE), 1.D `convertir-agent`.
 
 ---
 
-## Phase 2 — Notifications transverses (priorité 2, 2–3 j)
+## Phase 2 — Notifications transverses ✅ (2026-09-01)
 
-À faire après la stabilisation utile de l’intégration (sans attendre 1.B PDF, reporté).
+Canal `database` uniquement. Mail / SMS hors MVP.
 
-| # | Tâche | Détail |
+| # | Tâche | Statut |
 |---|---|---|
-| 2.1 | `NotificationService` + table Laravel | Canaux : database (+ mail plus tard) |
-| 2.2 | Notifications intégration | Validation, rejet, affectation, nomination, compte, prise de service |
-| 2.3 | Routes API | `GET /notifications`, non-lues, marquer lu |
-| 2.4 | Brancher `ConventionStageEnFinDateJob` | Remplacer le TODO log |
-| 2.5 | (Plus tard) Mail / SMS | Hors MVP — interfaces prêtes |
+| 2.1 | `NotificationService` + table Laravel | ✅ |
+| 2.2 | Notifications intégration / carrière | ✅ |
+| 2.3 | Routes API inbox | ✅ `GET /notifications`, non-lues, marquer lu |
+| 2.4 | Brancher `ConventionStageEnFinDateJob` | ✅ |
+| 2.5 | Mail / SMS | ⏸ Hors MVP |
 
 ---
 
@@ -191,55 +192,61 @@ Le frontend consomme déjà les endpoints et formes de réponse des modules livr
 
 ---
 
-## Phase 4 — Dossier agent « vie courante » (2–3 j)
+## Phase 4 — Dossier agent « vie courante » ✅ (2026-09-01)
 
-Compléter ce qui dépasse l’entrée :
-
-| # | Tâche |
-|---|---|
-| 4.1 | Enrichir fiche agent (infos perso / pro / contacts si incomplets) |
-| 4.2 | Documents hors intégration (GED légère dossier agent) |
-| 4.3 | Endpoints lecture carrière : contrats / affectations / nominations historiques |
-| 4.4 | Soft deletes / archivage agent selon règles métier |
-
----
-
-## Phase 5 — Congés & absences (5–7 j)
-
-Référentiels `TypeConge` / `TypeAbsence` déjà là.
-
-| # | Sous-module | Contenu |
+| # | Tâche | Statut |
 |---|---|---|
-| 5.1 | Paramétrage | Jours fériés, règles d’acquisition, soldes |
-| 5.2 | Demandes | CRUD + calcul jours ouvrables (week-ends + fériés) |
-| 5.3 | Workflow | Agent → N+1 → RH (valider / rejeter) |
-| 5.4 | PDF | Fiche + attestation congé |
-| 5.5 | Notifications | Brancher Phase 2 |
-| 5.6 | Tests + guide | |
+| 4.1 | Enrichir fiche agent (infos perso / pro / contacts si incomplets) | ✅ `/personnel/agents/{id}` |
+| 4.2 | Documents hors intégration (GED légère dossier agent) | ✅ |
+| 4.3 | Endpoints lecture carrière : contrats / affectations / nominations historiques | ✅ `GET /carriere/agents/{id}` |
+| 4.4 | Soft deletes / archivage agent selon règles métier | ✅ |
 
 ---
 
-## Phase 6 — Évaluations & avancements (8–12 j)
+## Phase 5 — Congés & absences ✅ (2026-09-01, CCN 2026-09-10)
 
-Module le plus lourd ; découper en livrables :
+Référentiels `TypeConge` / `TypeAbsence` déjà là. Circuit **par type** (N+1 / RH / DG). Positions CCN art. 76–80 (`disponibilite`, `sous_le_drapeau`).
 
-| Livrable | Contenu |
-|---|---|
-| L1 | Sessions + attribution agents → supérieurs + génération fiches |
-| L2 | Notation (compétences / assiduité / relations → /20) + signature agent |
-| L3 | Réclamations + avis hiérarchiques + validation RH |
-| L4 | Commissions + notes de synthèse PDF + décision avancement |
-| L5 | Lien avec `avancerEchelon` (Phase 3) |
+| # | Sous-module | Contenu | Statut |
+|---|---|---|---|
+| 5.1 | Paramétrage | Jours fériés, règles d’acquisition, soldes, paliers ancienneté | ✅ |
+| 5.2 | Demandes | CRUD + calcul jours ouvrables (week-ends + fériés) | ✅ |
+| 5.3 | Workflow | Agent → N+1 → RH / DG selon le type | ✅ |
+| 5.4 | PDF | Fiche + attestation congé | ✅ |
+| 5.5 | Notifications | Brancher Phase 2 | ✅ |
+| 5.6 | Tests + guide | Feature + note FE §2c | ✅ |
 
 ---
 
-## Phase 7 — Discipline & sécurité sociale (3–5 j)
+## Phase 6 — Évaluations & avancements ✅ (2026-09-10 → 2026-09-15)
 
-| # | Module | Contenu |
+Détail : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notation.md) + [`plan-evaluation-complements.md`](./plan-evaluation-complements.md).
+
+| Livrable | Contenu | Statut |
 |---|---|---|
-| 7.1 | Sanctions | Types, dossier, valider / rejeter, historique agent |
-| 7.2 | Sécurité sociale | Organismes + affiliations |
-| 7.3 | (Option) Représentants externes | Si toujours dans le périmètre métier |
+| L1 | Sessions + attribution agents → supérieurs + génération fiches | ✅ |
+| L2 | Notation (compétences / assiduité / relations → /20) + signature agent | ✅ |
+| L3 | Réclamations + avis hiérarchiques + validation RH | ✅ |
+| L4 | Commissions + notes de synthèse PDF + décision avancement | ✅ |
+| L5 | `avancerEchelon` / `avancerEchelons` (art. 70–72) | ✅ |
+| Lots A–C | Art. 62 notateur dominant, tableau D5, PDF fiche + synthèse | ✅ |
+| Lot D | Reclassements art. 73–75 (`/carriere/reclassements`, `changerClasse`) | ✅ |
+
+**Hors Phase 6 :** PDF acte de reclassement, catalogue formations, concours.
+
+---
+
+## Phase 7 — Discipline & affaires sociales — **prochain : 7.1**
+
+Modules **globaux** (pas de cloison par bureau). Suivi coché : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) D.2 / D.3.
+
+| # | Module | Contenu | Vague | Statut |
+|---|---|---|---|---|
+| 7.1 | Discipline | Types, dossier, valider / rejeter, historique, avertissements | D.2 | ⬜ **prochain** |
+| 7.2 | Affaires sociales P1 | Organismes, affiliations CNSS, ayants droit | D.3.1–D.3.3 | ⬜ |
+| 7.3 | Prestations / allocations | Demandes sociales ; montants → paie (après 9.2) | D.3.4 | ⬜ |
+| 7.4 | (Plus tard) Santé / AT-MP / retraite | Visites, accidents, dossier pension | D.3.5 | ⬜ |
+| 7.5 | (Option) Représentants externes | Si toujours dans le périmètre métier | — | ⬜ |
 
 ---
 
@@ -258,14 +265,17 @@ Module le plus lourd ; découper en livrables :
 
 ---
 
-## Phase 9 — Reporting, GED, formation (backlog)
+## Phase 9 — Formation, paie, reporting (après Phase 7)
 
-| Module | Priorité | Note |
-|---|---|---|
-| 10 — Dashboard & stats | Moyenne | Agrégats dossiers, effectifs, congés |
-| 12 — GED RH | Moyenne | Classement, archivage, versions (stages L4) |
-| 8 — Formation | Basse | Après le cœur RH |
-| SMS | Basse | Après mail |
+Toujours **sans cloisonnement**. Logistique hors périmètre.
+
+| # | Module | Contenu | Vague | Statut |
+|---|---|---|---|---|
+| 9.1 | Formation | Catalogue, plan, inscriptions, certifications + `convertir-agent` | D.4 | ⬜ |
+| 9.2 | Paie | Éléments (primes / retenues), lot mensuel, bulletin enrichi | D.5 | ⬜ |
+| 9.3 | Reporting | Dashboard effectifs, répartitions, exports | D.6 | ⬜ |
+| 9.4 | GED RH versionnée | Classement, archivage, versions | — | ⬜ reporté |
+| 9.5 | SMS | Après mail | — | ⏸ |
 
 ---
 
@@ -281,6 +291,16 @@ Module le plus lourd ; découper en livrables :
 
 ---
 
+## Phase 11 — Cloisonnement par bureau (Vague F, plus tard)
+
+Ne **pas** ouvrir avant que D.2–D.6 soient livrés et branchés FE.
+
+- Menus / permissions par bureau DRHL (Personnel, Solde, Formation, Affaires sociales, Étude).
+- Filtre listes « ma structure » (Direction → Service → Bureau).
+- Seeder éventuel `B.A.S.` + descriptions de missions.
+
+---
+
 ## Roadmap synthétique (ordre recommandé)
 
 ```mermaid
@@ -292,20 +312,22 @@ flowchart LR
   P3 --> P5
   P3 --> P6[Phase 6 Évaluations]
   P5 --> P6
-  P2 --> P7[Phase 7 Discipline]
+  P2 --> P7[Phase 7 Discipline + affaires sociales]
   P6 --> P7
-  P7 --> P9[Phase 9 Reporting / GED]
+  P7 --> P9[Phase 9 Formation / paie / reporting]
+  P9 -.-> P11[Phase 11 Cloisonnement]
   P1 -.-> P8[Phase 8 Recrutement amont]
   P1 --> P10[Phase 10 Qualité continue]
 ```
 
-| Vague | Phases | Estimation | Résultat |
-|---|---|---|---|
-| **V1 — Stabilisation** | 0 + 1 (sans 1.B) + 2 | ~1–1,5 sem. | Intégration stabilisée + notifs (PDF actes plus tard) |
-| **V2 — Rémunération** | 3 (+ 4) | ~1–1,5 sem. | Salaire agent de bout en bout |
-| **V3 — Vie agent** | 5 | ~1–1,5 sem. | Congés opérationnels |
-| **V4 — Carrière** | 6 | ~2–3 sem. | Évaluations / avancements |
-| **V5 — Compléments** | 7 + 9 (+ 8) | variable | Discipline, reporting, recrutement amont |
+| Vague | Phases | Estimation | Résultat | Statut |
+|---|---|---|---|---|
+| **V1 — Stabilisation** | 0 + 1 (sans 1.B) + 2 | ~1–1,5 sem. | Intégration stabilisée + notifs (PDF actes plus tard) | ✅ |
+| **V2 — Rémunération** | 3 (+ 4) | ~1–1,5 sem. | Salaire agent de bout en bout | ✅ |
+| **V3 — Vie agent** | 5 | ~1–1,5 sem. | Congés opérationnels | ✅ |
+| **V4 — Carrière** | 6 | ~2–3 sem. | Évaluations / avancements / reclassements | ✅ |
+| **V5 — Compléments globaux** | 7 + 9 | variable | Discipline, affaires sociales, formation, paie, reporting — **sans cloison** | ⬜ **prochain : 7.1** |
+| **V6 — Cloisonnement** | 11 | plus tard | Permissions / listes par bureau | ⬜ ne pas ouvrir |
 
 ---
 
@@ -314,29 +336,27 @@ flowchart LR
 - **V1 :** parcours intégration permanent + stage stables ; permissions (si coordonnées FE) ; notifs database ; tests Feature utiles ; **aucune régression FE** — *PDF actes hors V1*.
 - **V2 :** création salaire à l’entrée CDI/CDD ; clôture / avancement échelon ; routes sécurisées ; grille existante inchangée côté contrat.
 - **V3 :** demande → N+1 → RH ; solde ; PDF congé.
-- **V4 :** session → fiche → note → décision liée à l’échelon.
-- **Plus tard :** Phase 1.B — génération PDF des actes et autres documents.
+- **V4 :** session → fiche → note → commission → échelon / reclassement de classe — **atteint**.
+- **V5 :** Phase 7.1 discipline, puis affaires sociales P1, formation, paie, reporting — **modules globaux**, rôle `rh`.
+- **V6 :** cloisonnement par bureau (Vague F) — après branchement FE des modules V5.
+- **Plus tard :** Phase 1.B — génération PDF des actes d’intégration.
 
 ---
 
 ## Prochaine action immédiate
 
-> **✅ Phase 3 terminée** (grille, salaires agents, historique, bulletin PDF, permissions).
+> **✅ Phases 0 à 6 terminées** (hors 1.B PDF actes, 1.C permissions fines intégration, 1.D stage L2/L3).
 
-**Avant Phase 2 / 4 / 5 :** exécuter la campagne d’acceptation  
-→ [`guide-test-acceptation-v2.md`](./guide-test-acceptation-v2.md) (blocs A + B + D + F bloquants).
+Suivi opérationnel (cases à cocher) : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).  
+Contrat FE : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md).
 
-**Impact FE à synchroniser :**
-- Routes grille / salaires-agents exigent désormais `Authorization: Bearer` + permission `consulter-salaires` ou `gerer-salaires`.
-- Reseed permissions/rôles si environnement déjà seedé : `php artisan db:seed --class=PermissionSeeder && php artisan db:seed --class=RoleSeeder`.
+**Suite recommandée :**
 
-**Suite recommandée (après GO acceptation) :**
+1. **Phase 7.1 / D.2 — Discipline**.
+2. **Phase 7.2 / D.3 P1 — Affaires sociales** (organismes, affiliations, ayants droit).
+3. **Phase 9.1 / D.4 — Formation** (+ `convertir-agent`).
+4. **Phase 9.2 / D.5 — Paie** (éléments + lots), puis prestations D.3.4.
+5. **Phase 9.3 / D.6 — Reporting**.
+6. **Phase 11 / Vague F — Cloisonnement** — seulement ensuite.
 
-Suivi opérationnel (cases à cocher) : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).
-
-1. **Phase 2** — notifications transverses (validation, affectation, job stage).
-2. **ou Phase 4** — dossier agent vie courante (fiche / carrière lecture).
-3. **ou Phase 5** — congés & absences.
-
-En parallèle léger : Phase 0 (doc / inventaire FE).  
-Hors scope immédiat : Phase 1.B PDF actes.
+**Reporté / hors chemin critique :** Phase 1.B PDF actes, 1.C permissions fines `/integration/*` (coordonner FE), Phase 8 recrutement amont, logistique, GED versionnée, mail / SMS, PDF acte de reclassement.

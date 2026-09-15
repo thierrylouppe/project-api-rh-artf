@@ -61,7 +61,7 @@ Chaîne technique inchangée : Route → FormRequest → Controller → Service 
 - Fiche agent CRUD (reste `integration/agents` pour le FE)
 - Remise matériel, prise de service
 - Notifications
-- Avancement / évaluations (phases 5–6 du plan global)
+- Avancement / évaluations : **livré** sous `/api/avancements` (hors de cette branche carrière)
 - Renommage physique des controllers / namespaces PHP
 
 ---
