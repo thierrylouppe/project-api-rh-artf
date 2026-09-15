@@ -1,72 +1,75 @@
 <?php
 
+use App\Http\Controllers\API\AbsenceController;
 use App\Http\Controllers\API\ActeAdministratifController;
-use App\Http\Controllers\API\ConventionStageController;
+use App\Http\Controllers\API\AdministrationController;
 use App\Http\Controllers\API\AffectationController;
 use App\Http\Controllers\API\AgentController;
-use App\Http\Controllers\API\CompteIntegrationController;
-use App\Http\Controllers\API\ContratController;
-use App\Http\Controllers\API\DocumentDossierController;
-use App\Http\Controllers\API\DossierIntegrationController;
-use App\Http\Controllers\API\CarriereAgentController;
-use App\Http\Controllers\API\LotAffectationController;
-use App\Http\Controllers\API\LotNominationController;
-use App\Http\Controllers\API\AbsenceController;
-use App\Http\Controllers\API\CongeSoldeController;
-use App\Http\Controllers\API\DemandeCongeController;
-use App\Http\Controllers\API\JourFerieController;
-use App\Http\Controllers\API\PalierAncienneteCongeController;
-use App\Http\Controllers\API\RegleAcquisitionCongeController;
-use App\Http\Controllers\API\NotificationController;
-use App\Http\Controllers\API\NominationController;
-use App\Http\Controllers\API\PriseDeServiceController;
-use App\Http\Controllers\API\RemiseMaterielController;
-use App\Http\Controllers\API\ValidationWorkflowController;
-use App\Http\Controllers\API\ClassegrillesalarialeController;
-use App\Http\Controllers\API\ParametregrileController;
-use App\Http\Controllers\API\SalaireAgentController;
-use App\Http\Controllers\API\SalaireController;
-use App\Http\Controllers\API\AdministrationController;
 use App\Http\Controllers\API\AuditLogController;
-// Module Évaluation / Notation / Avancement
-use App\Http\Controllers\API\AvisHierarchiqueController;
+use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\AvancementExceptionnelController;
+use App\Http\Controllers\API\AvertissementController;
+use App\Http\Controllers\API\AvisHierarchiqueController;
 use App\Http\Controllers\API\BonificationStageController;
+use App\Http\Controllers\API\BureauController;
+use App\Http\Controllers\API\CarriereAgentController;
+use App\Http\Controllers\API\CategorieController;
+use App\Http\Controllers\API\CircuitValidationController;
+use App\Http\Controllers\API\ClassegrillesalarialeController;
 use App\Http\Controllers\API\CommissionAvancementController;
 use App\Http\Controllers\API\CommissionPreparatoireController;
+use App\Http\Controllers\API\CompteIntegrationController;
+use App\Http\Controllers\API\CongeSoldeController;
 use App\Http\Controllers\API\ConnaissanceComplementaireController;
+use App\Http\Controllers\API\ContactUrgenceController;
+use App\Http\Controllers\API\ContratController;
+use App\Http\Controllers\API\ConventionStageController;
+use App\Http\Controllers\API\DemandeCongeController;
+use App\Http\Controllers\API\DiplomeController;
+use App\Http\Controllers\API\DirectionController;
+use App\Http\Controllers\API\DocumentAgentController;
+use App\Http\Controllers\API\DocumentDossierController;
+use App\Http\Controllers\API\DossierIntegrationController;
+// Module Évaluation / Notation / Avancement
+use App\Http\Controllers\API\EchelonController;
 use App\Http\Controllers\API\EvaluationController;
+use App\Http\Controllers\API\FonctionController;
+use App\Http\Controllers\API\GradeController;
+use App\Http\Controllers\API\InformationsPersonnelleController;
+use App\Http\Controllers\API\InformationsProfessionnelleController;
+use App\Http\Controllers\API\JourFerieController;
+use App\Http\Controllers\API\LocaliteController;
+use App\Http\Controllers\API\LotAffectationController;
+use App\Http\Controllers\API\LotNominationController;
+use App\Http\Controllers\API\MotifAdministratifController;
+use App\Http\Controllers\API\NominationController;
+use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\PalierAncienneteCongeController;
+use App\Http\Controllers\API\ParametreApplicationController;
+use App\Http\Controllers\API\ParametregrileController;
+use App\Http\Controllers\API\PermissionController;
+use App\Http\Controllers\API\PersonnelController;
+use App\Http\Controllers\API\PriseDeServiceController;
 use App\Http\Controllers\API\QuestionEvaluationController;
 use App\Http\Controllers\API\ReclamationController;
 use App\Http\Controllers\API\ReclassementController;
-use App\Http\Controllers\API\SessionEvaluationController;
-use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\BureauController;
-use App\Http\Controllers\API\CategorieController;
-use App\Http\Controllers\API\DirectionController;
-use App\Http\Controllers\API\DiplomeController;
-use App\Http\Controllers\API\EchelonController;
-use App\Http\Controllers\API\FonctionController;
-use App\Http\Controllers\API\GradeController;
-use App\Http\Controllers\API\LocaliteController;
-use App\Http\Controllers\API\MotifAdministratifController;
-use App\Http\Controllers\API\ParametreApplicationController;
-use App\Http\Controllers\API\PersonnelController;
-use App\Http\Controllers\API\ContactUrgenceController;
-use App\Http\Controllers\API\DocumentAgentController;
-use App\Http\Controllers\API\InformationsPersonnelleController;
-use App\Http\Controllers\API\InformationsProfessionnelleController;
-use App\Http\Controllers\API\SituationFamilialeController;
-use App\Http\Controllers\API\PermissionController;
+use App\Http\Controllers\API\RegleAcquisitionCongeController;
+use App\Http\Controllers\API\RemiseMaterielController;
 use App\Http\Controllers\API\RoleController;
+use App\Http\Controllers\API\SalaireAgentController;
+use App\Http\Controllers\API\SalaireController;
+use App\Http\Controllers\API\SanctionController;
 use App\Http\Controllers\API\ServiceController;
-use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\SessionEvaluationController;
+use App\Http\Controllers\API\SituationFamilialeController;
 use App\Http\Controllers\API\TypeAbsenceController;
 use App\Http\Controllers\API\TypeCongeController;
 use App\Http\Controllers\API\TypeContratController;
 use App\Http\Controllers\API\TypeDocumentController;
-use App\Http\Controllers\API\CircuitValidationController;
 use App\Http\Controllers\API\TypeIntegrationController;
+use App\Http\Controllers\API\TypeSanctionController;
+use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\ValidationWorkflowController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json(['status' => 'ok']));
@@ -94,16 +97,16 @@ $routesCarriere = function (): void {
     Route::apiResource('contrats', ContratController::class)->only(['index', 'store', 'show']);
     Route::post('contrats/{contrat}/resilier', [ContratController::class, 'resilier']);
 
-    Route::post('affectations/groupee',               [LotAffectationController::class, 'store']);
-    Route::get('affectations/lots/{lot}',             [LotAffectationController::class, 'detail']);
-    Route::post('affectations/lots/{lot}/activer',    [LotAffectationController::class, 'activer']);
-    Route::post('affectations/lots/{lot}/rejeter',    [LotAffectationController::class, 'rejeter']);
-    Route::get('affectations/lots/{lot}/acte',        [LotAffectationController::class, 'acte']);
-    Route::post('affectations/notes-service/lot',     [AffectationController::class, 'noteServiceLot']);
+    Route::post('affectations/groupee', [LotAffectationController::class, 'store']);
+    Route::get('affectations/lots/{lot}', [LotAffectationController::class, 'detail']);
+    Route::post('affectations/lots/{lot}/activer', [LotAffectationController::class, 'activer']);
+    Route::post('affectations/lots/{lot}/rejeter', [LotAffectationController::class, 'rejeter']);
+    Route::get('affectations/lots/{lot}/acte', [LotAffectationController::class, 'acte']);
+    Route::post('affectations/notes-service/lot', [AffectationController::class, 'noteServiceLot']);
     Route::apiResource('affectations', AffectationController::class)->only(['index', 'store', 'show']);
-    Route::post('affectations/{affectation}/activer',     [AffectationController::class, 'activer']);
-    Route::post('affectations/{affectation}/rejeter',     [AffectationController::class, 'rejeter']);
-    Route::post('affectations/{affectation}/terminer',    [AffectationController::class, 'terminer']);
+    Route::post('affectations/{affectation}/activer', [AffectationController::class, 'activer']);
+    Route::post('affectations/{affectation}/rejeter', [AffectationController::class, 'rejeter']);
+    Route::post('affectations/{affectation}/terminer', [AffectationController::class, 'terminer']);
     Route::get('affectations/{affectation}/note-service', [AffectationController::class, 'noteService']);
 
     Route::get('nominations/postes-vacants', [NominationController::class, 'postesVacants']);
@@ -114,10 +117,10 @@ $routesCarriere = function (): void {
     Route::post('nominations/lots/{lot}/rejeter', [LotNominationController::class, 'rejeter']);
     Route::get('nominations/lots/{lot}/acte', [LotNominationController::class, 'acte']);
     Route::apiResource('nominations', NominationController::class)->only(['index', 'store', 'show', 'update']);
-    Route::post('nominations/{nomination}/activer',       [NominationController::class, 'activer']);
-    Route::post('nominations/{nomination}/cloturer',      [NominationController::class, 'cloturer']);
-    Route::post('nominations/{nomination}/rejeter',       [NominationController::class, 'rejeter']);
-    Route::get('nominations/{nomination}/acte',           [NominationController::class, 'acte']);
+    Route::post('nominations/{nomination}/activer', [NominationController::class, 'activer']);
+    Route::post('nominations/{nomination}/cloturer', [NominationController::class, 'cloturer']);
+    Route::post('nominations/{nomination}/rejeter', [NominationController::class, 'rejeter']);
+    Route::get('nominations/{nomination}/acte', [NominationController::class, 'acte']);
 };
 
 Route::prefix('carriere')->middleware('auth:sanctum')->group(function () use ($routesCarriere) {
@@ -155,44 +158,44 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () use 
 
     // — Dossiers d'intégration ————————————————————————————
     Route::apiResource('dossiers', DossierIntegrationController::class);
-    Route::post('dossiers/{dossier}/soumettre',           [DossierIntegrationController::class, 'soumettre']);
-    Route::post('dossiers/{dossier}/passer-en-etude-rh',  [DossierIntegrationController::class, 'passerEnEtudeRH']);
-    Route::post('dossiers/{dossier}/marquer-incomplet',   [DossierIntegrationController::class, 'marquerIncomplet']);
-    Route::post('dossiers/{dossier}/marquer-complet',     [DossierIntegrationController::class, 'marquerComplet']);
-    Route::post('dossiers/{dossier}/valider-rh',          [DossierIntegrationController::class, 'validerRH']);
-    Route::post('dossiers/{dossier}/rejeter-rh',          [DossierIntegrationController::class, 'rejeterRH']);
-    Route::post('dossiers/{dossier}/valider-dg',          [DossierIntegrationController::class, 'validerDG']);
-    Route::post('dossiers/{dossier}/generer-acte',        [DossierIntegrationController::class, 'genererActe']);
-    Route::post('dossiers/{dossier}/assigner-matricule',  [DossierIntegrationController::class, 'assignerMatricule']);
+    Route::post('dossiers/{dossier}/soumettre', [DossierIntegrationController::class, 'soumettre']);
+    Route::post('dossiers/{dossier}/passer-en-etude-rh', [DossierIntegrationController::class, 'passerEnEtudeRH']);
+    Route::post('dossiers/{dossier}/marquer-incomplet', [DossierIntegrationController::class, 'marquerIncomplet']);
+    Route::post('dossiers/{dossier}/marquer-complet', [DossierIntegrationController::class, 'marquerComplet']);
+    Route::post('dossiers/{dossier}/valider-rh', [DossierIntegrationController::class, 'validerRH']);
+    Route::post('dossiers/{dossier}/rejeter-rh', [DossierIntegrationController::class, 'rejeterRH']);
+    Route::post('dossiers/{dossier}/valider-dg', [DossierIntegrationController::class, 'validerDG']);
+    Route::post('dossiers/{dossier}/generer-acte', [DossierIntegrationController::class, 'genererActe']);
+    Route::post('dossiers/{dossier}/assigner-matricule', [DossierIntegrationController::class, 'assignerMatricule']);
     Route::post('dossiers/{dossier}/marquer-acte-genere', [DossierIntegrationController::class, 'marquerActeGenere']);
     Route::post('dossiers/{dossier}/marquer-contrat-signe', [DossierIntegrationController::class, 'marquerContratSigne']);
-    Route::post('dossiers/{dossier}/suspendre',           [DossierIntegrationController::class, 'suspendre']);
-    Route::post('dossiers/{dossier}/annuler',             [DossierIntegrationController::class, 'annuler']);
-    Route::get('dossiers/{dossier}/historique',           [DossierIntegrationController::class, 'historique']);
+    Route::post('dossiers/{dossier}/suspendre', [DossierIntegrationController::class, 'suspendre']);
+    Route::post('dossiers/{dossier}/annuler', [DossierIntegrationController::class, 'annuler']);
+    Route::get('dossiers/{dossier}/historique', [DossierIntegrationController::class, 'historique']);
     Route::get('dossiers/{dossier}/taches-post-integration', [DossierIntegrationController::class, 'tachesPostIntegration']);
 
     // — Documents du dossier ——————————————————————————————
-    Route::post('dossiers/{dossier}/documents',            [DocumentDossierController::class, 'store']);
-    Route::get('dossiers/{dossier}/documents',             [DocumentDossierController::class, 'parDossier']);
-    Route::post('documents/{document}/valider',            [DocumentDossierController::class, 'valider']);
-    Route::delete('documents/{document}',                  [DocumentDossierController::class, 'destroy']);
+    Route::post('dossiers/{dossier}/documents', [DocumentDossierController::class, 'store']);
+    Route::get('dossiers/{dossier}/documents', [DocumentDossierController::class, 'parDossier']);
+    Route::post('documents/{document}/valider', [DocumentDossierController::class, 'valider']);
+    Route::delete('documents/{document}', [DocumentDossierController::class, 'destroy']);
 
     // — Circuit de validation ——————————————————————————————
-    Route::get('dossiers/{dossier}/circuit',              [ValidationWorkflowController::class, 'circuit']);
-    Route::post('validations/{validation}/approuver',     [ValidationWorkflowController::class, 'approuver']);
-    Route::post('validations/{validation}/rejeter',       [ValidationWorkflowController::class, 'rejeter']);
-    Route::post('validations/{validation}/renvoyer',      [ValidationWorkflowController::class, 'renvoyer']);
+    Route::get('dossiers/{dossier}/circuit', [ValidationWorkflowController::class, 'circuit']);
+    Route::post('validations/{validation}/approuver', [ValidationWorkflowController::class, 'approuver']);
+    Route::post('validations/{validation}/rejeter', [ValidationWorkflowController::class, 'rejeter']);
+    Route::post('validations/{validation}/renvoyer', [ValidationWorkflowController::class, 'renvoyer']);
 
     // — Actes administratifs ——————————————————————————————
-    Route::get('dossiers/{dossier}/actes',                [ActeAdministratifController::class, 'byDossier']);
-    Route::post('dossiers/{dossier}/actes',               [ActeAdministratifController::class, 'generer']);
-    Route::post('actes/{acte}/signer',                    [ActeAdministratifController::class, 'signer']);
+    Route::get('dossiers/{dossier}/actes', [ActeAdministratifController::class, 'byDossier']);
+    Route::post('dossiers/{dossier}/actes', [ActeAdministratifController::class, 'generer']);
+    Route::post('actes/{acte}/signer', [ActeAdministratifController::class, 'signer']);
 
     // Alias carrière (contrats, affectations, nominations, salaires agent)
     $routesCarriere();
 
     // — Comptes utilisateurs ——————————————————————————————
-    Route::post('comptes/provisionner',                   [CompteIntegrationController::class, 'provisionner']);
+    Route::post('comptes/provisionner', [CompteIntegrationController::class, 'provisionner']);
 
     // — Remises de matériel ———————————————————————————————
     Route::apiResource('remises-materiel', RemiseMaterielController::class)
@@ -200,15 +203,15 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () use 
         ->parameters(['remises-materiel' => 'remise']);
 
     // — Prises de service — étape finale ———————————————————
-    Route::post('prises-de-service',                              [PriseDeServiceController::class, 'store']);
-    Route::post('dossiers/{dossier}/integrer',                    [PriseDeServiceController::class, 'integrer']);
+    Route::post('prises-de-service', [PriseDeServiceController::class, 'store']);
+    Route::post('dossiers/{dossier}/integrer', [PriseDeServiceController::class, 'integrer']);
 
     // — Stages (ConventionStage) ———————————————————————————
-    Route::get('stages',                                          [ConventionStageController::class, 'index']);
-    Route::get('stages/{stage}',                                  [ConventionStageController::class, 'show']);
-    Route::patch('stages/{stage}/prolonger',                      [ConventionStageController::class, 'prolonger']);
-    Route::post('stages/{stage}/cloturer',                        [ConventionStageController::class, 'cloturer']);
-    Route::get('stages/{stage}/attestation',                      [ConventionStageController::class, 'attestation']);
+    Route::get('stages', [ConventionStageController::class, 'index']);
+    Route::get('stages/{stage}', [ConventionStageController::class, 'show']);
+    Route::patch('stages/{stage}/prolonger', [ConventionStageController::class, 'prolonger']);
+    Route::post('stages/{stage}/cloturer', [ConventionStageController::class, 'cloturer']);
+    Route::get('stages/{stage}/attestation', [ConventionStageController::class, 'attestation']);
 });
 
 // ============================================================
@@ -272,9 +275,9 @@ Route::apiResource('types-contrats', TypeContratController::class);
 Route::apiResource('types-documents', TypeDocumentController::class);
 Route::apiResource('types-integrations', TypeIntegrationController::class);
 // Circuit de validation configurable par type d'intégration
-Route::get('types-integrations/{typeIntegration}/circuit',         [CircuitValidationController::class, 'lister']);
-Route::put('types-integrations/{typeIntegration}/circuit',         [CircuitValidationController::class, 'remplacer']);
-Route::post('types-integrations/{typeIntegration}/circuit',        [CircuitValidationController::class, 'store']);
+Route::get('types-integrations/{typeIntegration}/circuit', [CircuitValidationController::class, 'lister']);
+Route::put('types-integrations/{typeIntegration}/circuit', [CircuitValidationController::class, 'remplacer']);
+Route::post('types-integrations/{typeIntegration}/circuit', [CircuitValidationController::class, 'store']);
 Route::delete('types-integrations/{typeIntegration}/circuit/{circuitStep}', [CircuitValidationController::class, 'retirerNiveau']);
 Route::apiResource('types-absences', TypeAbsenceController::class);
 Route::apiResource('types-conges', TypeCongeController::class);
@@ -287,10 +290,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('grille-classes', ClassegrillesalarialeController::class)
         ->parameters(['grille-classes' => 'classegrillesalariale'])
         ->middleware([
-            'index'   => 'permission:consulter-salaires',
-            'show'    => 'permission:consulter-salaires',
-            'store'   => 'permission:gerer-salaires',
-            'update'  => 'permission:gerer-salaires',
+            'index' => 'permission:consulter-salaires',
+            'show' => 'permission:consulter-salaires',
+            'store' => 'permission:gerer-salaires',
+            'update' => 'permission:gerer-salaires',
             'destroy' => 'permission:gerer-salaires',
         ]);
 
@@ -367,6 +370,52 @@ Route::middleware('auth:sanctum')->prefix('absences')->group(function () {
 });
 
 // ============================================================
+// MODULE 9 — DISCIPLINE
+// ============================================================
+Route::middleware('auth:sanctum')->prefix('discipline')->group(function () {
+    Route::get('moi/historique', [SanctionController::class, 'moiHistorique']);
+    Route::get('moi/sanctions', [SanctionController::class, 'mesSanctions']);
+    Route::get('moi/sanctions/{id}/pdf-decision', [SanctionController::class, 'maDecisionPdf']);
+    Route::get('moi/sanctions/{id}', [SanctionController::class, 'maSanction']);
+    Route::get('moi/avertissements', [AvertissementController::class, 'mesAvertissements']);
+    Route::get('moi/avertissements/{id}', [AvertissementController::class, 'monAvertissement']);
+
+    Route::get('types-sanctions', [TypeSanctionController::class, 'index'])->middleware('permission:consulter-discipline|proposer-discipline');
+    Route::post('types-sanctions', [TypeSanctionController::class, 'store'])->middleware('permission:gerer-discipline');
+    Route::get('types-sanctions/{id}', [TypeSanctionController::class, 'show'])->middleware('permission:consulter-discipline|proposer-discipline');
+    Route::put('types-sanctions/{id}', [TypeSanctionController::class, 'update'])->middleware('permission:gerer-discipline');
+    Route::delete('types-sanctions/{id}', [TypeSanctionController::class, 'destroy'])->middleware('permission:gerer-discipline');
+
+    Route::get('sanctions', [SanctionController::class, 'index'])->middleware('permission:consulter-discipline');
+    Route::post('sanctions', [SanctionController::class, 'store'])->middleware('permission:proposer-discipline');
+    Route::get('sanctions/a-instruire', [SanctionController::class, 'aInstruire'])->middleware('permission:gerer-discipline');
+    Route::get('sanctions/a-prononcer', [SanctionController::class, 'aPrononcer'])->middleware('permission:prononcer-discipline');
+    Route::get('sanctions/a-valider', [SanctionController::class, 'aValider'])->middleware('permission:prononcer-discipline');
+    Route::get('sanctions/mes-rapports', [SanctionController::class, 'mesRapports'])->middleware('permission:proposer-discipline');
+    Route::get('agents/{agent}/sanctions', [SanctionController::class, 'byAgent'])->middleware('permission:consulter-discipline');
+    Route::get('agents/{agent}/historique', [SanctionController::class, 'historique'])->middleware('permission:consulter-discipline');
+    Route::get('sanctions/{id}/pieces', [SanctionController::class, 'pieces'])->middleware('permission:consulter-discipline|proposer-discipline|prononcer-discipline|gerer-discipline');
+    Route::post('sanctions/{id}/pieces', [SanctionController::class, 'storePiece'])->middleware('permission:proposer-discipline|gerer-discipline');
+    Route::get('sanctions/{id}/pieces/{pieceId}', [SanctionController::class, 'downloadPiece'])->middleware('permission:consulter-discipline|proposer-discipline|prononcer-discipline|gerer-discipline');
+    Route::delete('sanctions/{id}/pieces/{pieceId}', [SanctionController::class, 'destroyPiece'])->middleware('permission:proposer-discipline|gerer-discipline');
+    Route::get('sanctions/{id}/pdf-rapport', [SanctionController::class, 'rapportPdf'])->middleware('permission:consulter-discipline|proposer-discipline|prononcer-discipline|gerer-discipline');
+    Route::get('sanctions/{id}/pdf-decision', [SanctionController::class, 'decisionPdf'])->middleware('permission:consulter-discipline|proposer-discipline|prononcer-discipline|gerer-discipline');
+    Route::get('sanctions/{id}', [SanctionController::class, 'show'])->middleware('permission:consulter-discipline|proposer-discipline|prononcer-discipline|gerer-discipline');
+    Route::put('sanctions/{id}', [SanctionController::class, 'update'])->middleware('permission:proposer-discipline|gerer-discipline');
+    Route::post('sanctions/{id}/instruire', [SanctionController::class, 'instruire'])->middleware('permission:gerer-discipline');
+    Route::post('sanctions/{id}/valider', [SanctionController::class, 'valider'])->middleware('permission:prononcer-discipline');
+    Route::post('sanctions/{id}/rejeter', [SanctionController::class, 'rejeter'])->middleware('permission:prononcer-discipline');
+    Route::delete('sanctions/{id}', [SanctionController::class, 'destroy'])->middleware('permission:proposer-discipline|gerer-discipline');
+
+    Route::get('avertissements', [AvertissementController::class, 'index'])->middleware('permission:consulter-discipline');
+    Route::post('avertissements', [AvertissementController::class, 'store'])->middleware('permission:gerer-discipline');
+    Route::get('agents/{agent}/avertissements', [AvertissementController::class, 'byAgent'])->middleware('permission:consulter-discipline');
+    Route::get('avertissements/{id}', [AvertissementController::class, 'show'])->middleware('permission:consulter-discipline');
+    Route::put('avertissements/{id}', [AvertissementController::class, 'update'])->middleware('permission:gerer-discipline');
+    Route::delete('avertissements/{id}', [AvertissementController::class, 'destroy'])->middleware('permission:gerer-discipline');
+});
+
+// ============================================================
 // MODULE 1.3 — AUTH & ADMINISTRATION SYSTÈME
 // ============================================================
 Route::post('/login', [AuthController::class, 'login']);
@@ -422,10 +471,10 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
 
     // ---- Grille de critères (référentiel RH) ----
     Route::apiResource('questions-evaluation', QuestionEvaluationController::class)->middleware([
-        'index'   => 'permission:consulter-evaluations',
-        'show'    => 'permission:consulter-evaluations',
-        'store'   => 'permission:creer-evaluations',
-        'update'  => 'permission:creer-evaluations',
+        'index' => 'permission:consulter-evaluations',
+        'show' => 'permission:consulter-evaluations',
+        'store' => 'permission:creer-evaluations',
+        'update' => 'permission:creer-evaluations',
         'destroy' => 'permission:creer-evaluations',
     ]);
 

@@ -2,63 +2,65 @@
 
 namespace App\Providers;
 
-use App\Interfaces\CircuitValidationInterface;
+use App\Interfaces\AbsenceInterface;
 use App\Interfaces\ActeAdministratifInterface;
+use App\Interfaces\AdministrationInterface;
 use App\Interfaces\AffectationInterface;
 use App\Interfaces\AgentInterface;
+use App\Interfaces\AuditLogInterface;
+use App\Interfaces\AvancementExceptionnelInterface;
+use App\Interfaces\AvertissementInterface;
+use App\Interfaces\AvisHierarchiqueInterface;
+use App\Interfaces\BonificationStageInterface;
+use App\Interfaces\BureauInterface;
+use App\Interfaces\CategorieInterface;
+use App\Interfaces\CircuitValidationInterface;
+use App\Interfaces\ClassegrillesalarialeInterface;
+use App\Interfaces\CommissionAvancementInterface;
+use App\Interfaces\CommissionPreparatoireInterface;
 use App\Interfaces\CompteIntegrationInterface;
+use App\Interfaces\CongeSoldeInterface;
+use App\Interfaces\ConnaissanceComplementaireInterface;
+use App\Interfaces\ContactUrgenceInterface;
 use App\Interfaces\ContratInterface;
+use App\Interfaces\ConventionStageInterface;
+use App\Interfaces\DemandeCongeInterface;
+use App\Interfaces\DiplomeInterface;
+use App\Interfaces\DirectionInterface;
+use App\Interfaces\DocumentAgentInterface;
 use App\Interfaces\DocumentDossierInterface;
 use App\Interfaces\DossierIntegrationInterface;
-use App\Interfaces\HistoriqueIntegrationInterface;
-use App\Interfaces\LotAffectationInterface;
-use App\Interfaces\LotNominationInterface;
-use App\Interfaces\NotificationInterface;
-use App\Interfaces\NominationInterface;
-use App\Interfaces\PriseDeServiceInterface;
-use App\Interfaces\RemiseMaterielInterface;
-use App\Interfaces\ValidationWorkflowInterface;
-use App\Interfaces\ClassegrillesalarialeInterface;
-use App\Interfaces\ParametregrileInterface;
-use App\Interfaces\SalaireAgentInterface;
-use App\Interfaces\SalaireInterface;
-use App\Interfaces\AdministrationInterface;
-use App\Interfaces\AuditLogInterface;
-use App\Interfaces\BureauInterface;
-use App\Interfaces\ConventionStageInterface;
-use App\Interfaces\CategorieInterface;
-use App\Interfaces\DirectionInterface;
-use App\Interfaces\DiplomeInterface;
 use App\Interfaces\EchelonInterface;
+use App\Interfaces\EvaluationInterface;
 use App\Interfaces\FonctionInterface;
 use App\Interfaces\GradeInterface;
-use App\Interfaces\LocaliteInterface;
-use App\Interfaces\MotifAdministratifInterface;
-use App\Interfaces\ParametreApplicationInterface;
-use App\Interfaces\PermissionInterface;
-use App\Interfaces\RoleInterface;
-use App\Interfaces\ServiceInterface;
-use App\Interfaces\AbsenceInterface;
-use App\Interfaces\CongeSoldeInterface;
-use App\Interfaces\ContactUrgenceInterface;
-use App\Interfaces\DemandeCongeInterface;
-use App\Interfaces\DocumentAgentInterface;
+use App\Interfaces\HistoriqueIntegrationInterface;
 use App\Interfaces\InformationsPersonnelleInterface;
 use App\Interfaces\InformationsProfessionnelleInterface;
 use App\Interfaces\JourFerieInterface;
-use App\Interfaces\AvisHierarchiqueInterface;
-use App\Interfaces\AvancementExceptionnelInterface;
-use App\Interfaces\BonificationStageInterface;
-use App\Interfaces\CommissionAvancementInterface;
-use App\Interfaces\CommissionPreparatoireInterface;
-use App\Interfaces\ConnaissanceComplementaireInterface;
-use App\Interfaces\EvaluationInterface;
+use App\Interfaces\LocaliteInterface;
+use App\Interfaces\LotAffectationInterface;
+use App\Interfaces\LotNominationInterface;
+use App\Interfaces\MotifAdministratifInterface;
+use App\Interfaces\NominationInterface;
 use App\Interfaces\NoteEvaluationInterface;
+use App\Interfaces\NotificationInterface;
 use App\Interfaces\PalierAncienneteCongeInterface;
+use App\Interfaces\ParametreApplicationInterface;
+use App\Interfaces\ParametregrileInterface;
+use App\Interfaces\PermissionInterface;
+use App\Interfaces\PriseDeServiceInterface;
 use App\Interfaces\QuestionEvaluationInterface;
 use App\Interfaces\ReclamationInterface;
 use App\Interfaces\ReclassementInterface;
 use App\Interfaces\RegleAcquisitionCongeInterface;
+use App\Interfaces\RemiseMaterielInterface;
+use App\Interfaces\RoleInterface;
+use App\Interfaces\SalaireAgentInterface;
+use App\Interfaces\SalaireInterface;
+use App\Interfaces\SanctionInterface;
+use App\Interfaces\SanctionPieceInterface;
+use App\Interfaces\ServiceInterface;
 use App\Interfaces\SessionEvaluationInterface;
 use App\Interfaces\SituationFamilialeInterface;
 use App\Interfaces\TypeAbsenceInterface;
@@ -66,64 +68,68 @@ use App\Interfaces\TypeCongeInterface;
 use App\Interfaces\TypeContratInterface;
 use App\Interfaces\TypeDocumentInterface;
 use App\Interfaces\TypeIntegrationInterface;
+use App\Interfaces\TypeSanctionInterface;
 use App\Interfaces\UserInterface;
-use App\Repositories\CircuitValidationRepository;
+use App\Interfaces\ValidationWorkflowInterface;
+use App\Repositories\AbsenceRepository;
 use App\Repositories\ActeAdministratifRepository;
+use App\Repositories\AdministrationRepository;
 use App\Repositories\AffectationRepository;
 use App\Repositories\AgentRepository;
+use App\Repositories\AuditLogRepository;
+use App\Repositories\AvancementExceptionnelRepository;
+use App\Repositories\AvertissementRepository;
+use App\Repositories\AvisHierarchiqueRepository;
+use App\Repositories\BonificationStageRepository;
+use App\Repositories\BureauRepository;
+use App\Repositories\CategorieRepository;
+use App\Repositories\CircuitValidationRepository;
+use App\Repositories\ClassegrillesalarialeRepository;
+use App\Repositories\CommissionAvancementRepository;
+use App\Repositories\CommissionPreparatoireRepository;
 use App\Repositories\CompteIntegrationRepository;
+use App\Repositories\CongeSoldeRepository;
+use App\Repositories\ConnaissanceComplementaireRepository;
+use App\Repositories\ContactUrgenceRepository;
 use App\Repositories\ContratRepository;
+use App\Repositories\ConventionStageRepository;
+use App\Repositories\DemandeCongeRepository;
+use App\Repositories\DiplomeRepository;
+use App\Repositories\DirectionRepository;
+use App\Repositories\DocumentAgentRepository;
 use App\Repositories\DocumentDossierRepository;
 use App\Repositories\DossierIntegrationRepository;
-use App\Repositories\HistoriqueIntegrationRepository;
-use App\Repositories\LotAffectationRepository;
-use App\Repositories\LotNominationRepository;
-use App\Repositories\NotificationRepository;
-use App\Repositories\NominationRepository;
-use App\Repositories\PriseDeServiceRepository;
-use App\Repositories\RemiseMaterielRepository;
-use App\Repositories\ValidationWorkflowRepository;
-use App\Repositories\ClassegrillesalarialeRepository;
-use App\Repositories\ParametregrileRepository;
-use App\Repositories\SalaireAgentRepository;
-use App\Repositories\SalaireRepository;
-use App\Repositories\AdministrationRepository;
-use App\Repositories\AuditLogRepository;
-use App\Repositories\BureauRepository;
-use App\Repositories\ConventionStageRepository;
-use App\Repositories\CategorieRepository;
-use App\Repositories\DirectionRepository;
-use App\Repositories\DiplomeRepository;
 use App\Repositories\EchelonRepository;
+use App\Repositories\EvaluationRepository;
 use App\Repositories\FonctionRepository;
 use App\Repositories\GradeRepository;
-use App\Repositories\LocaliteRepository;
-use App\Repositories\MotifAdministratifRepository;
-use App\Repositories\ParametreApplicationRepository;
-use App\Repositories\PermissionRepository;
-use App\Repositories\RoleRepository;
-use App\Repositories\ServiceRepository;
-use App\Repositories\AbsenceRepository;
-use App\Repositories\CongeSoldeRepository;
-use App\Repositories\ContactUrgenceRepository;
-use App\Repositories\DemandeCongeRepository;
-use App\Repositories\DocumentAgentRepository;
+use App\Repositories\HistoriqueIntegrationRepository;
 use App\Repositories\InformationsPersonnelleRepository;
 use App\Repositories\InformationsProfessionnelleRepository;
 use App\Repositories\JourFerieRepository;
-use App\Repositories\AvisHierarchiqueRepository;
-use App\Repositories\AvancementExceptionnelRepository;
-use App\Repositories\BonificationStageRepository;
-use App\Repositories\CommissionAvancementRepository;
-use App\Repositories\CommissionPreparatoireRepository;
-use App\Repositories\ConnaissanceComplementaireRepository;
-use App\Repositories\EvaluationRepository;
+use App\Repositories\LocaliteRepository;
+use App\Repositories\LotAffectationRepository;
+use App\Repositories\LotNominationRepository;
+use App\Repositories\MotifAdministratifRepository;
+use App\Repositories\NominationRepository;
 use App\Repositories\NoteEvaluationRepository;
+use App\Repositories\NotificationRepository;
 use App\Repositories\PalierAncienneteCongeRepository;
+use App\Repositories\ParametreApplicationRepository;
+use App\Repositories\ParametregrileRepository;
+use App\Repositories\PermissionRepository;
+use App\Repositories\PriseDeServiceRepository;
 use App\Repositories\QuestionEvaluationRepository;
 use App\Repositories\ReclamationRepository;
 use App\Repositories\ReclassementRepository;
 use App\Repositories\RegleAcquisitionCongeRepository;
+use App\Repositories\RemiseMaterielRepository;
+use App\Repositories\RoleRepository;
+use App\Repositories\SalaireAgentRepository;
+use App\Repositories\SalaireRepository;
+use App\Repositories\SanctionPieceRepository;
+use App\Repositories\SanctionRepository;
+use App\Repositories\ServiceRepository;
 use App\Repositories\SessionEvaluationRepository;
 use App\Repositories\SituationFamilialeRepository;
 use App\Repositories\TypeAbsenceRepository;
@@ -131,7 +137,9 @@ use App\Repositories\TypeCongeRepository;
 use App\Repositories\TypeContratRepository;
 use App\Repositories\TypeDocumentRepository;
 use App\Repositories\TypeIntegrationRepository;
+use App\Repositories\TypeSanctionRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\ValidationWorkflowRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -139,79 +147,84 @@ class AppServiceProvider extends ServiceProvider
     /** @var array<class-string, class-string> */
     private array $repositoryBindings = [
         // Module Stage
-        ConventionStageInterface::class        => ConventionStageRepository::class,
+        ConventionStageInterface::class => ConventionStageRepository::class,
         // Circuit de validation configurable
-        CircuitValidationInterface::class      => CircuitValidationRepository::class,
+        CircuitValidationInterface::class => CircuitValidationRepository::class,
         // Module 2 — Intégration Administrative
-        AgentInterface::class                  => AgentRepository::class,
-        DossierIntegrationInterface::class     => DossierIntegrationRepository::class,
-        DocumentDossierInterface::class        => DocumentDossierRepository::class,
-        ValidationWorkflowInterface::class     => ValidationWorkflowRepository::class,
-        ActeAdministratifInterface::class      => ActeAdministratifRepository::class,
-        ContratInterface::class                => ContratRepository::class,
-        AffectationInterface::class            => AffectationRepository::class,
-        LotAffectationInterface::class         => LotAffectationRepository::class,
-        NominationInterface::class             => NominationRepository::class,
-        LotNominationInterface::class          => LotNominationRepository::class,
-        CompteIntegrationInterface::class      => CompteIntegrationRepository::class,
-        RemiseMaterielInterface::class         => RemiseMaterielRepository::class,
-        PriseDeServiceInterface::class         => PriseDeServiceRepository::class,
-        HistoriqueIntegrationInterface::class  => HistoriqueIntegrationRepository::class,
+        AgentInterface::class => AgentRepository::class,
+        DossierIntegrationInterface::class => DossierIntegrationRepository::class,
+        DocumentDossierInterface::class => DocumentDossierRepository::class,
+        ValidationWorkflowInterface::class => ValidationWorkflowRepository::class,
+        ActeAdministratifInterface::class => ActeAdministratifRepository::class,
+        ContratInterface::class => ContratRepository::class,
+        AffectationInterface::class => AffectationRepository::class,
+        LotAffectationInterface::class => LotAffectationRepository::class,
+        NominationInterface::class => NominationRepository::class,
+        LotNominationInterface::class => LotNominationRepository::class,
+        CompteIntegrationInterface::class => CompteIntegrationRepository::class,
+        RemiseMaterielInterface::class => RemiseMaterielRepository::class,
+        PriseDeServiceInterface::class => PriseDeServiceRepository::class,
+        HistoriqueIntegrationInterface::class => HistoriqueIntegrationRepository::class,
         // Module 1.1 — Structure organisationnelle
-        LocaliteInterface::class          => LocaliteRepository::class,
-        AdministrationInterface::class    => AdministrationRepository::class,
-        DirectionInterface::class         => DirectionRepository::class,
-        ServiceInterface::class           => ServiceRepository::class,
-        BureauInterface::class            => BureauRepository::class,
+        LocaliteInterface::class => LocaliteRepository::class,
+        AdministrationInterface::class => AdministrationRepository::class,
+        DirectionInterface::class => DirectionRepository::class,
+        ServiceInterface::class => ServiceRepository::class,
+        BureauInterface::class => BureauRepository::class,
         // Module 1.2 — Référentiels RH
-        DiplomeInterface::class           => DiplomeRepository::class,
-        GradeInterface::class             => GradeRepository::class,
-        CategorieInterface::class         => CategorieRepository::class,
-        EchelonInterface::class           => EchelonRepository::class,
-        FonctionInterface::class          => FonctionRepository::class,
-        TypeContratInterface::class       => TypeContratRepository::class,
-        TypeDocumentInterface::class      => TypeDocumentRepository::class,
-        TypeIntegrationInterface::class   => TypeIntegrationRepository::class,
-        TypeAbsenceInterface::class       => TypeAbsenceRepository::class,
-        TypeCongeInterface::class         => TypeCongeRepository::class,
+        DiplomeInterface::class => DiplomeRepository::class,
+        GradeInterface::class => GradeRepository::class,
+        CategorieInterface::class => CategorieRepository::class,
+        EchelonInterface::class => EchelonRepository::class,
+        FonctionInterface::class => FonctionRepository::class,
+        TypeContratInterface::class => TypeContratRepository::class,
+        TypeDocumentInterface::class => TypeDocumentRepository::class,
+        TypeIntegrationInterface::class => TypeIntegrationRepository::class,
+        TypeAbsenceInterface::class => TypeAbsenceRepository::class,
+        TypeCongeInterface::class => TypeCongeRepository::class,
         MotifAdministratifInterface::class => MotifAdministratifRepository::class,
         // Module Congés & absences
-        JourFerieInterface::class             => JourFerieRepository::class,
+        JourFerieInterface::class => JourFerieRepository::class,
         PalierAncienneteCongeInterface::class => PalierAncienneteCongeRepository::class,
         RegleAcquisitionCongeInterface::class => RegleAcquisitionCongeRepository::class,
-        CongeSoldeInterface::class            => CongeSoldeRepository::class,
-        DemandeCongeInterface::class          => DemandeCongeRepository::class,
-        AbsenceInterface::class               => AbsenceRepository::class,
+        CongeSoldeInterface::class => CongeSoldeRepository::class,
+        DemandeCongeInterface::class => DemandeCongeRepository::class,
+        AbsenceInterface::class => AbsenceRepository::class,
+        // Module Discipline
+        TypeSanctionInterface::class => TypeSanctionRepository::class,
+        SanctionInterface::class => SanctionRepository::class,
+        SanctionPieceInterface::class => SanctionPieceRepository::class,
+        AvertissementInterface::class => AvertissementRepository::class,
         // Module Évaluation / Notation / Avancement
-        AvisHierarchiqueInterface::class          => AvisHierarchiqueRepository::class,
-        AvancementExceptionnelInterface::class    => AvancementExceptionnelRepository::class,
-        BonificationStageInterface::class         => BonificationStageRepository::class,
-        CommissionPreparatoireInterface::class    => CommissionPreparatoireRepository::class,
-        CommissionAvancementInterface::class      => CommissionAvancementRepository::class,
+        AvisHierarchiqueInterface::class => AvisHierarchiqueRepository::class,
+        AvancementExceptionnelInterface::class => AvancementExceptionnelRepository::class,
+        BonificationStageInterface::class => BonificationStageRepository::class,
+        CommissionPreparatoireInterface::class => CommissionPreparatoireRepository::class,
+        CommissionAvancementInterface::class => CommissionAvancementRepository::class,
         ConnaissanceComplementaireInterface::class => ConnaissanceComplementaireRepository::class,
-        SessionEvaluationInterface::class         => SessionEvaluationRepository::class,
-        QuestionEvaluationInterface::class    => QuestionEvaluationRepository::class,
-        EvaluationInterface::class            => EvaluationRepository::class,
-        NoteEvaluationInterface::class        => NoteEvaluationRepository::class,
-        ReclamationInterface::class           => ReclamationRepository::class,
-        ReclassementInterface::class          => ReclassementRepository::class,
+        SessionEvaluationInterface::class => SessionEvaluationRepository::class,
+        QuestionEvaluationInterface::class => QuestionEvaluationRepository::class,
+        EvaluationInterface::class => EvaluationRepository::class,
+        NoteEvaluationInterface::class => NoteEvaluationRepository::class,
+        ReclamationInterface::class => ReclamationRepository::class,
+        ReclassementInterface::class => ReclassementRepository::class,
         // Module dossier agent (vie courante)
-        InformationsPersonnelleInterface::class     => InformationsPersonnelleRepository::class,
+        InformationsPersonnelleInterface::class => InformationsPersonnelleRepository::class,
         InformationsProfessionnelleInterface::class => InformationsProfessionnelleRepository::class,
-        ContactUrgenceInterface::class              => ContactUrgenceRepository::class,
-        SituationFamilialeInterface::class          => SituationFamilialeRepository::class,
-        DocumentAgentInterface::class               => DocumentAgentRepository::class,
+        ContactUrgenceInterface::class => ContactUrgenceRepository::class,
+        SituationFamilialeInterface::class => SituationFamilialeRepository::class,
+        DocumentAgentInterface::class => DocumentAgentRepository::class,
         // Module Grille Salariale
         ClassegrillesalarialeInterface::class => ClassegrillesalarialeRepository::class,
-        ParametregrileInterface::class        => ParametregrileRepository::class,
-        SalaireInterface::class               => SalaireRepository::class,
-        SalaireAgentInterface::class          => SalaireAgentRepository::class,
+        ParametregrileInterface::class => ParametregrileRepository::class,
+        SalaireInterface::class => SalaireRepository::class,
+        SalaireAgentInterface::class => SalaireAgentRepository::class,
         // Module 1.3 — Administration système
-        NotificationInterface::class        => NotificationRepository::class,
-        UserInterface::class                => UserRepository::class,
-        RoleInterface::class                => RoleRepository::class,
-        PermissionInterface::class          => PermissionRepository::class,
-        AuditLogInterface::class            => AuditLogRepository::class,
+        NotificationInterface::class => NotificationRepository::class,
+        UserInterface::class => UserRepository::class,
+        RoleInterface::class => RoleRepository::class,
+        PermissionInterface::class => PermissionRepository::class,
+        AuditLogInterface::class => AuditLogRepository::class,
         ParametreApplicationInterface::class => ParametreApplicationRepository::class,
     ];
 

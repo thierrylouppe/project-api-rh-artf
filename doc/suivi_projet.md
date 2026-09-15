@@ -7,7 +7,7 @@
 
 **Base de données :** MySQL `bd_api_rh_artf` (utf8mb4_unicode_ci) sur `127.0.0.1:3306`
 
-**État :** cœur « vie de l’agent » API **livré**. Prochain : **Module 9 Discipline** (D.2). Modules DRHL suivants **globaux** (pas de cloison bureau).
+**État :** cœur « vie de l’agent » API **livré**. **Module 9 Discipline (D.2) livré.** Prochain : **D.3 Affaires sociales** (P1). Modules DRHL suivants **globaux** (pas de cloison bureau).
 
 ---
 
@@ -124,9 +124,9 @@ Détail : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notati
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 9.1 Sanctions & avertissements | ⬜ | **Prochain module** (Vague D.2) |
-| 9.2 Procédures disciplinaires | ⬜ | Hors D.2 MVP (contentieux long) |
-| 9.3 Historique disciplinaire | ⬜ | D.2.2 |
+| 9.1 Sanctions & avertissements | ✅ | Vague D.2 — `/discipline` + CCN art. 90 |
+| 9.2 Procédures disciplinaires | ✅ | Circuit N+1 → RH → DG (art. 91). Hors scope : conseil / recours |
+| 9.3 Historique disciplinaire | ✅ | `GET /discipline/agents/{id}/historique` + `/moi/historique` |
 
 ---
 
@@ -176,8 +176,8 @@ Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vagu
 
 ## Prochaine étape recommandée
 
-**Module 9 — Discipline & Contentieux** (types, sanctions, valider / rejeter, historique agent).
+**D.3 Affaires sociales P1** (organismes, affiliations, ayants droit).
 
-Puis D.3 Affaires sociales P1 → D.4 Formation → D.5 Paie → D.6 Reporting. **Pas** de cloisonnement avant Vague F.
+Puis D.4 Formation → D.5 Paie → D.6 Reporting. **Pas** de cloisonnement avant Vague F.
 
 Suivi opérationnel : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).

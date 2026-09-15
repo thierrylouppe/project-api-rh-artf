@@ -29,6 +29,8 @@ class PermissionSeeder extends Seeder
             // Congés & absences
             'consulter-conges', 'creer-conges', 'valider-conges',
             'consulter-absences', 'creer-absences', 'valider-absences',
+            // Discipline
+            'consulter-discipline', 'gerer-discipline', 'proposer-discipline', 'prononcer-discipline',
             // Évaluations
             'consulter-evaluations', 'creer-evaluations', 'valider-evaluations',
             // Reporting

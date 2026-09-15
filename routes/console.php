@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\AppliquerEffetsMiseAPiedJob;
 use App\Jobs\ConventionStageEnFinDateJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -12,4 +13,8 @@ Artisan::command('inspire', function () {
 Schedule::job(new ConventionStageEnFinDateJob)
     ->weekdays()
     ->at('08:00')
+    ->withoutOverlapping();
+
+Schedule::job(new AppliquerEffetsMiseAPiedJob)
+    ->dailyAt('08:00')
     ->withoutOverlapping();

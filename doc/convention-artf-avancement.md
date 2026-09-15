@@ -1,5 +1,6 @@
 # Convention collective ARTF — Avancement (extrait)
 
+> **Texte intégral CCN :** [`convention-collective-artf.md`](./convention-collective-artf.md) (art. 60–75 ci-dessous).  
 > Source : Convention collective de l’ARTF, **chapitre 4** (art. 60–72) et **chapitre 5** (art. 73–75), pp. 20–21/44.  
 > Saisie : 2026-09-10, d’après scan fourni.  
 > Usage : **source juridique ARTF** pour le module évaluation / notation / avancement.  

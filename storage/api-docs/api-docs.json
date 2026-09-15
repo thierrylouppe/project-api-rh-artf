@@ -12,6 +12,128 @@
         }
     ],
     "paths": {
+        "/api/absences": {
+            "get": {
+                "tags": [
+                    "Absences"
+                ],
+                "summary": "Liste des absences",
+                "operationId": "listAbsences",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Absences"
+                ],
+                "summary": "Déclarer une absence",
+                "operationId": "storeAbsence",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/absences/a-valider": {
+            "get": {
+                "tags": [
+                    "Absences"
+                ],
+                "summary": "File N+1",
+                "operationId": "absencesAValider",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/absences/agents/{agent}": {
+            "get": {
+                "tags": [
+                    "Absences"
+                ],
+                "summary": "Absences d'un agent",
+                "operationId": "absencesParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/absences/{id}/valider": {
+            "post": {
+                "tags": [
+                    "Absences"
+                ],
+                "summary": "Valider une absence",
+                "operationId": "validerAbsence",
+                "responses": {
+                    "200": {
+                        "description": "Validée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/absences/{id}/rejeter": {
+            "post": {
+                "tags": [
+                    "Absences"
+                ],
+                "summary": "Rejeter une absence",
+                "operationId": "rejeterAbsence",
+                "responses": {
+                    "200": {
+                        "description": "Rejetée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/integration/dossiers/{dossier}/actes": {
             "get": {
                 "tags": [
@@ -429,55 +551,6 @@
                                 }
                             }
                         }
-                    }
-                },
-                "deprecated": true,
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/carriere/affectations/groupee": {
-            "post": {
-                "tags": [
-                    "Carrière — Affectations"
-                ],
-                "summary": "Affectation groupée",
-                "operationId": "storeAffectationGroupeeCarriere",
-                "responses": {
-                    "201": {
-                        "description": "Créées"
-                    },
-                    "422": {
-                        "description": "Validation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error422"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/integration/affectations/groupee": {
-            "post": {
-                "tags": [
-                    "Intégration — Affectations"
-                ],
-                "summary": "Affectation groupée (alias)",
-                "operationId": "storeAffectationGroupee",
-                "responses": {
-                    "201": {
-                        "description": "Créées"
                     }
                 },
                 "deprecated": true,
@@ -1264,6 +1337,744 @@
                 ]
             }
         },
+        "/api/discipline/avertissements": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Liste des avertissements",
+                "operationId": "listAvertissements",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Émettre un avertissement",
+                "operationId": "storeAvertissement",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/moi/avertissements": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Avertissements de l'agent connecté",
+                "operationId": "mesAvertissements",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/moi/avertissements/{id}": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Détail d'un avertissement de l'agent connecté",
+                "operationId": "monAvertissement",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/agents/{agent}/avertissements": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Avertissements d'un agent",
+                "operationId": "avertissementsParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/avertissements/{id}": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Détail d'un avertissement",
+                "operationId": "showAvertissement",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Modifier un avertissement",
+                "operationId": "updateAvertissement",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Supprimer un avertissement",
+                "operationId": "destroyAvertissement",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{evaluationId}/avis-hierarchiques": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Avis hiérarchiques d'une fiche, ordonnés",
+                "operationId": "listAvisHierarchiques",
+                "parameters": [
+                    {
+                        "name": "evaluationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des avis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Poster (ou mettre à jour) un avis hiérarchique non signé",
+                "operationId": "posterAvis",
+                "parameters": [
+                    {
+                        "name": "evaluationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Avis posté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{evaluationId}/niveaux-requis": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Niveaux d'avis hiérarchiques requis pour une fiche (selon position de l'évalué)",
+                "operationId": "niveauxRequis",
+                "parameters": [
+                    {
+                        "name": "evaluationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Niveaux requis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/avis-hierarchiques/{id}": {
+            "put": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Mettre à jour un avis non signé",
+                "operationId": "updateAvis",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Avis mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/avis-hierarchiques/{id}/signer": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Signer un avis hiérarchique (action définitive)",
+                "operationId": "signerAvis",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Avis signé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/agents/{id}": {
+            "get": {
+                "tags": [
+                    "Carrière — Synthèse"
+                ],
+                "summary": "Situation carrière d'un agent",
+                "description": "Agrège contrat actif, affectation active, nomination active et salaire actuel. Route nouvelle : pas d'alias /integration (conflit avec la fiche agent).",
+                "operationId": "syntheseCarriereAgent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Synthèse"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/sessions/{sessionId}/commission-avancement": {
+            "get": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "Commission d'avancement d'une session",
+                "operationId": "getCommissionAvan",
+                "parameters": [
+                    {
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Commission"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "Ouvrir la commission d'avancement (prérequis : commission préparatoire clôturée)",
+                "operationId": "ouvrirCommissionAvan",
+                "parameters": [
+                    {
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Commission ouverte"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/commissions-avancements/{id}/decider": {
+            "post": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "Enregistrer la décision d'avancement pour une fiche (art. 70)",
+                "operationId": "deciderCommissionAvan",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Décision enregistrée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{evaluationId}/avancer-echelon": {
+            "post": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "Appliquer l'avancement d'échelon en paie (idempotent, D6)",
+                "operationId": "avancerEchelon",
+                "parameters": [
+                    {
+                        "name": "evaluationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Échelon avancé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/commissions-avancements/{id}/cloturer": {
+            "post": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "Clôturer la commission d'avancement (prérequis pour clôturer la session)",
+                "operationId": "cloturerCommissionAvan",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Commission clôturée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/sessions/{sessionId}/commission-preparatoire": {
+            "get": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "Commission préparatoire d'une session",
+                "operationId": "getCommissionPrep",
+                "parameters": [
+                    {
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Commission"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "Ouvrir la commission préparatoire pour une session",
+                "operationId": "ouvrirCommissionPrep",
+                "parameters": [
+                    {
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Commission ouverte"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/commissions-preparatoires/{id}/noter": {
+            "post": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "Harmoniser la note d'une fiche (commission_note) + note de synthèse facultative",
+                "operationId": "noterFichePrep",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Note harmonisée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/commissions-preparatoires/{id}/alertes": {
+            "get": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "Fiches avec écart > 5 pts entre note N+1 et note commission",
+                "operationId": "alertesEcart",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fiches avec alerte"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/commissions-preparatoires/{id}/cloturer": {
+            "post": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "Clôturer la commission préparatoire",
+                "operationId": "cloturerCommissionPrep",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Commission clôturée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/commissions-preparatoires/{id}/synthese-pdf": {
+            "get": {
+                "tags": [
+                    "Commissions"
+                ],
+                "summary": "PDF de la note de synthèse (art. 67) — commission clôturée",
+                "operationId": "synthesePreparatoirePdf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/soldes": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Soldes de congés",
+                "operationId": "listSoldesConges",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/agents/{agent}/soldes": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Soldes d'un agent",
+                "operationId": "soldesParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Soldes"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/integration/contrats": {
             "get": {
                 "tags": [
@@ -1460,6 +2271,328 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/a-valider": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "File à valider par l'utilisateur connecté",
+                "operationId": "demandesCongesAValider",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Liste des demandes",
+                "operationId": "listDemandesConges",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Soumettre une demande",
+                "operationId": "storeDemandeConge",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Détail d'une demande",
+                "operationId": "showDemandeConge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/agents/{agent}/demandes": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Demandes d'un agent",
+                "operationId": "demandesCongesParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}/valider-n1": {
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Valider N+1",
+                "operationId": "validerDemandeCongeN1",
+                "responses": {
+                    "200": {
+                        "description": "Validée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}/rejeter-n1": {
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Rejeter N+1",
+                "operationId": "rejeterDemandeCongeN1",
+                "responses": {
+                    "200": {
+                        "description": "Rejetée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}/valider-rh": {
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Valider RH",
+                "operationId": "validerDemandeCongeRh",
+                "responses": {
+                    "200": {
+                        "description": "Validée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}/rejeter-rh": {
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Rejeter RH",
+                "operationId": "rejeterDemandeCongeRh",
+                "responses": {
+                    "200": {
+                        "description": "Rejetée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}/valider-dg": {
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Valider DG",
+                "operationId": "validerDemandeCongeDg",
+                "responses": {
+                    "200": {
+                        "description": "Validée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}/rejeter-dg": {
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Rejeter DG",
+                "operationId": "rejeterDemandeCongeDg",
+                "responses": {
+                    "200": {
+                        "description": "Rejetée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}/annuler": {
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Annuler une demande encore soumise",
+                "operationId": "annulerDemandeConge",
+                "responses": {
+                    "200": {
+                        "description": "Annulée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}/justificatif": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Télécharger le justificatif",
+                "operationId": "justificatifDemandeConge",
+                "responses": {
+                    "200": {
+                        "description": "Fichier"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/statistiques": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Statistiques",
+                "operationId": "statistiquesConges",
+                "responses": {
+                    "200": {
+                        "description": "Stats"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}/fiche-pdf": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Fiche PDF",
+                "operationId": "ficheCongePdf",
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/demandes/{id}/attestation": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Attestation PDF (après validation RH)",
+                "operationId": "attestationCongePdf",
+                "responses": {
+                    "200": {
+                        "description": "PDF"
                     }
                 },
                 "security": [
@@ -2681,13 +3814,886 @@
                 ]
             }
         },
-        "/api/integration/nominations": {
+        "/api/avancements/evaluations": {
             "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Liste de toutes les fiches (vue RH)",
+                "operationId": "listEvaluations",
+                "responses": {
+                    "200": {
+                        "description": "Liste des fiches"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Détail d'une fiche avec les notes",
+                "operationId": "showEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fiche complète"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/superieur/mes-evaluations": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Fiches à noter par le notateur connecté",
+                "operationId": "mesEvaluationsSuperieur",
+                "responses": {
+                    "200": {
+                        "description": "Fiches à noter"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/noter": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Saisir ou modifier la note d'un critère",
+                "operationId": "noterEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Note enregistrée, fiche recalculée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/contexte": {
+            "put": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Mettre à jour le contexte de la fiche (absences, sanctions, avis)",
+                "operationId": "updateContexteEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contexte mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/signer-evaluateur": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Le notateur signe la fiche (art. 63) — Phase 1 (sans avis). Utiliser avis-et-signer en Phase 2.",
+                "operationId": "signerEvaluateur",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fiche signée par le notateur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/avis-et-signer": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Le notateur donne son avis (min 10 chars) ET signe la fiche (art. 63)",
+                "operationId": "avisEtSigner",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fiche signée avec avis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/agent/mes-evaluations": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Historique des évaluations de l'agent connecté",
+                "operationId": "mesEvaluationsAgent",
+                "responses": {
+                    "200": {
+                        "description": "Fiches de l'agent"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/signer-evalue": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "L'agent signe sa fiche (art. 63)",
+                "operationId": "signerEvalue",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fiche signée par l'agent"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/reclamer": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "L'agent dépose une réclamation après avoir signé (art. 65)",
+                "operationId": "reclamer",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Réclamation déposée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/envoyer-rh": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Envoyer la fiche en validation RH (depuis signee_evalue)",
+                "operationId": "envoyerRh",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fiche transmise à la RH"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/valider-rh": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "La RH valide la fiche conforme (art. 66)",
+                "operationId": "validerEvaluationRh",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fiche finalisée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/annuler": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "La RH annule une fiche",
+                "operationId": "annulerEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fiche annulée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/superieur": {
+            "put": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Réattribuer le notateur (N+1) d'une fiche — RH uniquement, session ouverte",
+                "operationId": "reattribuerSuperieur",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notateur réattribué"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/sessions/{sessionId}/tableau": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Fiches inscrites au tableau d'avancement (D5)",
+                "operationId": "tableauAvancement",
+                "parameters": [
+                    {
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tableau"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/inscrire-tableau": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Inscrire une fiche finalisée au tableau d'avancement",
+                "operationId": "inscrireTableauAvancement",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Inscrite"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/retirer-tableau": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Retirer une fiche du tableau d'avancement",
+                "operationId": "retirerTableauAvancement",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Retirée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/evaluations/{id}/fiche-pdf": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "PDF de la fiche d'évaluation (après signature agent)",
+                "operationId": "ficheEvaluationPdf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/jours-feries": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Liste des jours fériés",
+                "operationId": "listJoursFeries",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Créer un jour férié",
+                "operationId": "storeJourFerie",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/jours-feries/{id}": {
+            "put": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Mettre à jour un jour férié",
+                "operationId": "updateJourFerie",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/groupee": {
+            "post": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
+                "summary": "Créer un lot d'affectations (un circuit, un acte)",
+                "operationId": "storeLotAffectationCarriere",
+                "responses": {
+                    "201": {
+                        "description": "Lot créé"
+                    },
+                    "422": {
+                        "description": "Validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/affectations/groupee": {
+            "post": {
+                "tags": [
+                    "Intégration — Affectations"
+                ],
+                "summary": "Créer un lot (alias)",
+                "operationId": "storeLotAffectation",
+                "responses": {
+                    "201": {
+                        "description": "Lot créé"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/lots/{id}": {
+            "get": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
+                "summary": "Détail d'un lot",
+                "operationId": "showLotAffectationCarriere",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/lots/{id}/activer": {
+            "post": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
+                "summary": "Activer toutes les lignes du lot",
+                "operationId": "activerLotAffectationCarriere",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Activé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/lots/{id}/rejeter": {
+            "post": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
+                "summary": "Rejeter le lot",
+                "operationId": "rejeterLotAffectationCarriere",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rejeté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/affectations/lots/{id}/acte": {
+            "get": {
+                "tags": [
+                    "Carrière — Affectations"
+                ],
+                "summary": "PDF unique listant toutes les affectations du lot",
+                "operationId": "acteLotAffectationCarriere",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/groupee": {
+            "post": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Créer un lot de nominations (un circuit, un acte)",
+                "operationId": "storeLotNominationCarriere",
+                "responses": {
+                    "201": {
+                        "description": "Lot créé"
+                    },
+                    "422": {
+                        "description": "Validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/nominations/groupee": {
+            "post": {
                 "tags": [
                     "Intégration — Nominations"
                 ],
+                "summary": "Créer un lot (alias)",
+                "operationId": "storeLotNomination",
+                "responses": {
+                    "201": {
+                        "description": "Lot créé"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/lots/{id}": {
+            "get": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Détail d'un lot",
+                "operationId": "showLotNominationCarriere",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/lots/{id}/activer": {
+            "post": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Activer toutes les lignes du lot",
+                "operationId": "activerLotNominationCarriere",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Activé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/lots/{id}/rejeter": {
+            "post": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Rejeter le lot",
+                "operationId": "rejeterLotNominationCarriere",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rejeté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/lots/{id}/acte": {
+            "get": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "PDF unique listant toutes les nominations du lot",
+                "operationId": "acteLotNominationCarriere",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations": {
+            "get": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
                 "summary": "Liste des nominations",
-                "operationId": "listNominations",
+                "operationId": "listNominationsCarriere",
                 "responses": {
                     "200": {
                         "description": "Liste"
@@ -2711,10 +4717,10 @@
             },
             "post": {
                 "tags": [
-                    "Intégration — Nominations"
+                    "Carrière — Nominations"
                 ],
                 "summary": "Créer une nomination",
-                "operationId": "storeNomination",
+                "operationId": "storeNominationCarriere",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2800,13 +4806,61 @@
                 ]
             }
         },
-        "/api/integration/nominations/{id}": {
+        "/api/integration/nominations": {
             "get": {
                 "tags": [
                     "Intégration — Nominations"
                 ],
+                "summary": "Liste des nominations (alias)",
+                "operationId": "listNominations",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Créer une nomination (alias)",
+                "operationId": "storeNomination",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/{id}": {
+            "get": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
                 "summary": "Détail d'une nomination",
-                "operationId": "showNomination",
+                "operationId": "showNominationCarriere",
                 "parameters": [
                     {
                         "name": "id",
@@ -2844,15 +4898,127 @@
                         "bearerAuth": []
                     }
                 ]
+            },
+            "put": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Modifier une nomination en attente",
+                "operationId": "updateNominationCarriere",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Modifiée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NominationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
-        "/api/integration/nominations/{nomination}/activer": {
-            "post": {
+        "/api/integration/nominations/{id}": {
+            "get": {
                 "tags": [
                     "Intégration — Nominations"
                 ],
+                "summary": "Détail d'une nomination (alias)",
+                "operationId": "showNomination",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NominationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Modifier une nomination (alias)",
+                "operationId": "updateNomination",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Modifiée"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/{nomination}/activer": {
+            "post": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
                 "summary": "Activer une nomination",
-                "operationId": "activerNomination",
+                "operationId": "activerNominationCarriere",
                 "parameters": [
                     {
                         "name": "nomination",
@@ -2869,6 +5035,7 @@
                             "schema": {
                                 "properties": {
                                     "dossier_integration_id": {
+                                        "description": "Ignoré — conservé pour compatibilité FE",
                                         "type": "integer",
                                         "nullable": true
                                     }
@@ -2897,13 +5064,43 @@
                 ]
             }
         },
-        "/api/integration/nominations/{nomination}/cloturer": {
+        "/api/integration/nominations/{nomination}/activer": {
             "post": {
                 "tags": [
                     "Intégration — Nominations"
                 ],
+                "summary": "Activer une nomination (alias)",
+                "operationId": "activerNomination",
+                "parameters": [
+                    {
+                        "name": "nomination",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Activée"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/{nomination}/cloturer": {
+            "post": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
                 "summary": "Clôturer une nomination",
-                "operationId": "cloturerNomination",
+                "operationId": "cloturerNominationCarriere",
                 "parameters": [
                     {
                         "name": "nomination",
@@ -2948,13 +5145,43 @@
                 ]
             }
         },
-        "/api/integration/nominations/{nomination}/rejeter": {
+        "/api/integration/nominations/{nomination}/cloturer": {
             "post": {
                 "tags": [
                     "Intégration — Nominations"
                 ],
+                "summary": "Clôturer une nomination (alias)",
+                "operationId": "cloturerNomination",
+                "parameters": [
+                    {
+                        "name": "nomination",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Clôturée"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/{nomination}/rejeter": {
+            "post": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
                 "summary": "Rejeter une nomination",
-                "operationId": "rejeterNomination",
+                "operationId": "rejeterNominationCarriere",
                 "parameters": [
                     {
                         "name": "nomination",
@@ -2993,12 +5220,71 @@
                 ]
             }
         },
+        "/api/integration/nominations/{nomination}/rejeter": {
+            "post": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Rejeter une nomination (alias)",
+                "operationId": "rejeterNomination",
+                "parameters": [
+                    {
+                        "name": "nomination",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rejetée"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/agents/{agent}/nominations": {
+            "get": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Nominations d'un agent",
+                "operationId": "listNominationsByAgentCarriere",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/integration/agents/{agent}/nominations": {
             "get": {
                 "tags": [
                     "Intégration — Nominations"
                 ],
-                "summary": "Nominations d'un agent",
+                "summary": "Nominations d'un agent (alias)",
                 "operationId": "listNominationsByAgent",
                 "parameters": [
                     {
@@ -3013,6 +5299,440 @@
                 "responses": {
                     "200": {
                         "description": "Liste"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/agents/{agent}/nominations/historique": {
+            "get": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Historique des nominations (hors active)",
+                "operationId": "historiqueNominationsByAgentCarriere",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/agents/{agent}/nominations/historique": {
+            "get": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Historique des nominations (alias)",
+                "operationId": "historiqueNominationsByAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/postes-vacants": {
+            "get": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Structures sans responsable actif",
+                "operationId": "postesVacantsNominationsCarriere",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/nominations/postes-vacants": {
+            "get": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Postes vacants (alias)",
+                "operationId": "postesVacantsNominations",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/chefs/{chef}/agents-sous-autorite": {
+            "get": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Agents sous l'autorité d'un chef",
+                "operationId": "agentsSousAutoriteCarriere",
+                "parameters": [
+                    {
+                        "name": "chef",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/nominations/chefs/{chef}/agents-sous-autorite": {
+            "get": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Agents sous autorité (alias)",
+                "operationId": "agentsSousAutorite",
+                "parameters": [
+                    {
+                        "name": "chef",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/{nomination}/acte": {
+            "get": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Télécharger l'acte de nomination (PDF)",
+                "operationId": "acteNominationCarriere",
+                "parameters": [
+                    {
+                        "name": "nomination",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/nominations/{nomination}/acte": {
+            "get": {
+                "tags": [
+                    "Intégration — Nominations"
+                ],
+                "summary": "Télécharger l'acte (alias)",
+                "operationId": "acteNomination",
+                "parameters": [
+                    {
+                        "name": "nomination",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier PDF"
+                    }
+                },
+                "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Inbox de l'utilisateur connecté",
+                "operationId": "listerNotifications",
+                "parameters": [
+                    {
+                        "name": "non_lues",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste paginée"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/non-lues": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Notifications non lues",
+                "operationId": "notificationsNonLues",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/{id}/lu": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Marquer une notification comme lue",
+                "operationId": "marquerNotificationLue",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Marquée lue"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "404": {
+                        "description": "Introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notifications/tout-lire": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Marquer toutes les notifications comme lues",
+                "operationId": "marquerToutesNotificationsLues",
+                "responses": {
+                    "200": {
+                        "description": "Toutes lues"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/paliers-anciennete": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Paliers d'ancienneté",
+                "operationId": "listPaliersAnciennete",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Créer un palier",
+                "operationId": "storePalierAnciennete",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/paliers-anciennete/{id}": {
+            "put": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Mettre à jour un palier",
+                "operationId": "updatePalierAnciennete",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Supprimer un palier",
+                "operationId": "destroyPalierAnciennete",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
                     }
                 },
                 "security": [
@@ -3267,6 +5987,1145 @@
                 ]
             }
         },
+        "/api/avancements/questions-evaluation": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Grille des critères d'évaluation",
+                "operationId": "listQuestionsEvaluation",
+                "responses": {
+                    "200": {
+                        "description": "Liste des critères"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Créer un critère d'évaluation",
+                "operationId": "storeQuestionEvaluation",
+                "responses": {
+                    "201": {
+                        "description": "Critère créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/questions-evaluation/{id}": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Détail d'un critère",
+                "operationId": "showQuestionEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail du critère"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Modifier un critère",
+                "operationId": "updateQuestionEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Supprimer un critère",
+                "operationId": "destroyQuestionEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/reclamations": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Liste des réclamations (vue RH)",
+                "operationId": "listReclamations",
+                "responses": {
+                    "200": {
+                        "description": "Liste des réclamations"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/reclamations/en-attente": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Réclamations en attente de traitement",
+                "operationId": "reclamationsEnAttente",
+                "responses": {
+                    "200": {
+                        "description": "Réclamations à traiter"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/reclamations/{id}": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Détail d'une réclamation",
+                "operationId": "showReclamation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/reclamations/{id}/traiter": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "RH traite une réclamation (acceptée = renvoi notateur, rejetée = maintien + envoi RH)",
+                "operationId": "traiterReclamation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Réclamation traitée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/regles-acquisition": {
+            "get": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Règles d'acquisition",
+                "operationId": "listReglesAcquisition",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Créer une règle d'acquisition",
+                "operationId": "storeRegleAcquisition",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges/regles-acquisition/{id}": {
+            "put": {
+                "tags": [
+                    "Congés"
+                ],
+                "summary": "Mettre à jour une règle",
+                "operationId": "updateRegleAcquisition",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Liste des sanctions",
+                "operationId": "listSanctions",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Soumettre un rapport disciplinaire (N+1 ou RH)",
+                "operationId": "storeSanction",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/a-instruire": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "File des rapports à instruire (RH)",
+                "operationId": "sanctionsAInstruire",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/a-valider": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Alias de a-prononcer",
+                "operationId": "sanctionsAValider",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/a-prononcer": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "File des sanctions à prononcer (DG)",
+                "operationId": "sanctionsAPrononcer",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/mes-rapports": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Rapports disciplinaires soumis par le N+1 connecté",
+                "operationId": "mesRapportsDiscipline",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/moi/historique": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Historique disciplinaire de l'agent connecté",
+                "operationId": "mesDossiersDiscipline",
+                "responses": {
+                    "200": {
+                        "description": "Historique"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/moi/sanctions": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Sanctions de l'agent connecté",
+                "operationId": "mesSanctions",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/moi/sanctions/{id}": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Détail d'une sanction de l'agent connecté",
+                "operationId": "maSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/moi/sanctions/{id}/pdf-decision": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "PDF de la décision pour l'agent concerné",
+                "operationId": "maDecisionDisciplinePdf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/agents/{agent}/sanctions": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Sanctions d'un agent",
+                "operationId": "sanctionsParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/agents/{agent}/historique": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Historique disciplinaire d'un agent",
+                "operationId": "historiqueDisciplineAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historique"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/{id}": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Détail d'une sanction",
+                "operationId": "showSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Modifier un rapport encore ouvert",
+                "operationId": "updateSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Supprimer un rapport en attente",
+                "operationId": "destroySanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/{id}/instruire": {
+            "post": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Instruire un rapport et le transmettre au DG",
+                "operationId": "instruireSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Instruite"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/{id}/valider": {
+            "post": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Prononcer une sanction (DG)",
+                "operationId": "validerSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Prononcée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/{id}/rejeter": {
+            "post": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Classer un rapport sans suite (DG)",
+                "operationId": "rejeterSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Classée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/{id}/pieces": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Pièces d'un rapport disciplinaire",
+                "operationId": "listPiecesSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Joindre une pièce au rapport",
+                "operationId": "storePieceSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/{id}/pieces/{pieceId}": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Télécharger une pièce",
+                "operationId": "downloadPieceSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "pieceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Retirer une pièce",
+                "operationId": "destroyPieceSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "pieceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/{id}/pdf-rapport": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "PDF du rapport disciplinaire",
+                "operationId": "rapportDisciplinePdf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/sanctions/{id}/pdf-decision": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "PDF de la décision du DG",
+                "operationId": "decisionDisciplinePdf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/sessions": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Liste des sessions d'évaluation",
+                "operationId": "listSessionsEvaluation",
+                "responses": {
+                    "200": {
+                        "description": "Liste des sessions"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Ouvrir une nouvelle session d'évaluation (génère les fiches éligibles)",
+                "operationId": "storeSessionEvaluation",
+                "responses": {
+                    "201": {
+                        "description": "Session créée avec fiches"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/sessions/{id}": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Détail d'une session",
+                "operationId": "showSessionEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail de la session"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Mettre à jour les métadonnées d'une session (description, dates)",
+                "operationId": "updateSessionEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour effectuée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/sessions/{id}/cloturer": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Clôturer une session ouverte",
+                "operationId": "cloturerSessionEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session clôturée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/sessions/{id}/annuler": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Annuler une session ouverte (annule les fiches non finalisées)",
+                "operationId": "annulerSessionEvaluation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Session annulée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/sessions/{id}/generer-fiches": {
+            "post": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Regénérer les fiches manquantes pour une session ouverte",
+                "operationId": "genererFichesSession",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fiches générées"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/sessions/{id}/sans-superieur": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Agents éligibles sans N+1 identifiable (vue RH — affectations à corriger)",
+                "operationId": "agentsSansSuperieur",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des agents sans notateur"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avancements/sessions/{id}/stats": {
+            "get": {
+                "tags": [
+                    "Évaluation"
+                ],
+                "summary": "Statistiques d'une session : compteurs par statut, moyenne /20, répartition mentions",
+                "operationId": "statsSession",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statistiques de la session"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/types-integrations": {
             "get": {
                 "tags": [
@@ -3491,6 +7350,125 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/discipline/types-sanctions": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Liste des types de sanctions",
+                "operationId": "listTypesSanctions",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Créer un type de sanction",
+                "operationId": "storeTypeSanction",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/discipline/types-sanctions/{id}": {
+            "get": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Détail d'un type de sanction",
+                "operationId": "showTypeSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Modifier un type de sanction",
+                "operationId": "updateTypeSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Discipline"
+                ],
+                "summary": "Supprimer un type de sanction",
+                "operationId": "destroyTypeSanction",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/integration/validations/{validation}/approuver": {
@@ -3981,6 +7959,14 @@
                         "type": "integer",
                         "example": 1
                     },
+                    "agent": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/AgentIdentite"
+                            }
+                        ],
+                        "nullable": true
+                    },
                     "structurable_type": {
                         "type": "string",
                         "example": "App\\Models\\Direction"
@@ -4149,6 +8135,32 @@
                     },
                     "message": {
                         "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "AgentIdentite": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "matricule": {
+                        "type": "string",
+                        "example": "ARTF-2026-001",
+                        "nullable": true
+                    },
+                    "nom": {
+                        "type": "string",
+                        "example": "MOUKOKO"
+                    },
+                    "prenom": {
+                        "type": "string",
+                        "example": "Jean"
+                    },
+                    "nom_complet": {
+                        "type": "string",
+                        "example": "Jean MOUKOKO"
                     }
                 },
                 "type": "object"
@@ -4530,6 +8542,14 @@
                         "type": "integer",
                         "nullable": true
                     },
+                    "agent": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/AgentIdentite"
+                            }
+                        ],
+                        "nullable": true
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time"
@@ -4683,11 +8703,31 @@
                     "type_acte": {
                         "type": "string",
                         "example": "decision",
-                        "nullable": true
+                        "nullable": true,
+                        "enum": [
+                            "arrete",
+                            "decision",
+                            "note_service"
+                        ]
+                    },
+                    "type_acte_label": {
+                        "type": "string",
+                        "example": "Décision de nomination"
                     },
                     "statut": {
                         "type": "string",
-                        "example": "EN_ATTENTE"
+                        "example": "en_attente",
+                        "enum": [
+                            "en_attente",
+                            "approuvee",
+                            "active",
+                            "cloturee",
+                            "rejetee"
+                        ]
+                    },
+                    "statut_label": {
+                        "type": "string",
+                        "example": "En attente de validation"
                     },
                     "created_at": {
                         "type": "string",
@@ -5024,20 +9064,52 @@
             "description": "Contrats agents"
         },
         {
-            "name": "Intégration — Affectations",
+            "name": "Carrière — Affectations",
             "description": "Affectations et notes de service"
         },
         {
+            "name": "Carrière — Nominations",
+            "description": "Nominations à un poste de responsabilité"
+        },
+        {
+            "name": "Carrière — Synthèse",
+            "description": "Situation carrière d'un agent"
+        },
+        {
+            "name": "Intégration — Affectations",
+            "description": "Affectations (alias déprécié)"
+        },
+        {
             "name": "Intégration — Nominations",
-            "description": "Nominations"
+            "description": "Nominations (alias déprécié)"
         },
         {
             "name": "Intégration — Prise de service",
             "description": "Prise de service et finalisation"
         },
         {
-            "name": "Carrière — Affectations",
-            "description": "Carrière — Affectations"
+            "name": "Absences",
+            "description": "Absences"
+        },
+        {
+            "name": "Discipline",
+            "description": "Discipline"
+        },
+        {
+            "name": "Évaluation",
+            "description": "Évaluation"
+        },
+        {
+            "name": "Commissions",
+            "description": "Commissions"
+        },
+        {
+            "name": "Congés",
+            "description": "Congés"
+        },
+        {
+            "name": "Notifications",
+            "description": "Notifications"
         }
     ]
 }

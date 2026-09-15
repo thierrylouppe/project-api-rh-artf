@@ -43,9 +43,9 @@ class Agent extends Model
     ];
 
     protected $casts = [
-        'date_naissance'     => 'date',
+        'date_naissance' => 'date',
         'date_prise_service' => 'date',
-        'archived_at'        => 'datetime',
+        'archived_at' => 'datetime',
     ];
 
     protected array $filterable = ['nom', 'prenom', 'matricule', 'statut', 'genre', 'type_integration_id'];
@@ -173,6 +173,16 @@ class Agent extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(DocumentAgent::class);
+    }
+
+    public function sanctions(): HasMany
+    {
+        return $this->hasMany(Sanction::class);
+    }
+
+    public function avertissements(): HasMany
+    {
+        return $this->hasMany(Avertissement::class);
     }
 
     public function archivedBy(): BelongsTo

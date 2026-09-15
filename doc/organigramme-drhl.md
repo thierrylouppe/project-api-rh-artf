@@ -46,7 +46,7 @@ Gestion du personnel : recrutement, dossiers, formation, paie, solde et protecti
 | Bureau | Sigle | Mission | Module API (vague) |
 |---|---|---|---|
 | Bureau Formation | `B.F` | Plans de formation, stages d’accueil, suivi des compétences | D.4 `/formations` + stages déjà livrés |
-| Bureau Personnel | `B.P` | Dossiers, affectations, carrière, absences | **Livré** + D.2 discipline |
+| Bureau Personnel | `B.P` | Dossiers, affectations, carrière, absences, discipline | **Livré** (D.2 inclus) |
 | Bureau Solde | `B.S.` | Paie, éléments de salaire, suivi des soldes | Grille / salaire **livrés** + D.5 `/paie` |
 | Bureau des Affaires sociales | `B.A.S.` | Protection sociale agent + famille (CNSS, ayants droit, prestations) | D.3 `/affaires-sociales` |
 

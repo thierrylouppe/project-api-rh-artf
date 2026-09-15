@@ -124,4 +124,29 @@ class NotificationService
 
         return $destinataires->unique('id')->values();
     }
+
+    /**
+     * Destinataires d'un événement métier : rôle + compte agent, hors auteur.
+     *
+     * @return Collection<int, User>
+     */
+    public function destinatairesRoleEtAgent(string $role, ?int $agentId, ?int $exclureUserId = null): Collection
+    {
+        $destinataires = $this->destinatairesAuteurEtAgent(null, $agentId);
+
+        try {
+            $destinataires = $destinataires->concat($this->userRepository->getByRole($role));
+        } catch (RoleDoesNotExist) {
+            //
+        }
+
+        return $destinataires
+            ->filter(fn ($user) => $user instanceof User)
+            ->unique('id')
+            ->when(
+                $exclureUserId,
+                fn (Collection $users) => $users->reject(fn (User $user) => $user->id === $exclureUserId)
+            )
+            ->values();
+    }
 }

@@ -5,11 +5,12 @@
 > Architecture obligatoire : [`architecture.md`](./architecture.md)  
 > Plan long : [`plan_complet.md`](./plan_complet.md)  
 > Contrat FE actuel : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md)  
-> Cible métier : [`organigramme-drhl.md`](./organigramme-drhl.md)
+> Cible métier : [`organigramme-drhl.md`](./organigramme-drhl.md)  
+> Droit ARTF (barèmes, délais, éligibilité) : [`convention-collective-artf.md`](./convention-collective-artf.md)
 
 **Objectif :** livrer les modules métier manquants (vie de l’agent + DRHL), **sans cloisonner** par service / bureau. Le cloisonnement vient **après**.
 
-**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. Prochain module neuf : **D.2 Discipline**.
+**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline livré.** Prochain module neuf : **D.3 Affaires sociales** (P1).
 
 ---
 
@@ -28,6 +29,7 @@
 | Congés & absences | `/conges`, `/absences` | Demandes, soldes, circuit par type, PDF |
 | Dossier agent | `/personnel/agents/{id}` | Infos, contacts, GED légère, archivage |
 | Évaluations & avancements | `/avancements/…` | P1–P5 + lots A–C (art. 62, tableau, PDF) |
+| Discipline | `/discipline/…` | Types CCN, rapport N+1, instruire RH, prononcer DG, pièces, PDF, avertissements, historique |
 
 **Hors scope immédiat :** PDF actes d’intégration (Phase 1.B), recrutement amont (concours), GED versionnée, mail / SMS, **Service Logistique**, cloisonnement par bureau.
 
@@ -109,8 +111,8 @@ Préfixe : `/api/conges/…` et `/api/absences`.
 | Vague | Module | Contenu | Bureau cible (doc) | Statut |
 |-------|--------|---------|--------------------|--------|
 | D.1 | Évaluations & avancements | P1–P5 + lots A–D | Personnel | ✅ |
-| D.2 | Discipline | Types, sanctions, valider / rejeter, historique | Personnel + conformité | ⬜ **prochain** |
-| D.3 | Affaires sociales | Organismes, affiliations, ayants droit ; prestations ensuite | Affaires sociales | ⬜ |
+| D.2 | Discipline | Types CCN, N+1→RH→DG, pièces, PDF, historique | Personnel + conformité | ✅ |
+| D.3 | Affaires sociales | Organismes, affiliations, ayants droit ; prestations ensuite | Affaires sociales | ⬜ **prochain** |
 | D.4 | Formation | Catalogue, plan annuel, inscriptions, certifications + `convertir-agent` | Formation | ⬜ |
 | D.5 | Paie (éléments + lots) | Primes / retenues, lot mensuel, bulletin enrichi | Solde | ⬜ |
 | D.6 | Reporting | Dashboard effectifs, répartitions, exports | Étude et planification | ⬜ |
@@ -123,18 +125,20 @@ Hors ces vagues : **logistique**, recrutement amont, GED versionnée, notes admi
 
 ---
 
-### D.2 — Discipline ⬜ **prochain**
+### D.2 — Discipline ✅
 
-Préfixe : `/api/discipline` (nouveau). Permissions à seeder : `consulter-discipline` / `gerer-discipline` (soft launch sur les **nouvelles** routes).
+Préfixe : `/api/discipline`. Permissions : `consulter-discipline` / `gerer-discipline` / `proposer-discipline` / `prononcer-discipline`. Circuit CCN art. 90–91 : N+1 propose → RH instruit → DG prononce.
 
 | # | Tâche | Statut |
 |---|--------|--------|
-| D.2.1 | Référentiel `types-sanctions` (gravité) | ⬜ |
-| D.2.2 | Dossier sanction : créer, instruire, valider / rejeter, historique agent | ⬜ |
-| D.2.3 | Avertissements | ⬜ |
-| D.2.4 | Notifications + tests Feature + note FE | ⬜ |
+| D.2.1 | Référentiel `types-sanctions` (4 codes CCN art. 90) | ✅ |
+| D.2.2 | Dossier sanction : rapport, instruire, prononcer / classer, historique | ✅ |
+| D.2.3 | Avertissements | ✅ |
+| D.2.4 | Notifications + tests Feature + note FE | ✅ |
+| D.2.5 | Pièces jointes, mise à pied 1–8 j, PDF rapport / décision | ✅ |
+| D.2.6 | Conservation 5 ans, récidive (antécédents), suspension / archivage auto | ✅ |
 
-**Hors D.2 :** procédure contentieuse longue (recours, conseil de discipline) — itération suivante si le métier le demande.
+**Hors D.2 :** conseil de discipline, recours, indemnité de licenciement calculée, abandon de poste.
 
 ---
 
@@ -234,9 +238,9 @@ Jusque-là : **pas** de middleware ni de scope Eloquent par bureau.
 ```
 A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
                                                          ↓
-                                              D.2 Discipline  ← ici
+                                              D.2 Discipline  ✅
                                                          ↓
-                                              D.3 Affaires sociales (P1 : organismes, affiliations, ayants droit)
+                                              D.3 Affaires sociales (P1)  ← ici
                                                          ↓
                                               D.4 Formation
                                                          ↓
@@ -247,8 +251,8 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
                                               F Cloisonnement par bureau   ← après, pas maintenant
 ```
 
-1. **D.2 Discipline** — premier module neuf.  
-2. **D.3.1–D.3.3** Affaires sociales (P1).  
+1. ~~**D.2 Discipline**~~ **livré**.  
+2. **D.3.1–D.3.3** Affaires sociales (P1) — prochain.  
 3. **D.4** Formation (+ `convertir-agent`).  
 4. **D.5** Paie, puis **D.3.4** prestations / allocations.  
 5. **D.6** Reporting.  
@@ -267,4 +271,7 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 | 2026-09-10 | D.1 | Évaluations P1–P5 (sessions → commissions → art. 71–72, stats, notifs) |
 | 2026-09-14 | D.1 | Lots A–C (art. 62, tableau D5, PDF fiche + synthèse) |
 | 2026-09-15 | D.1 | Lot D art. 73–75 (`/carriere/reclassements`). Vague D.1 **close**. |
-| 2026-09-15 | Plan | Modules D.3–D.6 + Vague F cloisonnement. Décision : **pas de cloison** tant que les modules ne sont pas livrés. Prochain : **D.2**. |
+| 2026-09-15 | D.2 | Discipline : `/discipline` (types, dossiers, instruire / valider / rejeter, avertissements, historique). Permissions `consulter-discipline` / `gerer-discipline`. |
+| 2026-09-15 | D.2 | Alignement CCN art. 90–91 : 4 types, N+1→RH→DG, pièces, mise à pied 1–8 j, PDF. Permissions `proposer-discipline` / `prononcer-discipline`. |
+| 2026-09-15 | D.2 | Vague B : conservation 5 ans, antécédents/récidive, mise à pied → `suspendu`, licenciement → archivage. |
+| 2026-09-15 | Plan | Modules D.3–D.6 + Vague F cloisonnement. Décision : **pas de cloison** tant que les modules ne sont pas livrés. Prochain : **D.3**. |

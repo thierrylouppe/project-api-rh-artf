@@ -8,7 +8,7 @@ Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste ré
 
 | Sujet | Fichier |
 |-------|---------|
-| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.2 prochain ; cloisonnement **plus tard** |
+| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.2 livré ; prochain D.3 ; cloisonnement **plus tard** |
 | Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
 | Routes carrière, lots, checklist 14/15 | [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md) |
@@ -45,7 +45,7 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | `consulter-salaires` / `gerer-salaires`. Historique : `type_changement` peut valoir `reclassement`, `hors_classe`, `reconversion` (art. 73–75). |
 | Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
 | Évaluations | `/avancements/…` | **Livré** | P1–P5 + lots A–C (art. 62, tableau D5, PDF). Contrat : §7b. Reclassement de **classe** : §4 (`/carriere/reclassements`), pas ici. |
-| Discipline | `/discipline` | **Pas livré** | Vague D.2 — ne pas concevoir d’écrans tant que l’API n’est pas là. |
+| Discipline | `/discipline` | **Livré** | Vague D.2 + CCN art. 89–91 — contrat §2e. Menus : `consulter-discipline` (RH/DG), `proposer-discipline` (N+1), `prononcer-discipline` (DG). |
 | Affaires sociales | `/affaires-sociales` | **Pas livré** | Vague D.3. Rôle `rh` global (pas de menu par bureau). |
 | Formation | `/formations` | **Pas livré** | Vague D.4. Stages d’accueil déjà sous `/integration/stages`. |
 | Paie (lots / éléments) | `/paie` | **Pas livré** | Vague D.5. Grille + salaire indiciaire **déjà** sous `/salaires-agents`. |
@@ -87,7 +87,7 @@ Forme `GET /notifications` :
 }
 ```
 
-`domaine` utile pour le routage d’écran : `integration`, `affectation`, `nomination`, `lot_affectation`, `lot_nomination`, `compte`, `prise_de_service`, `stage`, `conge`, `absence`.
+`domaine` utile pour le routage d’écran : `integration`, `affectation`, `nomination`, `lot_affectation`, `lot_nomination`, `compte`, `prise_de_service`, `stage`, `conge`, `absence`, `discipline`.
 
 ---
 
@@ -404,6 +404,90 @@ Archivage : `statut=archive`, compte utilisateur `is_active=false`, écritures d
 
 ---
 
+## 2e. Discipline — contrat FE
+
+Préfixe : **`/api/discipline`**. Auth Bearer obligatoire. Listes **non paginées**. Source CCN : art. **90–91**.
+
+**Breaking (vague CCN) :** le DG **seul** prononce (`prononcer-discipline`). La RH n’a plus `POST …/valider` ni `…/rejeter`. `prochaine_etape` après instruction = **`prononcer`** (plus `valider`). Quatre types CCN seulement en actif (mutation / rétrogradation désactivés au seed). Une **pièce jointe** est obligatoire avant `instruire`. Reconnecter les comptes après seed (`proposer-discipline`, `prononcer-discipline`).
+
+### Permissions
+
+| Permission | Usage | Seeder |
+|------------|--------|--------|
+| `consulter-discipline` | Listes RH/DG, détail, historique agent | `rh`, `admin`, `directeur-general` |
+| `gerer-discipline` | Types, instruire, avertissements, pièces (instruction) | `rh`, `admin` |
+| `proposer-discipline` | Soumettre un rapport (N+1 de l’agent, ou RH pour tout agent) | `rh`, `admin`, `directeur`, `chef-service`, `chef-bureau` |
+| `prononcer-discipline` | File à prononcer, prononcer / classer sans suite | `directeur-general`, `admin` |
+
+Les chefs **n’ont pas** `consulter-discipline` (pas de menu RH global). Ils voient **leurs** rapports : `GET /discipline/sanctions/mes-rapports`.
+
+L’**agent** n’a pas `consulter-discipline`. Self-service **sans permission dédiée** :
+
+| Écran | Qui | APIs |
+|-------|-----|------|
+| Mes sanctions / historique | compte lié à un `agent_id` | **`GET /discipline/moi/historique`** · `GET /discipline/moi/sanctions` · `GET /discipline/moi/sanctions/{id}` |
+| PDF décision | idem, après prononcé | **`GET /discipline/moi/sanctions/{id}/pdf-decision`** |
+| Mes avertissements | idem | `GET /discipline/moi/avertissements` · `GET /discipline/moi/avertissements/{id}` |
+
+`GET /user` → `data.agent_id` : si `null`, ces routes répondent **403**. Un dossier d’un autre agent : **404**. `notes_instruction` est **masqué** (réservé à `consulter-discipline` / `gerer-discipline`).
+
+Deep-link notification (`sanction_id`) : agent → `GET /discipline/moi/sanctions/{id}` ; N+1 → `GET /discipline/sanctions/{id}` (ses rapports) ; RH/DG → même URL.
+
+### Écrans recommandés
+
+| Écran | Qui | APIs |
+|-------|-----|------|
+| Types de sanctions | `gerer-discipline` (écriture) · lecture aussi `proposer-discipline` | `GET/POST /discipline/types-sanctions` · `PUT/DELETE …/{id}` |
+| Soumettre un rapport | `proposer-discipline` | **`POST /discipline/sanctions`** · `GET /discipline/sanctions/mes-rapports` |
+| File à instruire | `gerer-discipline` | **`GET /discipline/sanctions/a-instruire`** (`en_attente`) |
+| File à prononcer | `prononcer-discipline` | **`GET /discipline/sanctions/a-prononcer`** (`instruite`) — alias `GET …/a-valider` |
+| Dossier | RH / DG / auteur | `GET/PUT /discipline/sanctions/{id}` · `POST …/{id}/instruire` · `POST …/{id}/valider` · `POST …/{id}/rejeter` |
+| Pièces (art. 91) | auteur (avant instruction) ou RH | `GET/POST /discipline/sanctions/{id}/pieces` · `GET/DELETE …/pieces/{pieceId}` (multipart `fichier`) |
+| PDF | RH / DG / auteur | `GET …/{id}/pdf-rapport` · `GET …/{id}/pdf-decision` (après prononcé) |
+| Avertissements | `gerer-discipline` | `GET/POST /discipline/avertissements` |
+| Historique agent (RH) | `consulter-discipline` | **`GET /discipline/agents/{id}/historique`** |
+| Mes dossiers (agent) | compte avec `agent_id` | **`GET /discipline/moi/historique`** |
+
+### Types CCN (art. 90)
+
+`data.code` : `avertissement_ecrit` · `blame_ecrit` · `mise_a_pied` · `licenciement`.  
+`exige_nb_jours` + `nb_jours_min` / `nb_jours_max` (1–8) sur la mise à pied. Types hors CCN : `actif=false` au seed (mutation d’office, rétrogradation). Un type CCN **ne peut pas** être supprimé (422).
+
+### Workflow sanction
+
+`en_attente` (rapport soumis) → RH `instruire` → `instruite` → DG **`valider` (prononcer)** **ou** **`rejeter` (classer)**. On **ne** classe **pas** depuis `en_attente` (supprimer le rapport à la place). `data.prochaine_etape` : `instruire` \| `prononcer` \| `null`.
+
+`statut_label` : `Rapport soumis` · `Instruite — à prononcer` · `Prononcée` · `Classée sans suite`. Valeurs `statut` inchangées (`en_attente`, `instruite`, `validee`, `rejetee`).
+
+`POST /discipline/sanctions` : `{ "agent_id", "type_sanction_id", "motif", "date_faits", "nb_jours"?, "avec_indemnite"? }`.  
+- N+1 : uniquement ses agents (affectation active). RH (`gerer-discipline`) : tout agent non archivé.  
+- Mise à pied : `nb_jours` **obligatoire**, 1–8.  
+- Licenciement : `avec_indemnite` (défaut `true`).
+
+`POST …/instruire` : `{ "notes_instruction": "…", "decision": "…" }` (`decision` optionnelle). **Au moins une pièce** sinon 422.  
+`POST …/valider` (DG) : `{ "decision": "…", "date_decision": "Y-m-d"?, "commentaire": "?", "nb_jours"?, "date_debut_effet"?, "avec_indemnite"? }`. Mise à pied : `date_fin_effet` = début + `nb_jours` − 1 (jours calendaires).  
+`POST …/rejeter` (DG) : `{ "commentaire": "…" }` (min. 3 caractères).
+
+Pièce : multipart `fichier` (pdf/jpg/png/doc/docx, max 10 Mo).
+
+Suppression d’un dossier : uniquement `en_attente` (auteur ou RH). Un dossier **instruit ou prononcé** n’est pas supprimable (conservation art. 91). Agent archivé : 422.
+
+### Conservation, récidive, effets (vague B)
+
+- `conservee_jusqu_au` : date de dépôt (ou de décision si plus tardive) **+ 5 ans**. `dans_delai_conservation` = encore dans ce délai.
+- Détail / création : `recidive` (au moins une sanction **prononcée** sur 5 ans) + `antecedents_5_ans[]` `{ id, type, date_decision, motif }`. Historique : `data.recidive`.
+- **Pas d’échelle automatique** (art. 90 : sanctions adaptées à la gravité, pas successives).
+- Mise à pied prononcée : si `date_debut_effet` ≤ aujourd’hui, `agent.statut` → `suspendu`. Job quotidien `AppliquerEffetsMiseAPiedJob` (08h00) suspend / réactive à l’échéance. Compte utilisateur **inchangé**.
+- Licenciement prononcé : archivage agent (`statut=archive`, compte `is_active=false`). **Pas** de calcul d’indemnité art. 111–114 (`avec_indemnite` reste un booléen).
+
+Notifications : `domaine: discipline`, actions `creee` \| `instruite` \| `validee` \| `rejetee` \| `avertissement_cree`. Meta : `sanction_id` / `avertissement_id` + `agent_id`. L’auteur de l’action n’est **pas** notifié. `creee` / `validee` / `rejetee` : RH + agent + auteur du rapport. `instruite` : DG + agent + auteur du rapport.
+
+`createur` / `validateur` / `emetteur` : `{ id, name }` ou `null`. `agent` : identité légère `{ id, matricule, nom, prenom, nom_complet }`. `pieces[]` : `{ id, nom_original, mime_type, taille, uploader }`.
+
+**Hors scope :** conseil de discipline, recours, indemnité calculée (art. 111–114), art. 140–149, abandon de poste 107–108, récompenses art. 88.
+
+---
+
 ## 3. Intégration — à retenir pour le wizard
 
 Deux chemins API ; le FE actuel utilise **B**.
@@ -546,6 +630,7 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | Salaires / reclassements | `consulter-salaires`, `gerer-salaires` — DG a **lecture** `consulter-salaires` (file art. 74–75) |
 | Congés | `consulter-conges`, `creer-conges`, `valider-conges` — les boutons N+1/RH/DG se jouent **en plus** sur le rôle / le supérieur (§2c) |
 | Absences | `consulter-absences`, `creer-absences`, `valider-absences` — signer = N+1 |
+| Discipline | `consulter-discipline`, `gerer-discipline`, `proposer-discipline`, `prononcer-discipline` — circuit N+1 → RH → DG. Contrat §2e |
 | Users | `consulter-utilisateurs`, `creer-utilisateurs`, `modifier-utilisateurs` |
 | Rôles | `consulter-roles`, `creer-roles`, `modifier-roles` |
 
@@ -558,7 +643,8 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 - ~~Campagnes et fiches d’évaluation~~ → **livré** P1–P5 + lots A–D (§7b + §4)
 - ~~Reclassement / hors classe / reconversion (art. 73–75)~~ → **livré** §4
 - Catalogue formations, concours, PDF **acte** de reclassement → formations = Vague D.4 (ne pas brancher avant API)
-- Discipline, affaires sociales, paie lots, dashboard → vagues D.2–D.6 (ne pas concevoir d’écrans avant l’API)
+- ~~Discipline~~ → **livré** §2e
+- Affaires sociales, paie lots, dashboard → vagues D.3–D.6 (ne pas concevoir d’écrans avant l’API)
 - GED **versioning / recherche** (la GED agent légère est livrée, §2d)
 - Cloisonnement menus par bureau DRHL → Vague F, **après** D.2–D.6
 - Mail / SMS (canal `database` uniquement pour l’instant)
@@ -1142,7 +1228,10 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
-| 2026-09-15 | **Plans d’implémentation recalés** : V1–V4 close, prochain = discipline D.2 | Doc seule. Consommer `/avancements` + `/carriere/reclassements`. |
+| 2026-09-15 | **Discipline vague B** : conservation 5 ans, récidive (antécédents), suspension mise à pied, archivage licenciement | Afficher `conservee_jusqu_au`, `recidive`, `antecedents_5_ans`. Historique : `data.recidive`. Statut agent mis à jour au prononcé. |
+| 2026-09-15 | **Discipline CCN art. 90–91** : 4 types, circuit N+1→RH→DG, pièces, mise à pied 1–8 j, PDF | **Breaking** : DG prononce (`prononcer-discipline`) ; chefs `proposer-discipline` + `mes-rapports` ; `prochaine_etape=prononcer` ; pièce obligatoire avant instruire. Reconnecter. Contrat §2e. |
+| 2026-09-15 | **Discipline D.2** : `/api/discipline` + self-service agent `/moi/…` | Permissions `consulter-discipline` / `gerer-discipline` pour RH. Agent : `GET /discipline/moi/historique` (pas de permission). Reconnecter RH / DG / admin. Contrat §2e. |
+| 2026-09-15 | **Plans d’implémentation recalés** : V1–V4 close, D.2 livré, prochain = affaires sociales D.3 | Consommer `/avancements` + `/carriere/reclassements` + `/discipline`. |
 | 2026-09-15 | **Carrière art. 73–75** : `/carriere/reclassements` (formation, exceptionnel, hors classe, reconversion) + `changerClasse` | Écran fiche agent, **pas** commission. DG : `consulter-salaires` + `POST …/approuver` (74/75). RH : créer / art. 73 / `appliquer`. Voir §4. |
 | 2026-09-14 | **Évaluation lots A–C** : N+1 = poste dominant 24 mois (art. 62), tableau d’avancement (`inscrit_tableau`), PDF fiche + note de synthèse | Champs optionnels `affectation_notation`, `inscrit_tableau`. Nouveaux : `GET sessions/{id}/tableau`, `POST …/inscrire-tableau` / `retirer-tableau`, `GET …/fiche-pdf`, `GET …/synthese-pdf`. `prochaine_etape` : `inscrire_tableau`. |
 | 2026-09-10 | **Congés — positions CCN art. 79–80** : `StatutAgent` + 2 valeurs (`disponibilite`, `sous_le_drapeau`), migration ENUM agents, suppression "Mise en disponibilité" de type_absences, `SessionEvaluationService` dynamique | Agents en disponibilité et sous le drapeau exclus de l'évaluation. Enum agents étendu. |

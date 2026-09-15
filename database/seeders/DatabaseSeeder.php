@@ -48,6 +48,7 @@ class DatabaseSeeder extends Seeder
             RegleAcquisitionCongeSeeder::class,
             PalierAncienneteCongeSeeder::class,
             MotifAdministratifSeeder::class,
+            TypeSanctionSeeder::class,
 
             // ── 5. Module Évaluation / Notation / Avancement ────────────
             QuestionEvaluationSeeder::class,

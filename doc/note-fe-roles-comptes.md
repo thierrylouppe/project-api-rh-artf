@@ -60,6 +60,7 @@ Mot de passe : respecter la casse.
 | Contrats | oui | oui | — | — | — | — | — |
 | Salaires / grille | oui | oui | reclassements (lecture + approuver 74/75) | — | — | — | — |
 | Reporting RH | oui | oui | — | — | — | — | — |
+| Discipline | oui | oui (instruire) | **prononcer** | **proposer** (équipe) | **proposer** (équipe) | **proposer** (équipe) | **ses dossiers** (`/discipline/moi/…`) |
 | Agents (consultation) | oui | oui | oui | oui | oui | oui | — |
 | Congés / absences (validation) | oui | oui | oui | oui | oui | oui | — |
 | Congés / absences (créer les siens) | oui | — | — | — | — | — | oui |
@@ -76,6 +77,7 @@ Mot de passe : respecter la casse.
 `consulter-contrats`, `creer-contrats`, `modifier-contrats`  
 `consulter-nominations`, `gerer-nominations` (menus ; pas encore de `permission:` sur les routes)  
 `consulter-salaires`, `gerer-salaires`  
+`consulter-discipline`, `gerer-discipline`, `proposer-discipline`  
 `consulter-reporting`
 
 ### Partagés hiérarchie + RH
@@ -84,13 +86,18 @@ Mot de passe : respecter la casse.
 `consulter-salaires` (**DG seulement** parmi la hiérarchie — file reclassements art. 74–75)  
 `consulter-conges`, `valider-conges`  
 `consulter-absences`, `valider-absences`  
-`consulter-evaluations` (`valider-evaluations` : DG / directeur / admin uniquement)
+`consulter-evaluations` (`valider-evaluations` : DG / directeur / admin uniquement)  
+`consulter-discipline` (**DG seulement** parmi la hiérarchie — lecture globale)  
+`prononcer-discipline` (**DG seulement** — art. 91)  
+`proposer-discipline` (`directeur`, `chef-service`, `chef-bureau` — rapport N+1)
 
 ### Agent
 
 `consulter-referentiels`  
 `consulter-conges`, `creer-conges`  
 `consulter-absences`, `creer-absences`
+
+Self-service discipline **sans** `consulter-discipline` : `GET /discipline/moi/historique` (compte avec `agent_id`).
 
 ## 6. À faire côté FE
 

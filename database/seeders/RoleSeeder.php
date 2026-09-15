@@ -24,6 +24,7 @@ class RoleSeeder extends Seeder
                 'consulter-nominations', 'gerer-nominations',
                 'consulter-salaires', 'gerer-salaires',
                 'consulter-conges', 'creer-conges', 'valider-conges', 'consulter-absences', 'creer-absences', 'valider-absences',
+                'consulter-discipline', 'gerer-discipline', 'proposer-discipline',
                 // Évaluations : la DRHL ouvre les sessions et contrôle la conformité (CCN art. 66-70)
                 'consulter-evaluations', 'creer-evaluations', 'valider-evaluations',
                 'consulter-reporting',
@@ -35,6 +36,7 @@ class RoleSeeder extends Seeder
                 'consulter-salaires',
                 'consulter-conges', 'valider-conges',
                 'consulter-absences', 'valider-absences',
+                'consulter-discipline', 'prononcer-discipline',
                 'consulter-evaluations', 'valider-evaluations',
             ],
             'directeur' => [
@@ -42,6 +44,7 @@ class RoleSeeder extends Seeder
                 'consulter-nominations',
                 'consulter-conges', 'valider-conges',
                 'consulter-absences', 'valider-absences',
+                'proposer-discipline',
                 'consulter-evaluations', 'valider-evaluations',
             ],
             // Notateurs au sens CCN art. 64 : ils notent et signent les fiches de leur équipe
@@ -49,12 +52,14 @@ class RoleSeeder extends Seeder
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
                 'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
+                'proposer-discipline',
                 'consulter-evaluations', 'valider-evaluations',
             ],
             'chef-bureau' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
                 'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
+                'proposer-discipline',
                 'consulter-evaluations', 'valider-evaluations',
             ],
             // L'agent consulte sa fiche, la signe (art. 63) et peut réclamer (art. 65)

@@ -236,13 +236,13 @@ Détail : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notati
 
 ---
 
-## Phase 7 — Discipline & affaires sociales — **prochain : 7.1**
+## Phase 7 — Discipline & affaires sociales — **prochain : 7.2**
 
 Modules **globaux** (pas de cloison par bureau). Suivi coché : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) D.2 / D.3.
 
 | # | Module | Contenu | Vague | Statut |
 |---|---|---|---|---|
-| 7.1 | Discipline | Types, dossier, valider / rejeter, historique, avertissements | D.2 | ⬜ **prochain** |
+| 7.1 | Discipline | Types CCN, rapport N+1, instruire, prononcer DG, pièces, PDF, historique | D.2 | ✅ |
 | 7.2 | Affaires sociales P1 | Organismes, affiliations CNSS, ayants droit | D.3.1–D.3.3 | ⬜ |
 | 7.3 | Prestations / allocations | Demandes sociales ; montants → paie (après 9.2) | D.3.4 | ⬜ |
 | 7.4 | (Plus tard) Santé / AT-MP / retraite | Visites, accidents, dossier pension | D.3.5 | ⬜ |
