@@ -34,7 +34,7 @@ Chaîne : Route → FormRequest → Controller → **Service** → **Interface**
 | Note de synthèse | Champ `evaluations.note_synthese` + PDF commission après clôture | Livré lot C |
 | Notateur | Poste où l’agent a **servi le plus longtemps** sur `[debut − 24 mois, debut)` | Livré lot A |
 | Tableau d’avancement (D5) | `inscrit_tableau` ; `GET …/tableau` ; 422 si `decider` hors tableau | Livré lot B |
-| Art. 73–75 | Aucun endpoint, `TypeChangementSalaireAgent` n’a pas de reclassement | **Lot D ouvert** |
+| Art. 73–75 | `/api/carriere/reclassements` + `changerClasse` | Livré lot D |
 
 `avancerEchelon` / `avancerEchelons` restent **même classe**. Ils ne servent **pas** le ch. 5.
 
@@ -54,7 +54,7 @@ Lot A  Art. 62 — notateur = affectation dominante
 | **A** | Fiche générée avec le bon N+1 si mutation dans la période | Haute métier (légal) | ✅ |
 | **B** | Liste « tableau » filtrable ; inscrire / retirer avant commission d’avancement | Haute métier (D5) | ✅ |
 | **C** | Télécharger fiche PDF + PDF synthèse préparatoire | Moyenne (plan 5.5) | ✅ |
-| **D** | Demandes de reclassement / hors classe / reconversion + effet paie **classe** | Hors notation V1 | ⬜ |
+| **D** | Demandes de reclassement / hors classe / reconversion + effet paie **classe** | Hors notation V1 | ✅ |
 
 Ne pas commencer le lot N+1 tant que le lot N n’est pas **testé + noté FE**.  
 Exception : C peut démarrer en parallèle de B si le FE a besoin des PDF tout de suite (pas de dépendance métier).
@@ -252,19 +252,19 @@ Ne pas brancher sur `CommissionAvancementService::decider`.
 
 | Art. | Type | Conditions (à valider en Service) | Effet paie |
 |------|------|-----------------------------------|------------|
-| **73** | `reclassement_formation` | Formation autorisée + diplôme reconnu (`diplome_id`) | Nouvelle `classegrillesalariale` (classe **supérieure**) ; échelon de départ selon règle RH (proposition : échelon 1 de la nouvelle classe, **D11**) |
-| **74a** | `reclassement_exceptionnel` | Âge ≥ 50 **et** ancienneté ≥ 15 ans **et** 3 ans dans la même classe | Classe supérieure |
-| **74b** | `hors_classe` | Ancienneté ≥ 25 ans **et** grade inspecteur principal **et** 8ᵉ échelon | Position / classe hors grille standard — **D12** à figer (nouvelle classe grille ou flag) |
-| **75** | `reconversion` | Motif ∈ `baisse_activite` \| `reorganisation` \| `maladie` (certificat si maladie) | Autre emploi : `fonction` / poste + éventuellement classe ; **pas** un avancement |
+| **73** | `reclassement_formation` | Formation autorisée + diplôme **au dossier** (`diplome_id` + `informations_professionnelles`) rattaché à une classe grille | Classe **supérieure** ; échelon = `echelon_depart` (**D11**) |
+| **74a** | `reclassement_exceptionnel` | Âge ≥ 50 **et** ancienneté ≥ 15 ans **et** 3 ans dans la même classe | Classe supérieure (pas Hors classe) |
+| **74b** | `hors_classe` | Ancienneté ≥ 25 ans **et** grade Inspecteur principal **et** 8ᵉ échelon | Classe grille **Classe X / Hors Classe** (coeff. 170, déjà seedée) — **422** si pas de ligne de salaire |
+| **75** | `reconversion` | Motif ∈ `baisse_activite` \| `reorganisation` \| `maladie` (certificat si maladie) | Autre `fonction` ; classe optionnelle |
 
-### D.2 Décisions à trancher avant code
+### D.2 Décisions figées (2026-09-15)
 
-| # | Sujet | Proposition |
-|---|--------|-------------|
-| D11 | Échelon après reclassement 73/74a | Échelon 1 de la nouvelle classe (comme intégration) |
-| D12 | Hors classe (74b) | Ajouter une classe grille « Hors classe » seedée **ou** `agents.hors_classe = true` + salaire figé. À confirmer RH. |
-| D13 | Circuit | RH crée → DG valide (art. 74 exceptionnel / 75 organisation). 73 : RH si diplôme déjà au dossier. |
-| D14 | Permission | `gerer-reclassements` (`rh` + `admin`) ; lecture `consulter-salaires` ou `consulter-evaluations` — **ne pas** coller `valider-evaluations` |
+| # | Sujet | Décision |
+|---|--------|----------|
+| D11 | Échelon après 73/74a/74b | `parametregrilles.echelon_depart` (1) — comme l’intégration. Pas de conservation du n° d’échelon. |
+| D12 | Hors classe (74b) | Vraie classe de grille « Hors Classe » (catégorie Classe X, grade Hors Classe). **Pas** de flag `agents.hors_classe`. |
+| D13 | Circuit | RH crée (`soumis`). **73** : RH `approuver`. **74/75** : DG `approuver`. RH seule `appliquer` (paie). |
+| D14 | Permission | **Pas** de `gerer-reclassements`. Écrire / appliquer : `gerer-salaires`. Lire / approuver : `consulter-salaires`. DG reçoit `consulter-salaires` (seeder). **Pas** `valider-evaluations`. |
 
 ### D.3 Données
 
@@ -282,32 +282,31 @@ Table `reclassements` :
 
 ### D.4 API minimale
 
-| Méthode | URI | Rôle |
-|---------|-----|------|
-| `GET/POST` | `/carriere/reclassements` | Liste / créer |
-| `GET` | `/carriere/reclassements/{id}` | Détail + éligibilité calculée |
-| `POST` | `…/{id}/approuver` · `…/{id}/rejeter` | DG / RH selon D13 |
-| `POST` | `…/{id}/appliquer` | Idempotent : écrit salaire + `categorie_id` / `grade_id` agent |
-| `GET` | `/carriere/agents/{id}/reclassements` | Historique |
+| Méthode | URI | Permission | Description |
+|---------|-----|------------|-------------|
+| `GET` | `/carriere/reclassements` | `consulter-salaires` | Liste (filtres `type`, `statut`, `agent_id`) |
+| `POST` | `/carriere/reclassements` | `gerer-salaires` | Créer (`soumis`) |
+| `GET` | `/carriere/reclassements/{id}` | `consulter-salaires` | Détail + `eligibilite` |
+| `POST` | `…/{id}/approuver` · `…/{id}/rejeter` | `consulter-salaires` | 73 = RH ; 74/75 = DG (**403** sinon) |
+| `POST` | `…/{id}/appliquer` | `gerer-salaires` | Idempotent : paie + `categorie_id` / `grade_id` / `fonction_id` |
+| `GET` | `/carriere/agents/{id}/reclassements` | `consulter-salaires` | Historique |
 
 422 explicites si conditions art. 73–74 non réunies (ne pas laisser le FE « tenter »).
 
 ### D.5 Tests Feature
 
-- [ ] 73 sans diplôme → 422.
-- [ ] 74a âge 49 → 422 ; 50 + 15 ans + 3 ans classe → 201.
-- [ ] 74b inspecteur principal + échelon 8 + 25 ans → OK ; sinon 422.
-- [ ] 75 maladie sans justificatif → 422.
-- [ ] `appliquer` deux fois → 2ᵉ appel no-op / message idempotent.
-- [ ] `appliquer` ne change **pas** seulement l’échelon dans la même classe.
+- [x] 73 sans diplôme → 422.
+- [x] 74a âge 49 → 422 ; 50 + 15 ans + 3 ans classe → 201.
+- [x] 74b inspecteur principal + échelon 8 + 25 ans → OK ; sinon 422.
+- [x] 75 maladie sans justificatif → 422.
+- [x] `appliquer` deux fois → 2ᵉ appel no-op / message idempotent.
+- [x] `appliquer` ne change **pas** seulement l’échelon dans la même classe.
 
 ### D.6 Note FE
 
 Nouveau § carrière. Hors écrans `/avancements`. Lien depuis la fiche agent (pas depuis la commission).
 
-**Done quand :** 4 types + paie classe + tests + journal FE. Hors classe (D12) peut être un sous-lot si la RH n’a pas tranché.
-
-**Hors lot D :** catalogue formations, concours, PDF acte de reclassement (réutiliser plus tard le pattern nomination).
+**Done :** 4 types + `changerClasse` + tests `ReclassementTest` + journal FE. Hors lot : catalogue formations, concours, PDF acte.
 
 ---
 
@@ -341,5 +340,6 @@ Lot D    /api/carriere/reclassements
 
 | Date | Lot | Fait |
 |------|-----|------|
-| 2026-09-14 | A–C | API livrée : notateur art. 62, `inscrit_tableau`, PDF fiche + synthèse. Tests `EvaluationComplementsTest`. Note FE à jour. Lot D non commencé. |
+| 2026-09-15 | D | API `/carriere/reclassements` (art. 73–75). D11–D14 figés. `changerClasse`. Tests `ReclassementTest`. |
+| 2026-09-14 | A–C | API livrée : notateur art. 62, `inscrit_tableau`, PDF fiche + synthèse. Tests `EvaluationComplementsTest`. Lot D non commencé. |
 | 2026-09-14 | — | Branche `feature/evaluation-complements` + création de ce plan. D5 proposé : inscription par défaut à `finalisee`, filtre RH avant commission d’avancement. |

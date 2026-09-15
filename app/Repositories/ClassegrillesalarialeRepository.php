@@ -26,4 +26,12 @@ class ClassegrillesalarialeRepository extends BaseRepository implements Classegr
             ->where('grade_id', $gradeId)
             ->first();
     }
+
+    public function findByGradeNom(string $nom): ?Classegrillesalariale
+    {
+        return Classegrillesalariale::query()
+            ->with(['categorie', 'grade'])
+            ->whereHas('grade', fn ($q) => $q->where('nom', $nom))
+            ->first();
+    }
 }

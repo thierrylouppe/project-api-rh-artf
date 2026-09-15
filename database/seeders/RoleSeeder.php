@@ -32,6 +32,7 @@ class RoleSeeder extends Seeder
             'directeur-general' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
+                'consulter-salaires',
                 'consulter-conges', 'valider-conges',
                 'consulter-absences', 'valider-absences',
                 'consulter-evaluations', 'valider-evaluations',

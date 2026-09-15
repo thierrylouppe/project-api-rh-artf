@@ -58,7 +58,7 @@ Mot de passe : respecter la casse.
 | Référentiels (lecture listes) | oui | oui | oui | oui | oui | oui | oui |
 | Recrutement / intégration (pilotage) | oui | oui | — | — | — | — | — |
 | Contrats | oui | oui | — | — | — | — | — |
-| Salaires / grille | oui | oui | — | — | — | — | — |
+| Salaires / grille | oui | oui | reclassements (lecture + approuver 74/75) | — | — | — | — |
 | Reporting RH | oui | oui | — | — | — | — | — |
 | Agents (consultation) | oui | oui | oui | oui | oui | oui | — |
 | Congés / absences (validation) | oui | oui | oui | oui | oui | oui | — |
@@ -81,6 +81,7 @@ Mot de passe : respecter la casse.
 ### Partagés hiérarchie + RH
 
 `consulter-structure`, `consulter-referentiels`, `consulter-agents`, `consulter-nominations`  
+`consulter-salaires` (**DG seulement** parmi la hiérarchie — file reclassements art. 74–75)  
 `consulter-conges`, `valider-conges`  
 `consulter-absences`, `valider-absences`  
 `consulter-evaluations` (`valider-evaluations` : DG / directeur / admin uniquement)

@@ -2,14 +2,14 @@
 
 > Document **vivant** : à mettre à jour à chaque livraison API qui impacte le front.  
 > Objectif : un seul point d’entrée pour les échanges FE (quoi appeler, quoi ne plus attendre, où lire le détail).  
-> Dernière mise à jour : **2026-09-14**
+> Dernière mise à jour : **2026-09-15**
 
 Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste résumé.**
 
 | Sujet | Fichier |
 |-------|---------|
 | Suivi implémentation (vagues A–D) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) |
-| Restes évaluation (PDF, art. 62, D5, art. 73–75) | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) |
+| Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
 | Routes carrière, lots, checklist 14/15 | [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md) |
 | Workflow intégration par type | [`workflow-integration-par-type.md`](./workflow-integration-par-type.md) |
@@ -41,10 +41,10 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Référentiels | `/diplomes`, `/grades`, `/types-integrations`, etc. | **Livré** | Listes pour formulaires. Circuit configurable : `GET/PUT /types-integrations/{id}/circuit`. `GET /diplomes` : chaque item porte `classe_grille` (catégorie, grade, **échelon de départ**). **Pas** de `fonction_id` (nomination). Pré-remplissage UX, champs toujours modifiables. |
 | Intégration (entrée) | `/integration/…` | **Livré** | Dossier + documents + circuit + acte + compte + matériel + prise de service + stages. **Pas** affectation/nomination ici (carrière). |
 | Personnel | `/personnel/…` | **Livré** | Listes + **fiche vie courante** (infos, contacts, GED, archivage). §2d. Fiche wizard : `GET /integration/agents/{id}`. |
-| Carrière | `/carriere/…` | **Livré** | Affectations, nominations, contrats, salaires agent, synthèse. Alias `/integration/…` encore OK **sauf** `GET /carriere/agents/{id}`. |
-| Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | Permissions `consulter-salaires` / `gerer-salaires`. |
+| Carrière | `/carriere/…` | **Livré** | Affectations, nominations, contrats, salaires agent, synthèse, **reclassements art. 73–75**. Alias `/integration/…` encore OK **sauf** `GET /carriere/agents/{id}`. |
+| Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | `consulter-salaires` / `gerer-salaires`. Historique : `type_changement` peut valoir `reclassement`, `hors_classe`, `reconversion` (art. 73–75). |
 | Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
-| Évaluations | — | **Pas livré** | — |
+| Évaluations | `/avancements/…` | **Livré** | P1–P5 + lots A–C (art. 62, tableau D5, PDF). Contrat : §7b. Reclassement de **classe** : §4 (`/carriere/reclassements`), pas ici. |
 | Reporting / dashboard | — | **Pas livré** | Permission `consulter-reporting` seedée, pas d’API. |
 | Inbox notifications | `/notifications` | **Livré** | Inbox utilisateur (`auth:sanctum`). Voir §2b. |
 
@@ -429,6 +429,103 @@ Préfixe canonique : **`/api/carriere`**. Basculer progressivement ; prévenir l
 - Activation : body `dossier_integration_id` encore **accepté mais ignoré** (le dossier ne change pas de statut).
 - Statuts minuscules : `en_attente`, `approuvee`, `active`, `cloturee`, `rejetee` + `statut_label`.
 - Synthèse : `GET /carriere/agents/{id}` (identité + contrat / affectation / nomination / salaire actuel). **Pas d’alias** `/integration`.
+- Reclassements (art. 73–75) : `GET/POST /carriere/reclassements` — **pas** dans `/avancements`. Lien depuis la fiche agent.
+
+### Reclassements — art. 73–75 (lot D)
+
+Hors notation. Changement de **classe** ou d’emploi. L’avancement d’échelon (`avancer-echelon`) reste dans la même classe.
+
+| Méthode | URL | Permission | Qui |
+|---------|-----|------------|-----|
+| `GET` | `/carriere/reclassements` | `consulter-salaires` | RH, admin, **DG** |
+| `POST` | `/carriere/reclassements` | `gerer-salaires` | RH |
+| `GET` | `/carriere/reclassements/{id}` | `consulter-salaires` | + `eligibilite`, `prochaine_etape` |
+| `POST` | `/carriere/reclassements/{id}/approuver` | `consulter-salaires` | **73** : rôle `rh`. **74/75** : rôle `directeur-general`. `admin` toujours. **403** sinon |
+| `POST` | `/carriere/reclassements/{id}/rejeter` | idem | idem |
+| `POST` | `/carriere/reclassements/{id}/appliquer` | `gerer-salaires` | RH — idempotent (`meta.applique`) |
+| `GET` | `/carriere/agents/{id}/reclassements` | `consulter-salaires` | Historique |
+
+**Body créer :**
+```json
+{
+  "agent_id": 12,
+  "type": "reclassement_formation",
+  "motif": "Formation autorisée, diplôme reconnu au dossier.",
+  "diplome_id": 4,
+  "classe_cible_id": null,
+  "fonction_cible_id": null,
+  "motif_reconversion": null,
+  "piece_path": null
+}
+```
+
+`type` : `reclassement_formation` (73) · `reclassement_exceptionnel` (74a) · `hors_classe` (74b) · `reconversion` (75).
+
+`statut` : `soumis` → `approuve` \| `rejete` → `applique` (`annule` réservé, pas d’endpoint V1).
+
+| Type | Champs métier | Effet à `appliquer` |
+|------|----------------|---------------------|
+| 73 | `diplome_id` **obligatoire** et **déjà** sur `informations_professionnelles`. Classe = celle du diplôme (supérieure). | Nouvelle classe, échelon **1** |
+| 74a | `classe_cible_id` supérieure (pas Hors classe). ≥ 50 ans, ≥ 15 ans ancienneté, ≥ 3 ans dans la classe. | Nouvelle classe, échelon **1** |
+| 74b | Inspecteur principal + 8ᵉ échelon + ≥ 25 ans. Cible = Classe X / Hors Classe (seed). | Classe X, échelon **1**. **422** si grille non générée pour cette classe |
+| 75 | `motif_reconversion` : `baisse_activite` \| `reorganisation` \| `maladie`. `fonction_cible_id` obligatoire. `piece_path` si maladie. `classe_cible_id` optionnel. | Nouvelle fonction ; classe seulement si fournie |
+
+`prochaine_etape` : `approuver` (soumis) · `appliquer` (approuve) · `null`.
+
+**Body approuver / rejeter :** `{ "commentaire": "optionnel" }`
+
+**Réponse `appliquer` :**
+```json
+{
+  "success": true,
+  "data": { "id": 1, "statut": "applique", "prochaine_etape": null },
+  "message": "Reclassement appliqué.",
+  "meta": { "applique": true }
+}
+```
+2ᵉ appel : `200`, `meta.applique: false`, message idempotent. Pas de 2ᵉ ligne de paie.
+
+**GET show** (champs utiles FE) :
+```json
+{
+  "id": 1,
+  "agent_id": 12,
+  "type": "reclassement_formation",
+  "type_label": "Reclassement après formation (art. 73)",
+  "article": "73",
+  "statut": "soumis",
+  "statut_label": "Soumis",
+  "prochaine_etape": "approuver",
+  "classe_origine": { "id": 1, "categorie": "Classe I", "grade": "Personnel de service", "coefficient": 45 },
+  "classe_cible": { "id": 2, "categorie": "Classe II", "grade": "Personnel de service spécialisé", "coefficient": 50 },
+  "echelon_origine": 3,
+  "echelon_cible": 1,
+  "age_ans": 46,
+  "anciennete_ans": 8,
+  "annees_dans_classe": 8,
+  "eligibilite": { "ok": true, "age_ans": 46, "anciennete_ans": 8, "annees_dans_classe": 8, "messages": [] }
+}
+```
+`eligibilite` est sur le **détail** (`GET /{id}`), pas forcément sur la liste.
+
+**422** si les conditions CCN ne sont pas réunies (afficher `errors.*`, ne pas masquer le bouton au hasard). Un seul dossier `soumis`/`approuve` à la fois par agent.
+
+| Cas | `errors.*` |
+|-----|------------|
+| 73 sans diplôme / pas au dossier | `diplome_id` |
+| 74a âge inférieur à 50 | `age` |
+| 74a ancienneté inférieure à 15 ans | `anciennete` |
+| 74a moins de 3 ans dans la classe | `classe` |
+| 74b pas 8ᵉ échelon / pas inspecteur principal | `echelon` / `grade` |
+| 75 maladie sans `piece_path` | `piece_path` (`string`, chemin GED — **pas** d’upload multipart V1) |
+| Hors classe sans ligne de grille | `classe_cible_id` |
+| Déjà un dossier ouvert | `agent_id` |
+| Approuver si pas `soumis` | `statut` |
+
+Le DG a `consulter-salaires` (seeder) pour cette file — **pas** `gerer-salaires` (il n’écrit pas le bulletin). Après seed local : reconnecter le compte DG.
+
+Détail : [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot D.
+
 - Listes métier : `GET /personnel/agents` (intégrés) vs `GET /integration/agents` (tous les dossiers).
 
 Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquettes affectation / nomination dans `doc/maquettes/`.
@@ -442,29 +539,33 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | Recrutement / intégration | `consulter-recrutement`, `creer-recrutement`, `valider-recrutement` |
 | Contrats | `consulter-contrats`, `creer-contrats`, `modifier-contrats` |
 | Nominations (menus) | `consulter-nominations`, `gerer-nominations` — **pas encore** de middleware `permission:` sur les routes nomination |
-| Salaires | `consulter-salaires`, `gerer-salaires` (routes protégées) |
+| Salaires / reclassements | `consulter-salaires`, `gerer-salaires` — DG a **lecture** `consulter-salaires` (file art. 74–75) |
 | Congés | `consulter-conges`, `creer-conges`, `valider-conges` — les boutons N+1/RH/DG se jouent **en plus** sur le rôle / le supérieur (§2c) |
 | Absences | `consulter-absences`, `creer-absences`, `valider-absences` — signer = N+1 |
 | Users | `consulter-utilisateurs`, `creer-utilisateurs`, `modifier-utilisateurs` |
 | Rôles | `consulter-roles`, `creer-roles`, `modifier-roles` |
 
-Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / contrats / recrutement / reporting. Périmètre « ma structure seulement » : **pas encore** filtré côté API.
+Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / contrats / recrutement / reporting, **sauf le DG** qui voit la file de reclassements (lecture + approuver 74/75). Périmètre « ma structure seulement » : **pas encore** filtré côté API.
 
 ---
 
 ## 6. Hors périmètre actuel (ne pas concevoir d’écrans API)
 
-- ~~Campagnes et fiches d’évaluation~~ → **livré Phase 1** (voir §7b ci-dessous)
-- Catalogue formations, discipline, GED **versioning / recherche** (la GED agent légère est livrée, §2d)
+- ~~Campagnes et fiches d’évaluation~~ → **livré** P1–P5 + lots A–C (§7b)
+- ~~Reclassement / hors classe / reconversion (art. 73–75)~~ → **livré** §4
+- Catalogue formations, concours, PDF **acte** de reclassement
+- Discipline, GED **versioning / recherche** (la GED agent légère est livrée, §2d)
 - Dashboard / exports reporting
 - Mail / SMS (canal `database` uniquement pour l’instant)
 
 ---
 
-## 7b. Module Évaluation / Notation / Avancement — Phase 1, 2 et 3
+## 7b. Module Évaluation / Notation / Avancement — P1–P5 + lots A–C
 
-> Branche : `feature/evaluation-notation-avancement` · Préfixe : `/api/avancements/`
-> Auth : `auth:sanctum` + `permission:consulter-evaluations | creer-evaluations | valider-evaluations`
+> Préfixe : `/api/avancements/`  
+> Auth : `auth:sanctum` + `permission:consulter-evaluations | creer-evaluations | valider-evaluations`  
+> Lots A–C (2026-09-14) : N+1 art. 62, tableau D5, PDF fiche + synthèse — voir sous-sections plus bas.  
+> Art. 73–75 : **pas ici** → `/api/carriere/reclassements` (§4).
 
 ### Permissions par rôle (seeder mis à jour)
 
@@ -483,7 +584,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 |---------|----------|-------------|
 | GET | `/avancements/sessions` | Liste des sessions (filtrables par `statut`) |
 | GET | `/avancements/sessions/{id}` | Détail + évaluations chargées |
-| GET | `/avancements/sessions/{id}/tableau` | Fiches `finalisee` **inscrites** au tableau d’avancement (D5) |
+| GET | `/avancements/sessions/{id}/tableau` | Fiches `finalisee` **inscrites** au tableau (D5) — permission `consulter-evaluations` |
 | **POST** | `/avancements/sessions` | **Ouvrir une session** → génère automatiquement les fiches éligibles |
 | PUT | `/avancements/sessions/{id}` | Modifier description / dates |
 | **POST** | `/avancements/sessions/{id}/cloturer` | Clôturer |
@@ -1036,8 +1137,8 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
-| 2026-09-14 | **Évaluation lots A–C** : N+1 = poste dominant 24 mois (art. 62), tableau d’avancement (`inscrit_tableau`), PDF fiche + note de synthèse | Champs optionnels `affectation_notation`, `inscrit_tableau`. Nouveaux : `GET sessions/{id}/tableau`, `POST …/inscrire-tableau` / `retirer-tableau`, `GET …/fiche-pdf`, `GET …/synthese-pdf`. `prochaine_etape` : `inscrire_tableau`. **Lot D (art. 73–75) toujours hors API.** |
-| 2026-09-14 | Plan restes évaluation (PDF fiche/synthèse, N+1 art. 62, tableau D5, art. 73–75) | Voir [`plan-evaluation-complements.md`](./plan-evaluation-complements.md). Lots A–C livrés ; lot D (reclassement) pas encore. |
+| 2026-09-15 | **Carrière art. 73–75** : `/carriere/reclassements` (formation, exceptionnel, hors classe, reconversion) + `changerClasse` | Écran fiche agent, **pas** commission. DG : `consulter-salaires` + `POST …/approuver` (74/75). RH : créer / art. 73 / `appliquer`. Voir §4. |
+| 2026-09-14 | **Évaluation lots A–C** : N+1 = poste dominant 24 mois (art. 62), tableau d’avancement (`inscrit_tableau`), PDF fiche + note de synthèse | Champs optionnels `affectation_notation`, `inscrit_tableau`. Nouveaux : `GET sessions/{id}/tableau`, `POST …/inscrire-tableau` / `retirer-tableau`, `GET …/fiche-pdf`, `GET …/synthese-pdf`. `prochaine_etape` : `inscrire_tableau`. |
 | 2026-09-10 | **Congés — positions CCN art. 79–80** : `StatutAgent` + 2 valeurs (`disponibilite`, `sous_le_drapeau`), migration ENUM agents, suppression "Mise en disponibilité" de type_absences, `SessionEvaluationService` dynamique | Agents en disponibilité et sous le drapeau exclus de l'évaluation. Enum agents étendu. |
 | 2026-09-10 | **Congés — validations métier CCN art. 77** : congé annuel bloqué avant 12 mois de service, convenances personnelles min 15 jours | API renvoie **422** avec message explicite si règle non respectée. |
 | 2026-09-10 | **Congés — mise en conformité CCN ARTF art. 77** : paliers ancienneté corrigés (8 paliers 0/6/8/10/12/14/16/18j), paternité 2j (était 10j), maternité 105j (était 98j), 14 types de congé ajoutés (exceptionnels, maladie famille, convenances perso, concours, éducation syndicale) | Nouvelle table seed `GET /types-conges`. Noms exacts dans §2c. |

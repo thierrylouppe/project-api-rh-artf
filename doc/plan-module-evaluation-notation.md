@@ -61,8 +61,7 @@ Phase 1  Grille + session + fiches + notation /20
 | 4 | Préparatoire + synthèse (art. 66–68), commission + note d’avancement (art. 69–70), `avancerEchelon` | ⬜ |
 | 5 | Avancement auto stage 9 mois (art. 71), exceptionnel +2 max (art. 72), cloche, PDF | ⬜ |
 
-**Hors module V1 (ch. 5 CCN) :** reclassement de classe, hors classe, reconversion (art. 73–75).  
-Hors scope aussi : concours, reporting dashboard, mail.
+**Art. 73–75 livré** (`/api/carriere/reclassements`) : [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot D.
 
 **Restes (PDF, art. 62 mutation, D5, ch. 5) :** plan dédié [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — branche `feature/evaluation-complements`.
 
@@ -227,6 +226,7 @@ Ne pas mettre le calcul de `note_globale` dans le Controller.
 
 | Date | Phase | Fait |
 |------|-------|------|
+| 2026-09-15 | D | `/carriere/reclassements` art. 73–75. D11–D14 figés. |
 | 2026-09-14 | A–C | Lots A–C livrés (art. 62, D5, PDF). Lot D art. 73–75 ouvert. |
 | 2026-09-14 | — | Restes (PDF 5.5, art. 62, D5, art. 73–75) → [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) |
 | 2026-09-10 | — | D9 tranché : **DG non évalué**. D4 résolu via `nominations.poste`. D10 ouvert (+2 échelons) |

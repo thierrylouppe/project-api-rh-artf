@@ -66,7 +66,7 @@ La note **doit être portée à la connaissance du salarié** pour **réclamatio
 
 ## Chapitre 5 — Reclassement, hors classe, reconversion
 
-**Hors périmètre du module notation / tableau d’avancement** (changement de **classe** ou d’emploi, pas d’échelon dans la même classe). À traiter plus tard (carrière / formation).
+**Hors module notation / tableau d’avancement** (changement de **classe** ou d’emploi, pas d’échelon dans la même classe). API : `/api/carriere/reclassements`.
 
 **Art. 73.** Reclassement à une **classe supérieure** après formation autorisée et diplôme reconnu par l’État.
 
@@ -91,4 +91,4 @@ Reclassement **hors classe** : ancienneté ≥ 25 ans, grade d’inspecteur prin
 | Note à l’avancement (art. 70) | Note **fixée par la commission d’avancement**, distincte de la note N+1 |
 | +2 échelons stage 9 mois (art. 71) | Parcours **séparé** (pas le cycle 24 mois) |
 | +2 échelons max exceptionnel (art. 72) | Décision commission, proposition DG |
-| Art. 73–75 | **Pas** dans `/avancements` V1 — plan [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot D (`/carriere/reclassements`) |
+| Art. 73–75 | `/api/carriere/reclassements` — lot D livré |

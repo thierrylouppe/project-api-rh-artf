@@ -125,5 +125,6 @@ A Notifications  →  C Congés  →  D.1 Évaluations
 | 2026-09-01 | — | Création de ce suivi |
 | 2026-09-01 | A | Inbox API, branchements intégration/carrière, job stage |
 | 2026-09-01 | C | Congés & absences (demandes, soldes, workflow, PDF) |
+| 2026-09-15 | D.1 | Lot D art. 73–75 livré (`/carriere/reclassements`). |
 | 2026-09-14 | D.1 | Lots A–C livrés (art. 62, tableau D5, PDF) — `feature/evaluation-complements`. Lot D art. 73–75 ouvert. |
 | 2026-09-01 | B | Fiche personnel, GED agent, archivage |

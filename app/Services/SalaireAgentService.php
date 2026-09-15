@@ -292,6 +292,57 @@ class SalaireAgentService extends BaseService
         });
     }
 
+    /**
+     * Change la classe de grille (art. 73–75). Ne pas utiliser avancerEchelons.
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException
+     */
+    public function changerClasse(
+        int $agentId,
+        int $classeCibleId,
+        int $echelon,
+        TypeChangementSalaireAgent $type,
+        ?string $motif = null,
+    ): SalaireAgent {
+        return DB::transaction(function () use ($agentId, $classeCibleId, $echelon, $type, $motif) {
+            $actuel = $this->repository->getActuel($agentId);
+            abort_if($actuel === null, 422, 'Aucun salaire actif pour cet agent.');
+
+            abort_if(
+                (int) $actuel->classegrillesalariale_id === $classeCibleId,
+                422,
+                'La classe cible est identique à la classe actuelle : ce n\'est pas un reclassement.'
+            );
+
+            $classeCible = $this->classeRepository->findById($classeCibleId);
+            $ligneGrille = $this->trouverLigneGrille($classeCibleId, $echelon);
+            $dateDebut   = now()->toDateString();
+
+            $this->repository->cloturerActifs($agentId, $dateDebut);
+
+            $echelonModel = $this->echelonRepository->findByNumero($echelon);
+            $this->agentRepository->update($agentId, array_filter([
+                'categorie_id' => $classeCible->categorie_id,
+                'grade_id'     => $classeCible->grade_id,
+                'echelon_id'   => $echelonModel?->id,
+            ], fn ($v) => $v !== null));
+
+            return $this->repository->create([
+                'agent_id'                 => $agentId,
+                'salaire_id'               => $ligneGrille->id,
+                'classegrillesalariale_id' => $classeCibleId,
+                'echelon'                  => $echelon,
+                'montant_base'             => $ligneGrille->salaire,
+                'montant_net'              => $ligneGrille->salaire,
+                'date_debut'               => $dateDebut,
+                'date_fin'                 => null,
+                'statut'                   => StatutSalaireAgent::ACTIF,
+                'type_changement'          => $type,
+                'motif'                    => $motif,
+            ]);
+        });
+    }
+
     private function resoudreClasse(Agent $agent): Classegrillesalariale
     {
         abort_unless(

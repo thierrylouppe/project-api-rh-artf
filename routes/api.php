@@ -38,6 +38,7 @@ use App\Http\Controllers\API\ConnaissanceComplementaireController;
 use App\Http\Controllers\API\EvaluationController;
 use App\Http\Controllers\API\QuestionEvaluationController;
 use App\Http\Controllers\API\ReclamationController;
+use App\Http\Controllers\API\ReclassementController;
 use App\Http\Controllers\API\SessionEvaluationController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BureauController;
@@ -123,6 +124,22 @@ Route::prefix('carriere')->middleware('auth:sanctum')->group(function () use ($r
     $routesCarriere();
     // Synthèse carrière uniquement ici : pas d'alias /integration (conflit avec GET /integration/agents/{id}).
     Route::get('agents/{agent}', [CarriereAgentController::class, 'synthese']);
+
+    // Reclassement / hors classe / reconversion (CCN art. 73–75)
+    Route::get('reclassements', [ReclassementController::class, 'index'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('reclassements', [ReclassementController::class, 'store'])
+        ->middleware('permission:gerer-salaires');
+    Route::get('reclassements/{id}', [ReclassementController::class, 'show'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('reclassements/{id}/approuver', [ReclassementController::class, 'approuver'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('reclassements/{id}/rejeter', [ReclassementController::class, 'rejeter'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('reclassements/{id}/appliquer', [ReclassementController::class, 'appliquer'])
+        ->middleware('permission:gerer-salaires');
+    Route::get('agents/{id}/reclassements', [ReclassementController::class, 'parAgent'])
+        ->middleware('permission:consulter-salaires');
 });
 
 // ============================================================
