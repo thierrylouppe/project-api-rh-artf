@@ -4,16 +4,20 @@ use App\Http\Controllers\API\AbsenceController;
 use App\Http\Controllers\API\ActeAdministratifController;
 use App\Http\Controllers\API\AdministrationController;
 use App\Http\Controllers\API\AffectationController;
+use App\Http\Controllers\API\AffiliationSocialeController;
 use App\Http\Controllers\API\AgentController;
 use App\Http\Controllers\API\AuditLogController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\AvancementExceptionnelController;
 use App\Http\Controllers\API\AvertissementController;
 use App\Http\Controllers\API\AvisHierarchiqueController;
+use App\Http\Controllers\API\AyantDroitController;
 use App\Http\Controllers\API\BonificationStageController;
 use App\Http\Controllers\API\BureauController;
 use App\Http\Controllers\API\CarriereAgentController;
+use App\Http\Controllers\API\CatalogueFormationController;
 use App\Http\Controllers\API\CategorieController;
+use App\Http\Controllers\API\CertificationFormationController;
 use App\Http\Controllers\API\CircuitValidationController;
 use App\Http\Controllers\API\ClassegrillesalarialeController;
 use App\Http\Controllers\API\CommissionAvancementController;
@@ -30,6 +34,7 @@ use App\Http\Controllers\API\DirectionController;
 use App\Http\Controllers\API\DocumentAgentController;
 use App\Http\Controllers\API\DocumentDossierController;
 use App\Http\Controllers\API\DossierIntegrationController;
+use App\Http\Controllers\API\DossierSocialController;
 // Module Évaluation / Notation / Avancement
 use App\Http\Controllers\API\EchelonController;
 use App\Http\Controllers\API\EvaluationController;
@@ -37,6 +42,7 @@ use App\Http\Controllers\API\FonctionController;
 use App\Http\Controllers\API\GradeController;
 use App\Http\Controllers\API\InformationsPersonnelleController;
 use App\Http\Controllers\API\InformationsProfessionnelleController;
+use App\Http\Controllers\API\InscriptionFormationController;
 use App\Http\Controllers\API\JourFerieController;
 use App\Http\Controllers\API\LocaliteController;
 use App\Http\Controllers\API\LotAffectationController;
@@ -44,11 +50,13 @@ use App\Http\Controllers\API\LotNominationController;
 use App\Http\Controllers\API\MotifAdministratifController;
 use App\Http\Controllers\API\NominationController;
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\OrganismeSocialController;
 use App\Http\Controllers\API\PalierAncienneteCongeController;
 use App\Http\Controllers\API\ParametreApplicationController;
 use App\Http\Controllers\API\ParametregrileController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\PersonnelController;
+use App\Http\Controllers\API\PlanFormationController;
 use App\Http\Controllers\API\PriseDeServiceController;
 use App\Http\Controllers\API\QuestionEvaluationController;
 use App\Http\Controllers\API\ReclamationController;
@@ -212,6 +220,8 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () use 
     Route::patch('stages/{stage}/prolonger', [ConventionStageController::class, 'prolonger']);
     Route::post('stages/{stage}/cloturer', [ConventionStageController::class, 'cloturer']);
     Route::get('stages/{stage}/attestation', [ConventionStageController::class, 'attestation']);
+    Route::post('stages/{stage}/convertir-agent', [ConventionStageController::class, 'convertirAgent'])
+        ->middleware('permission:gerer-formations|creer-recrutement');
 });
 
 // ============================================================
@@ -413,6 +423,75 @@ Route::middleware('auth:sanctum')->prefix('discipline')->group(function () {
     Route::get('avertissements/{id}', [AvertissementController::class, 'show'])->middleware('permission:consulter-discipline');
     Route::put('avertissements/{id}', [AvertissementController::class, 'update'])->middleware('permission:gerer-discipline');
     Route::delete('avertissements/{id}', [AvertissementController::class, 'destroy'])->middleware('permission:gerer-discipline');
+});
+
+// ============================================================
+// MODULE 10 — AFFAIRES SOCIALES (D.3 P1)
+// ============================================================
+Route::middleware('auth:sanctum')->prefix('affaires-sociales')->group(function () {
+    Route::get('organismes', [OrganismeSocialController::class, 'index'])->middleware('permission:consulter-affaires-sociales');
+    Route::post('organismes', [OrganismeSocialController::class, 'store'])->middleware('permission:gerer-affaires-sociales');
+    Route::get('organismes/{id}', [OrganismeSocialController::class, 'show'])->middleware('permission:consulter-affaires-sociales');
+    Route::put('organismes/{id}', [OrganismeSocialController::class, 'update'])->middleware('permission:gerer-affaires-sociales');
+    Route::delete('organismes/{id}', [OrganismeSocialController::class, 'destroy'])->middleware('permission:gerer-affaires-sociales');
+
+    Route::get('affiliations', [AffiliationSocialeController::class, 'index'])->middleware('permission:consulter-affaires-sociales');
+    Route::post('affiliations', [AffiliationSocialeController::class, 'store'])->middleware('permission:gerer-affaires-sociales');
+    Route::get('alertes/sans-affiliation-cnss', [AffiliationSocialeController::class, 'sansAffiliationCnss'])->middleware('permission:consulter-affaires-sociales');
+    Route::get('agents/{agent}/affiliations', [AffiliationSocialeController::class, 'byAgent'])->middleware('permission:consulter-affaires-sociales');
+    Route::get('agents/{agent}/ayants-droit', [AyantDroitController::class, 'byAgent'])->middleware('permission:consulter-affaires-sociales');
+    Route::get('agents/{agent}/dossier-social', [DossierSocialController::class, 'show'])->middleware('permission:consulter-affaires-sociales');
+    Route::get('affiliations/{id}', [AffiliationSocialeController::class, 'show'])->middleware('permission:consulter-affaires-sociales');
+    Route::put('affiliations/{id}', [AffiliationSocialeController::class, 'update'])->middleware('permission:gerer-affaires-sociales');
+    Route::delete('affiliations/{id}', [AffiliationSocialeController::class, 'destroy'])->middleware('permission:gerer-affaires-sociales');
+
+    Route::get('ayants-droit', [AyantDroitController::class, 'index'])->middleware('permission:consulter-affaires-sociales');
+    Route::post('ayants-droit', [AyantDroitController::class, 'store'])->middleware('permission:gerer-affaires-sociales');
+    Route::get('ayants-droit/{id}/pieces', [AyantDroitController::class, 'pieces'])->middleware('permission:consulter-affaires-sociales');
+    Route::post('ayants-droit/{id}/pieces', [AyantDroitController::class, 'storePiece'])->middleware('permission:gerer-affaires-sociales');
+    Route::get('ayants-droit/{id}/pieces/{pieceId}', [AyantDroitController::class, 'downloadPiece'])->middleware('permission:consulter-affaires-sociales');
+    Route::delete('ayants-droit/{id}/pieces/{pieceId}', [AyantDroitController::class, 'destroyPiece'])->middleware('permission:gerer-affaires-sociales');
+    Route::get('ayants-droit/{id}', [AyantDroitController::class, 'show'])->middleware('permission:consulter-affaires-sociales');
+    Route::put('ayants-droit/{id}', [AyantDroitController::class, 'update'])->middleware('permission:gerer-affaires-sociales');
+    Route::delete('ayants-droit/{id}', [AyantDroitController::class, 'destroy'])->middleware('permission:gerer-affaires-sociales');
+});
+
+// ============================================================
+// MODULE 11 — FORMATION CONTINUE (D.4)
+// ============================================================
+Route::middleware('auth:sanctum')->prefix('formations')->group(function () {
+    Route::get('catalogue', [CatalogueFormationController::class, 'index'])->middleware('permission:consulter-formations');
+    Route::post('catalogue', [CatalogueFormationController::class, 'store'])->middleware('permission:gerer-formations');
+    Route::get('catalogue/{id}', [CatalogueFormationController::class, 'show'])->middleware('permission:consulter-formations');
+    Route::put('catalogue/{id}', [CatalogueFormationController::class, 'update'])->middleware('permission:gerer-formations');
+    Route::delete('catalogue/{id}', [CatalogueFormationController::class, 'destroy'])->middleware('permission:gerer-formations');
+
+    Route::get('plans', [PlanFormationController::class, 'index'])->middleware('permission:consulter-formations');
+    Route::post('plans', [PlanFormationController::class, 'store'])->middleware('permission:gerer-formations');
+    Route::get('plans/{id}', [PlanFormationController::class, 'show'])->middleware('permission:consulter-formations');
+    Route::put('plans/{id}', [PlanFormationController::class, 'update'])->middleware('permission:gerer-formations');
+    Route::delete('plans/{id}', [PlanFormationController::class, 'destroy'])->middleware('permission:gerer-formations');
+    Route::post('plans/{id}/lignes', [PlanFormationController::class, 'storeLigne'])->middleware('permission:gerer-formations');
+    Route::delete('plans/{id}/lignes/{ligneId}', [PlanFormationController::class, 'destroyLigne'])->middleware('permission:gerer-formations');
+    Route::post('plans/{id}/valider', [PlanFormationController::class, 'valider'])->middleware('permission:gerer-formations');
+    Route::post('plans/{id}/executer', [PlanFormationController::class, 'executer'])->middleware('permission:gerer-formations');
+    Route::post('plans/{id}/cloturer', [PlanFormationController::class, 'cloturer'])->middleware('permission:gerer-formations');
+
+    Route::get('inscriptions', [InscriptionFormationController::class, 'index'])->middleware('permission:consulter-formations');
+    Route::post('inscriptions', [InscriptionFormationController::class, 'store'])->middleware('permission:gerer-formations');
+    Route::get('agents/{agent}/inscriptions', [InscriptionFormationController::class, 'byAgent'])->middleware('permission:consulter-formations');
+    Route::get('agents/{agent}/certifications', [CertificationFormationController::class, 'byAgent'])->middleware('permission:consulter-formations');
+    Route::get('inscriptions/{id}', [InscriptionFormationController::class, 'show'])->middleware('permission:consulter-formations');
+    Route::post('inscriptions/{id}/confirmer-presence', [InscriptionFormationController::class, 'confirmerPresence'])->middleware('permission:gerer-formations');
+    Route::post('inscriptions/{id}/cloturer', [InscriptionFormationController::class, 'cloturer'])->middleware('permission:gerer-formations');
+    Route::post('inscriptions/{id}/annuler', [InscriptionFormationController::class, 'annuler'])->middleware('permission:gerer-formations');
+    Route::delete('inscriptions/{id}', [InscriptionFormationController::class, 'destroy'])->middleware('permission:gerer-formations');
+
+    Route::get('certifications', [CertificationFormationController::class, 'index'])->middleware('permission:consulter-formations');
+    Route::post('certifications', [CertificationFormationController::class, 'store'])->middleware('permission:gerer-formations');
+    Route::get('certifications/{id}/fichier', [CertificationFormationController::class, 'fichier'])->middleware('permission:consulter-formations');
+    Route::get('certifications/{id}', [CertificationFormationController::class, 'show'])->middleware('permission:consulter-formations');
+    Route::delete('certifications/{id}', [CertificationFormationController::class, 'destroy'])->middleware('permission:gerer-formations');
 });
 
 // ============================================================

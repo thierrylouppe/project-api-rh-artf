@@ -61,6 +61,8 @@ Mot de passe : respecter la casse.
 | Salaires / grille | oui | oui | reclassements (lecture + approuver 74/75) | — | — | — | — |
 | Reporting RH | oui | oui | — | — | — | — | — |
 | Discipline | oui | oui (instruire) | **prononcer** | **proposer** (équipe) | **proposer** (équipe) | **proposer** (équipe) | **ses dossiers** (`/discipline/moi/…`) |
+| Affaires sociales | oui | oui | lecture | — | — | — | — |
+| Formations | oui | oui | lecture | — | — | — | — |
 | Agents (consultation) | oui | oui | oui | oui | oui | oui | — |
 | Congés / absences (validation) | oui | oui | oui | oui | oui | oui | — |
 | Congés / absences (créer les siens) | oui | — | — | — | — | — | oui |
@@ -78,6 +80,8 @@ Mot de passe : respecter la casse.
 `consulter-nominations`, `gerer-nominations` (menus ; pas encore de `permission:` sur les routes)  
 `consulter-salaires`, `gerer-salaires`  
 `consulter-discipline`, `gerer-discipline`, `proposer-discipline`  
+`consulter-affaires-sociales`, `gerer-affaires-sociales`  
+`consulter-formations`, `gerer-formations`  
 `consulter-reporting`
 
 ### Partagés hiérarchie + RH
@@ -88,6 +92,8 @@ Mot de passe : respecter la casse.
 `consulter-absences`, `valider-absences`  
 `consulter-evaluations` (`valider-evaluations` : DG / directeur / admin uniquement)  
 `consulter-discipline` (**DG seulement** parmi la hiérarchie — lecture globale)  
+`consulter-affaires-sociales` (**DG seulement** parmi la hiérarchie — lecture globale)  
+`consulter-formations` (**DG seulement** parmi la hiérarchie — lecture globale)  
 `prononcer-discipline` (**DG seulement** — art. 91)  
 `proposer-discipline` (`directeur`, `chef-service`, `chef-bureau` — rapport N+1)
 

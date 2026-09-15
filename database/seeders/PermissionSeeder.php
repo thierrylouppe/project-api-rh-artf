@@ -31,6 +31,10 @@ class PermissionSeeder extends Seeder
             'consulter-absences', 'creer-absences', 'valider-absences',
             // Discipline
             'consulter-discipline', 'gerer-discipline', 'proposer-discipline', 'prononcer-discipline',
+            // Affaires sociales
+            'consulter-affaires-sociales', 'gerer-affaires-sociales',
+            // Formations
+            'consulter-formations', 'gerer-formations',
             // Évaluations
             'consulter-evaluations', 'creer-evaluations', 'valider-evaluations',
             // Reporting

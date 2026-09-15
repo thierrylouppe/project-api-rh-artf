@@ -7,7 +7,7 @@
 
 **Base de données :** MySQL `bd_api_rh_artf` (utf8mb4_unicode_ci) sur `127.0.0.1:3306`
 
-**État :** cœur « vie de l’agent » API **livré**. **Module 9 Discipline (D.2) livré.** Prochain : **D.3 Affaires sociales** (P1). Modules DRHL suivants **globaux** (pas de cloison bureau).
+**État :** cœur « vie de l’agent » API **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Prochain : **D.5 Paie**. Modules DRHL suivants **globaux** (pas de cloison bureau).
 
 ---
 
@@ -57,7 +57,7 @@
 |-------------|--------|--------|
 | 3.1 Recrutement externe | ⏸ | Concours / candidatures — Phase 8, hors chemin critique |
 | 3.2 Autres modes d'intégration | ✅ | Types d’intégration + circuit par type (`/integration/…`) |
-| 3.3 Workflow d'intégration | ✅ | Dossier, transitions, acte métier, stage, matériel, PDS. **Hors V1 :** PDF actes (1.B), `convertir-agent` (1.D) |
+| 3.3 Workflow d'intégration | ✅ | Dossier, transitions, acte métier, stage, matériel, PDS. **Hors V1 :** PDF actes (1.B). `convertir-agent` **livré** (D.4.5). |
 
 ---
 
@@ -112,11 +112,11 @@ Détail : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notati
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 8.1 Catalogue formations | ⬜ | Vague **D.4** — formation continue (les stages d’accueil restent `/integration/stages`) |
-| 8.2 Plans de formation | ⬜ | D.4.2 |
-| 8.3 Inscriptions & suivi | ⬜ | D.4.3 |
-| 8.4 Certifications | ⬜ | D.4.4 |
-| 8.5 Conversion stagiaire → agent | ⬜ | D.4.5 `convertir-agent` |
+| 8.1 Catalogue formations | ✅ | Vague **D.4** — formation continue (les stages d’accueil restent `/integration/stages`) |
+| 8.2 Plans de formation | ✅ | D.4.2 |
+| 8.3 Inscriptions & suivi | ✅ | D.4.3 |
+| 8.4 Certifications | ✅ | D.4.4 |
+| 8.5 Conversion stagiaire → agent | ✅ | D.4.5 `convertir-agent` |
 
 ---
 
@@ -164,9 +164,9 @@ Détail : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notati
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 13.1 Organismes | ⬜ | Vague **D.3.1** — CNSS, mutuelle, complémentaire |
-| 13.2 Affiliations | ⬜ | D.3.2 — n°, dates, alerte sans affiliation |
-| 13.3 Ayants droit | ⬜ | D.3.3 — nominatif (la fiche `situation-familiale` actuelle est trop pauvre) |
+| 13.1 Organismes | ✅ | Vague **D.3.1** — CNSS, mutuelle, complémentaire |
+| 13.2 Affiliations | ✅ | D.3.2 — n°, dates, alerte sans affiliation |
+| 13.3 Ayants droit | ✅ | D.3.3 — nominatif + pièces ; `nb_enfants` dérivé |
 | 13.4 Prestations / allocations | ⬜ | D.3.4 — après éléments de paie D.5 |
 | 13.5 Santé / AT-MP / retraite | ⬜ | D.3.5 — plus tard |
 
@@ -176,8 +176,8 @@ Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vagu
 
 ## Prochaine étape recommandée
 
-**D.3 Affaires sociales P1** (organismes, affiliations, ayants droit).
+**D.5 Paie** (éléments + lots mensuels).
 
-Puis D.4 Formation → D.5 Paie → D.6 Reporting. **Pas** de cloisonnement avant Vague F.
+Puis D.3.4 Prestations → D.6 Reporting. **Pas** de cloisonnement avant Vague F.
 
 Suivi opérationnel : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).

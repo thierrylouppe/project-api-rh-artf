@@ -5,17 +5,21 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\Stage\CloturerRequest;
 use App\Http\Requests\Stage\ProlongerRequest;
 use App\Http\Resources\ConventionStageResource;
+use App\Http\Resources\DossierIntegrationResource;
 use App\Services\ClotureStageService;
 use App\Services\ConventionStageService;
+use App\Services\ConversionStagiaireService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use OpenApi\Attributes as OA;
 
 class ConventionStageController extends BaseController
 {
     public function __construct(
         private readonly ConventionStageService $conventionService,
         private readonly ClotureStageService $clotureService,
+        private readonly ConversionStagiaireService $conversionService,
     ) {
         parent::__construct($conventionService);
     }
@@ -42,8 +46,8 @@ class ConventionStageController extends BaseController
         $convention = $this->conventionService->prolonger($id, $request->input('date_fin'));
 
         return response()->json([
-            'data'    => new ConventionStageResource($convention),
-            'message' => 'Convention prolongée jusqu\'au ' . $request->input('date_fin'),
+            'data' => new ConventionStageResource($convention),
+            'message' => 'Convention prolongée jusqu\'au '.$request->input('date_fin'),
         ]);
     }
 
@@ -56,7 +60,7 @@ class ConventionStageController extends BaseController
         );
 
         return response()->json([
-            'data'    => new ConventionStageResource($convention),
+            'data' => new ConventionStageResource($convention),
             'message' => 'Stage clôturé avec succès',
         ]);
     }
@@ -64,5 +68,15 @@ class ConventionStageController extends BaseController
     public function attestation(int $id): Response
     {
         return $this->clotureService->genererAttestationPdf($id);
+    }
+
+    #[OA\Post(path: '/api/integration/stages/{id}/convertir-agent', operationId: 'convertirStagiaireAgent', tags: ['Intégration — Stages'], summary: 'Ouvrir un dossier d\'intégration agent après clôture du stage', security: [['bearerAuth' => []]], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 201, description: 'Dossier créé')])]
+    public function convertirAgent(int $id): JsonResponse
+    {
+        return $this->successResponse(
+            new DossierIntegrationResource($this->conversionService->convertir($id)),
+            'Dossier d\'intégration agent ouvert',
+            201
+        );
     }
 }

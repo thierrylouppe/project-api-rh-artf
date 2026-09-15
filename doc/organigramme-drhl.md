@@ -80,5 +80,5 @@ Assurer l’affiliation des agents aux organismes sociaux, suivre les ayants dro
 
 Ne gère pas : dossier de carrière (Personnel), bulletin / lot de paie (Solde), catalogue de formation (Formation).
 
-P1 (D.3.1–D.3.3) : organismes, affiliations, ayants droit.  
+P1 (D.3.1–D.3.3) : **livré** — organismes, affiliations, ayants droit (`/api/affaires-sociales`).  
 Ensuite : prestations / allocations (après D.5), santé / AT-MP / retraite.

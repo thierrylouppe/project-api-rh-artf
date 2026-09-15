@@ -4,7 +4,7 @@
 > Références : [`suivi_projet.md`](./suivi_projet.md) · [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) · [`integration.md`](./integration.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md) · [`architecture.md`](./architecture.md) · [`structuration_par_module.md`](./structuration_par_module.md)
 
 **État au 2026-09-15 :** V1–V4 livrées (intégration, salaires, dossier agent, notifications, congés, évaluations P1–P5 + reclassements art. 73–75).  
-**Prochain :** Phase 7.1 — Discipline. Puis affaires sociales, formation, paie, reporting — **sans cloisonnement** par bureau.  
+**Prochain :** Phase 9.2 / D.5 — Paie. Puis prestations D.3.4, reporting — **sans cloisonnement** par bureau.  
 **Objectif :** API RH opérationnelle de bout en bout, architecture inchangée (Controller → Service → Interface → Repository).
 
 **Contrainte frontend :** tout ce qui est déjà livré côté API est **déjà consommé par le frontend**. Toute évolution backend doit préserver (ou versionner) le contrat existant ; les correctifs / ajouts se font en **extension**, pas en rupture.
@@ -126,7 +126,7 @@ Le frontend consomme déjà les endpoints et formes de réponse des modules livr
 | # | Tâche | Statut |
 |---|---|---|
 | 1.11 | Prolongation avancée / suspension | ⬜ L2 |
-| 1.12 | `POST .../stages/{id}/convertir-agent` | ⬜ L3 |
+| 1.12 | `POST .../stages/{id}/convertir-agent` | ✅ D.4.5 |
 | 1.13 | Job échéance stage → vraie notification | ✅ Phase 2 |
 | 1.14 | Archivage GED stage | ⏸ → Module 12 |
 
@@ -138,7 +138,7 @@ Le frontend consomme déjà les endpoints et formes de réponse des modules livr
 | 1.16 | Annotations Swagger des endpoints `/integration` |
 | 1.17 | Critère de fin : 1 parcours permanent + 1 parcours stage verts en CI |
 
-**Fin Phase 1 (périmètre actuel) :** workflow 1.A livré. **Restes :** 1.B PDF actes, 1.C permissions fines (coordonner FE), 1.D `convertir-agent`.
+**Fin Phase 1 (périmètre actuel) :** workflow 1.A livré. **Restes :** 1.B PDF actes, 1.C permissions fines (coordonner FE). 1.D `convertir-agent` **livré** (D.4.5).
 
 ---
 
@@ -243,7 +243,7 @@ Modules **globaux** (pas de cloison par bureau). Suivi coché : [`plan-prochaine
 | # | Module | Contenu | Vague | Statut |
 |---|---|---|---|---|
 | 7.1 | Discipline | Types CCN, rapport N+1, instruire, prononcer DG, pièces, PDF, historique | D.2 | ✅ |
-| 7.2 | Affaires sociales P1 | Organismes, affiliations CNSS, ayants droit | D.3.1–D.3.3 | ⬜ |
+| 7.2 | Affaires sociales P1 | Organismes, affiliations CNSS, ayants droit | D.3.1–D.3.3 | ✅ |
 | 7.3 | Prestations / allocations | Demandes sociales ; montants → paie (après 9.2) | D.3.4 | ⬜ |
 | 7.4 | (Plus tard) Santé / AT-MP / retraite | Visites, accidents, dossier pension | D.3.5 | ⬜ |
 | 7.5 | (Option) Représentants externes | Si toujours dans le périmètre métier | — | ⬜ |
@@ -271,7 +271,7 @@ Toujours **sans cloisonnement**. Logistique hors périmètre.
 
 | # | Module | Contenu | Vague | Statut |
 |---|---|---|---|---|
-| 9.1 | Formation | Catalogue, plan, inscriptions, certifications + `convertir-agent` | D.4 | ⬜ |
+| 9.1 | Formation | Catalogue, plan, inscriptions, certifications + `convertir-agent` | D.4 | ✅ |
 | 9.2 | Paie | Éléments (primes / retenues), lot mensuel, bulletin enrichi | D.5 | ⬜ |
 | 9.3 | Reporting | Dashboard effectifs, répartitions, exports | D.6 | ⬜ |
 | 9.4 | GED RH versionnée | Classement, archivage, versions | — | ⬜ reporté |
@@ -352,9 +352,9 @@ Contrat FE : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.
 
 **Suite recommandée :**
 
-1. **Phase 7.1 / D.2 — Discipline**.
-2. **Phase 7.2 / D.3 P1 — Affaires sociales** (organismes, affiliations, ayants droit).
-3. **Phase 9.1 / D.4 — Formation** (+ `convertir-agent`).
+1. ~~**Phase 7.1 / D.2 — Discipline**~~ **livré**.
+2. ~~**Phase 7.2 / D.3 P1 — Affaires sociales**~~ **livré**.
+3. ~~**Phase 9.1 / D.4 — Formation**~~ **livré**.
 4. **Phase 9.2 / D.5 — Paie** (éléments + lots), puis prestations D.3.4.
 5. **Phase 9.3 / D.6 — Reporting**.
 6. **Phase 11 / Vague F — Cloisonnement** — seulement ensuite.

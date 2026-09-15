@@ -25,6 +25,8 @@ class RoleSeeder extends Seeder
                 'consulter-salaires', 'gerer-salaires',
                 'consulter-conges', 'creer-conges', 'valider-conges', 'consulter-absences', 'creer-absences', 'valider-absences',
                 'consulter-discipline', 'gerer-discipline', 'proposer-discipline',
+                'consulter-affaires-sociales', 'gerer-affaires-sociales',
+                'consulter-formations', 'gerer-formations',
                 // Évaluations : la DRHL ouvre les sessions et contrôle la conformité (CCN art. 66-70)
                 'consulter-evaluations', 'creer-evaluations', 'valider-evaluations',
                 'consulter-reporting',
@@ -37,6 +39,8 @@ class RoleSeeder extends Seeder
                 'consulter-conges', 'valider-conges',
                 'consulter-absences', 'valider-absences',
                 'consulter-discipline', 'prononcer-discipline',
+                'consulter-affaires-sociales',
+                'consulter-formations',
                 'consulter-evaluations', 'valider-evaluations',
             ],
             'directeur' => [

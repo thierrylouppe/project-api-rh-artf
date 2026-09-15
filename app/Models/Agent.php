@@ -185,6 +185,16 @@ class Agent extends Model
         return $this->hasMany(Avertissement::class);
     }
 
+    public function affiliations(): HasMany
+    {
+        return $this->hasMany(AffiliationSociale::class);
+    }
+
+    public function ayantsDroit(): HasMany
+    {
+        return $this->hasMany(AyantDroit::class);
+    }
+
     public function archivedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'archived_by');

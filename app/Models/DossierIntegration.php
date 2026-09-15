@@ -33,12 +33,12 @@ class DossierIntegration extends Model
     ];
 
     protected $casts = [
-        'date_demande'   => 'date',
-        'nombre_postes'  => 'integer',
-        'statut'         => StatutDossier::class,
+        'date_demande' => 'date',
+        'nombre_postes' => 'integer',
+        'statut' => StatutDossier::class,
     ];
 
-    protected array $filterable = ['statut', 'type_integration_id', 'demandeur_id'];
+    protected array $filterable = ['statut', 'type_integration_id', 'demandeur_id', 'agent_id'];
 
     public function typeIntegration(): BelongsTo
     {

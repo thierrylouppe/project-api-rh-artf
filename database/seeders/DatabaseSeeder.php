@@ -49,6 +49,7 @@ class DatabaseSeeder extends Seeder
             PalierAncienneteCongeSeeder::class,
             MotifAdministratifSeeder::class,
             TypeSanctionSeeder::class,
+            OrganismeSocialSeeder::class,
 
             // ── 5. Module Évaluation / Notation / Avancement ────────────
             QuestionEvaluationSeeder::class,

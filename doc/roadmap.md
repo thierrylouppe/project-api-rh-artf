@@ -2,7 +2,7 @@
 > Construction par module fonctionnel. Chaque module est autonome et livrable indépendamment.  
 > Documents de référence : [`instruction_projet.md`](./instruction_projet.md) · [`architecture.md`](./architecture.md) · [`structuration_par_module.md`](./structuration_par_module.md)
 
-**État d’implémentation (2026-09-15) :** ce fichier décrit *comment* construire. Le **statut réel** est dans [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) et [`suivi_projet.md`](./suivi_projet.md). Cœur API (modules 1–7 + 9 + 11, hors recrutement amont) **livré**. Prochain : D.3 Affaires sociales.
+**État d’implémentation (2026-09-15) :** ce fichier décrit *comment* construire. Le **statut réel** est dans [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) et [`suivi_projet.md`](./suivi_projet.md). Cœur API **livré**. D.2–D.4 **livrés**. Prochain : D.5 Paie.
 
 ---
 

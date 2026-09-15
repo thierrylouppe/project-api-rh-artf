@@ -6,14 +6,19 @@ use App\Interfaces\AbsenceInterface;
 use App\Interfaces\ActeAdministratifInterface;
 use App\Interfaces\AdministrationInterface;
 use App\Interfaces\AffectationInterface;
+use App\Interfaces\AffiliationSocialeInterface;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\AuditLogInterface;
 use App\Interfaces\AvancementExceptionnelInterface;
 use App\Interfaces\AvertissementInterface;
 use App\Interfaces\AvisHierarchiqueInterface;
+use App\Interfaces\AyantDroitInterface;
+use App\Interfaces\AyantDroitPieceInterface;
 use App\Interfaces\BonificationStageInterface;
 use App\Interfaces\BureauInterface;
+use App\Interfaces\CatalogueFormationInterface;
 use App\Interfaces\CategorieInterface;
+use App\Interfaces\CertificationFormationInterface;
 use App\Interfaces\CircuitValidationInterface;
 use App\Interfaces\ClassegrillesalarialeInterface;
 use App\Interfaces\CommissionAvancementInterface;
@@ -37,6 +42,7 @@ use App\Interfaces\GradeInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
 use App\Interfaces\InformationsPersonnelleInterface;
 use App\Interfaces\InformationsProfessionnelleInterface;
+use App\Interfaces\InscriptionFormationInterface;
 use App\Interfaces\JourFerieInterface;
 use App\Interfaces\LocaliteInterface;
 use App\Interfaces\LotAffectationInterface;
@@ -45,10 +51,12 @@ use App\Interfaces\MotifAdministratifInterface;
 use App\Interfaces\NominationInterface;
 use App\Interfaces\NoteEvaluationInterface;
 use App\Interfaces\NotificationInterface;
+use App\Interfaces\OrganismeSocialInterface;
 use App\Interfaces\PalierAncienneteCongeInterface;
 use App\Interfaces\ParametreApplicationInterface;
 use App\Interfaces\ParametregrileInterface;
 use App\Interfaces\PermissionInterface;
+use App\Interfaces\PlanFormationInterface;
 use App\Interfaces\PriseDeServiceInterface;
 use App\Interfaces\QuestionEvaluationInterface;
 use App\Interfaces\ReclamationInterface;
@@ -75,14 +83,19 @@ use App\Repositories\AbsenceRepository;
 use App\Repositories\ActeAdministratifRepository;
 use App\Repositories\AdministrationRepository;
 use App\Repositories\AffectationRepository;
+use App\Repositories\AffiliationSocialeRepository;
 use App\Repositories\AgentRepository;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\AvancementExceptionnelRepository;
 use App\Repositories\AvertissementRepository;
 use App\Repositories\AvisHierarchiqueRepository;
+use App\Repositories\AyantDroitPieceRepository;
+use App\Repositories\AyantDroitRepository;
 use App\Repositories\BonificationStageRepository;
 use App\Repositories\BureauRepository;
+use App\Repositories\CatalogueFormationRepository;
 use App\Repositories\CategorieRepository;
+use App\Repositories\CertificationFormationRepository;
 use App\Repositories\CircuitValidationRepository;
 use App\Repositories\ClassegrillesalarialeRepository;
 use App\Repositories\CommissionAvancementRepository;
@@ -106,6 +119,7 @@ use App\Repositories\GradeRepository;
 use App\Repositories\HistoriqueIntegrationRepository;
 use App\Repositories\InformationsPersonnelleRepository;
 use App\Repositories\InformationsProfessionnelleRepository;
+use App\Repositories\InscriptionFormationRepository;
 use App\Repositories\JourFerieRepository;
 use App\Repositories\LocaliteRepository;
 use App\Repositories\LotAffectationRepository;
@@ -114,10 +128,12 @@ use App\Repositories\MotifAdministratifRepository;
 use App\Repositories\NominationRepository;
 use App\Repositories\NoteEvaluationRepository;
 use App\Repositories\NotificationRepository;
+use App\Repositories\OrganismeSocialRepository;
 use App\Repositories\PalierAncienneteCongeRepository;
 use App\Repositories\ParametreApplicationRepository;
 use App\Repositories\ParametregrileRepository;
 use App\Repositories\PermissionRepository;
+use App\Repositories\PlanFormationRepository;
 use App\Repositories\PriseDeServiceRepository;
 use App\Repositories\QuestionEvaluationRepository;
 use App\Repositories\ReclamationRepository;
@@ -195,6 +211,16 @@ class AppServiceProvider extends ServiceProvider
         SanctionInterface::class => SanctionRepository::class,
         SanctionPieceInterface::class => SanctionPieceRepository::class,
         AvertissementInterface::class => AvertissementRepository::class,
+        // Module Affaires sociales
+        OrganismeSocialInterface::class => OrganismeSocialRepository::class,
+        AffiliationSocialeInterface::class => AffiliationSocialeRepository::class,
+        AyantDroitInterface::class => AyantDroitRepository::class,
+        AyantDroitPieceInterface::class => AyantDroitPieceRepository::class,
+        // Module Formation
+        CatalogueFormationInterface::class => CatalogueFormationRepository::class,
+        PlanFormationInterface::class => PlanFormationRepository::class,
+        InscriptionFormationInterface::class => InscriptionFormationRepository::class,
+        CertificationFormationInterface::class => CertificationFormationRepository::class,
         // Module Évaluation / Notation / Avancement
         AvisHierarchiqueInterface::class => AvisHierarchiqueRepository::class,
         AvancementExceptionnelInterface::class => AvancementExceptionnelRepository::class,

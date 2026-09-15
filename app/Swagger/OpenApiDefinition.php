@@ -53,4 +53,6 @@ MD
 #[OA\Tag(name: 'Intégration — Affectations', description: 'Affectations (alias déprécié)')]
 #[OA\Tag(name: 'Intégration — Nominations', description: 'Nominations (alias déprécié)')]
 #[OA\Tag(name: 'Intégration — Prise de service', description: 'Prise de service et finalisation')]
+#[OA\Tag(name: 'Affaires sociales', description: 'Organismes, affiliations CNSS, ayants droit (CCN art. 58–59)')]
+#[OA\Tag(name: 'Formations', description: 'Formation continue des agents (CCN art. 92–104)')]
 class OpenApiDefinition {}

@@ -8,7 +8,7 @@ Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste ré
 
 | Sujet | Fichier |
 |-------|---------|
-| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.2 livré ; prochain D.3 ; cloisonnement **plus tard** |
+| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; prochain D.5 ; cloisonnement **plus tard** |
 | Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
 | Routes carrière, lots, checklist 14/15 | [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md) |
@@ -46,8 +46,8 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
 | Évaluations | `/avancements/…` | **Livré** | P1–P5 + lots A–C (art. 62, tableau D5, PDF). Contrat : §7b. Reclassement de **classe** : §4 (`/carriere/reclassements`), pas ici. |
 | Discipline | `/discipline` | **Livré** | Vague D.2 + CCN art. 89–91 — contrat §2e. Menus : `consulter-discipline` (RH/DG), `proposer-discipline` (N+1), `prononcer-discipline` (DG). |
-| Affaires sociales | `/affaires-sociales` | **Pas livré** | Vague D.3. Rôle `rh` global (pas de menu par bureau). |
-| Formation | `/formations` | **Pas livré** | Vague D.4. Stages d’accueil déjà sous `/integration/stages`. |
+| Affaires sociales | `/affaires-sociales` | **Livré (P1)** | Vague D.3.1–D.3.3. Contrat §2f. Rôle `rh` global (pas de menu par bureau). Prestations / santé **pas** livrés. |
+| Formation | `/formations` | **Livré** | Vague D.4. Contrat §2g. Stages d’accueil restent `/integration/stages`. Conversion : `POST /integration/stages/{id}/convertir-agent`. |
 | Paie (lots / éléments) | `/paie` | **Pas livré** | Vague D.5. Grille + salaire indiciaire **déjà** sous `/salaires-agents`. |
 | Reporting / dashboard | `/reporting` | **Pas livré** | Vague D.6. Permission `consulter-reporting` seedée, pas d’API. |
 | Inbox notifications | `/notifications` | **Livré** | Inbox utilisateur (`auth:sanctum`). Voir §2b. |
@@ -398,7 +398,7 @@ Préfixe **`/api/personnel`**. Auth Bearer. Pas de permission dédiée (comme le
 | Documents | `GET/POST` · `GET …/{id}/fichier` (blob) · `DELETE` (soft) | `…/documents` · `…/documents/arborescence` |
 | Archives | `POST …/archiver` `{ "motif" }` · `POST …/desarchiver` | Liste : `GET /personnel/agents?statut=archive` (hors liste par défaut) |
 
-`PUT` perso : `adresse`, `quartier`, `ville`, `code_postal`, `pays`. Pro : `diplome_id`, `niveau_etude`, `specialite`, `annees_experience`, `etablissement`. Famille : `statut_matrimonial` (`celibataire` \| `marie` \| `divorce` \| `veuf` \| `union_libre`), `nb_enfants`. Documents : multipart `type_document_id`, `fichier`, `titre?`, `sous_dossier?` (défaut `general`). Types : `GET /types-documents`.
+`PUT` perso : `adresse`, `quartier`, `ville`, `code_postal`, `pays`. Pro : `diplome_id`, `niveau_etude`, `specialite`, `annees_experience`, `etablissement`. Famille : `statut_matrimonial` (`celibataire` \| `marie` \| `divorce` \| `veuf` \| `union_libre`), `nb_enfants`. **D.3 :** si des enfants nominatifs existent (`/affaires-sociales/ayants-droit`), `nb_enfants` est **recalculé** (enfants `a_charge`) et la valeur POST est ignorée. Documents : multipart `type_document_id`, `fichier`, `titre?`, `sous_dossier?` (défaut `general`). Types : `GET /types-documents`.
 
 Archivage : `statut=archive`, compte utilisateur `is_active=false`, écritures dossier **422**. Désarchivage → `inactif` + compte réactivé. Stagiaire : pas d’archivage ici (module stage).
 
@@ -485,6 +485,161 @@ Notifications : `domaine: discipline`, actions `creee` \| `instruite` \| `valide
 `createur` / `validateur` / `emetteur` : `{ id, name }` ou `null`. `agent` : identité légère `{ id, matricule, nom, prenom, nom_complet }`. `pieces[]` : `{ id, nom_original, mime_type, taille, uploader }`.
 
 **Hors scope :** conseil de discipline, recours, indemnité calculée (art. 111–114), art. 140–149, abandon de poste 107–108, récompenses art. 88.
+
+---
+
+## 2f. Affaires sociales — contrat FE (P1)
+
+Préfixe : **`/api/affaires-sociales`**. Auth Bearer obligatoire. Listes **non paginées**. Source CCN : art. **58–59** (enfants à charge).  
+P1 = organismes + affiliations + ayants droit. **Pas** de prestations (D.3.4, après paie) ni santé / AT-MP (D.3.5).
+
+Reconnecter les comptes RH / DG / admin après seed (`consulter-affaires-sociales`, `gerer-affaires-sociales`).
+
+### Permissions
+
+| Permission | Usage | Seeder |
+|------------|--------|--------|
+| `consulter-affaires-sociales` | Listes, détail, alertes, dossier social, téléchargement pièces | `rh`, `admin`, `directeur-general` |
+| `gerer-affaires-sociales` | CRUD organismes / affiliations / ayants droit / pièces | `rh`, `admin` |
+
+Pas de self-service agent en P1. Les chefs **n’ont pas** le menu.
+
+### Écrans recommandés
+
+| Écran | Qui | APIs |
+|-------|-----|------|
+| Organismes | lecture `consulter-…` · écriture `gerer-…` | `GET/POST /affaires-sociales/organismes` · `GET/PUT/DELETE …/organismes/{id}` |
+| Affiliations | idem | `GET/POST /affaires-sociales/affiliations` · `GET/PUT/DELETE …/affiliations/{id}` · `GET …/agents/{id}/affiliations` |
+| Alerte sans CNSS | `consulter-…` | **`GET /affaires-sociales/alertes/sans-affiliation-cnss`** |
+| Ayants droit | idem | `GET/POST /affaires-sociales/ayants-droit` · `GET/PUT/DELETE …/ayants-droit/{id}` · `GET …/agents/{id}/ayants-droit` |
+| Pièces ayant droit | idem | `GET/POST …/ayants-droit/{id}/pieces` · `GET/DELETE …/pieces/{pieceId}` (multipart `fichier` + `type_piece`) |
+| Dossier social agent | `consulter-…` | **`GET /affaires-sociales/agents/{id}/dossier-social`** |
+
+### Organismes
+
+`data.type` : `cnss` \| `mutuelle` \| `complementaire` \| `autre`.  
+Seed : CNSS (`code=CNSS`, `systeme=true`) — **non supprimable**, type/code non modifiables.  
+Liste : actifs par défaut ; `?actif=all` pour tout voir. Organisme inactif : nouvelle affiliation **422**. Organisme déjà utilisé : suppression **422**.
+
+### Affiliations
+
+`POST /affaires-sociales/affiliations` : `{ "agent_id", "organisme_id", "numero_affiliation"?, "date_debut", "date_fin"?, "statut"?, "notes"? }`.
+
+- `statut` : `active` \| `suspendue` \| `cloturee` (défaut `active`).
+- Une seule affiliation **active** par couple agent + organisme (sinon 422).
+- CNSS : si `numero_affiliation` omis, reprise de `agent.numero_cnss`. Une affiliation CNSS active **écrit** `agent.numero_cnss`.
+- Agent archivé : 422.
+
+Alerte : agents non archivés / non stagiaires **sans** affiliation CNSS active. Identité légère + `numero_cnss` + `statut`.
+
+### Ayants droit (art. 59)
+
+`POST` : `{ "agent_id", "type", "nom", "prenom", "date_naissance", "sexe"?, "lien_juridique", "qualite_age"?, "date_debut"?, "date_fin"?, "actif"? }`.
+
+| Champ | Valeurs |
+|-------|---------|
+| `type` | `conjoint` \| `enfant` |
+| `lien_juridique` conjoint | `mariage` \| `union_libre` |
+| `lien_juridique` enfant | `mariage` \| `naturel_reconnu` \| `adoption` \| `tutelle` |
+| `qualite_age` (enfants, défaut `standard`) | `standard` (moins de **16** ans) · `apprentissage` (moins de **17**) · `etudes` / `infirmite` (moins de **21**) |
+
+Règles métier (422) :
+
+- un seul **conjoint actif** ;
+- max **2** enfants actifs sous **tutelle** ;
+- agent archivé.
+
+Champs calculés (lecture) : `age`, `age_limite`, `a_charge`, `eligible_arbre_noel` (enfant 0–16 ans inclus, art. 58).
+
+`nb_enfants` de `PUT /personnel/agents/{id}/situation-familiale` : si des enfants nominatifs existent, **ignoré** et recalculé (`a_charge`). Ne plus en faire la saisie maître.
+
+Pièce : multipart `fichier` (pdf/jpg/png/doc/docx, max 10 Mo) + `type_piece` : `acte_naissance` \| `acte_mariage` \| `jugement_tutelle` \| `certificat_scolarite` \| `certificat_apprentissage` \| `certificat_medical` \| `autre`.
+
+### Dossier social
+
+`GET …/agents/{id}/dossier-social` :
+
+```json
+{
+  "data": {
+    "agent": { "id": 1, "matricule": "…", "nom": "…", "prenom": "…", "nom_complet": "…", "numero_cnss": "…", "statut": "actif" },
+    "affiliations": [],
+    "ayants_droit": [],
+    "synthese": {
+      "affiliation_cnss": false,
+      "nb_enfants_a_charge": 0,
+      "nb_enfants_arbre_noel": 0,
+      "prime_arbre_noel_forfaitaire": true,
+      "nb_enfants_tutelle": 0,
+      "a_conjoint_a_charge": false
+    }
+  }
+}
+```
+
+`nb_enfants_arbre_noel` plafonné à **3**. `prime_arbre_noel_forfaitaire=true` si aucun enfant 0–16 ans (part forfaitaire art. 58) — **pas de versement** en P1.
+
+**Hors P1 :** demandes de prestations, capital décès, frais médicaux, AT-MP, assurances, paie.
+
+---
+
+## 2g. Formations — contrat FE (D.4)
+
+Préfixe : **`/api/formations`**. Auth Bearer. Listes **non paginées**. Source CCN : art. **92–104**.  
+Les stages d’**accueil** restent sous `/integration/stages`.
+
+Reconnecter RH / DG / admin (`consulter-formations`, `gerer-formations`).
+
+### Permissions
+
+| Permission | Usage | Seeder |
+|------------|--------|--------|
+| `consulter-formations` | Catalogue, plans, inscriptions, certifications, pièce | `rh`, `admin`, `directeur-general` |
+| `gerer-formations` | CRUD + valider / exécuter / inscrire / clôturer | `rh`, `admin` |
+
+`POST /integration/stages/{id}/convertir-agent` : `gerer-formations` **ou** `creer-recrutement`.
+
+### Écrans recommandés
+
+| Écran | APIs |
+|-------|------|
+| Catalogue | `GET/POST /formations/catalogue` · `GET/PUT/DELETE …/catalogue/{id}` |
+| Plan annuel | `GET/POST /formations/plans` · `POST …/plans/{id}/lignes` · `POST …/valider` · `…/executer` · `…/cloturer` |
+| Inscriptions | `GET/POST /formations/inscriptions` · `POST …/{id}/confirmer-presence` · `POST …/{id}/cloturer` · `POST …/{id}/annuler` · `GET …/agents/{id}/inscriptions` |
+| Certifications | `POST /formations/certifications` (multipart `fichier` optionnel) · `GET …/agents/{id}/certifications` · `GET …/{id}/fichier` |
+| Conversion stagiaire | **`POST /integration/stages/{id}/convertir-agent`** — stage **clôturé** uniquement |
+
+### Catalogue
+
+`type_action` : `sur_le_tas` \| `seminaire` \| `perfectionnement` \| `qualification` \| `ecole` \| `camrtf`.  
+`modalite` : `interne` \| `externe`.  
+Plafonds durée : perfectionnement **9 mois** (art. 99), qualification / école **36 mois** (art. 102). Liste : actifs par défaut ; `?actif=all`.
+
+`anciennete_min_ans` défaut **3** (art. 92). `debit_formation_mois` optionnel (art. 104) → calcule `debit_jusqu_au` à l’inscription.
+
+### Plan annuel
+
+`brouillon` → `valide` → `execute` → `cloture`. Modification / lignes **uniquement** en brouillon. Validation **422** sans ligne. Une année = un plan.
+
+### Inscriptions
+
+`POST` : `{ agent_id, formation_id, plan_id?, date_debut?, date_fin?, admission_sur_titre? }`.
+
+- Agent archivé ou stagiaire : 422.
+- Ancienneté < `anciennete_min_ans` : 422.
+- `plan_id` : plan `valide` ou `execute`, formation prévue dans les lignes.
+- `admission_sur_titre` : âge ≤ 50 **et** dernier échelon (n° 12) — art. 103.
+- Perfectionnement / qualification : clôture exige `rapport_remis=true` (art. 100).
+
+Statuts : `inscrite` → `presente` (`confirmer-presence`) → `terminee` (`cloturer`) ; ou `annulee`.
+
+### Certifications
+
+Lien optionnel `diplome_id` (référentiel déjà utilisé par le reclassement art. 73). Pièce pdf/jpg/png max 10 Mo.
+
+### Conversion stagiaire → agent
+
+Stage `TERMINE` uniquement. Ouvre un dossier d’intégration **Recrutement externe** (`BROUILLON`) sur le même agent. 2ᵉ appel : 422. Le wizard d’intégration existant prend le relais.
 
 ---
 
@@ -631,6 +786,8 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | Congés | `consulter-conges`, `creer-conges`, `valider-conges` — les boutons N+1/RH/DG se jouent **en plus** sur le rôle / le supérieur (§2c) |
 | Absences | `consulter-absences`, `creer-absences`, `valider-absences` — signer = N+1 |
 | Discipline | `consulter-discipline`, `gerer-discipline`, `proposer-discipline`, `prononcer-discipline` — circuit N+1 → RH → DG. Contrat §2e |
+| Affaires sociales | `consulter-affaires-sociales`, `gerer-affaires-sociales` — P1 organismes / affiliations / ayants droit. Contrat §2f |
+| Formations | `consulter-formations`, `gerer-formations` — catalogue, plan, inscriptions, certifications. Contrat §2g |
 | Users | `consulter-utilisateurs`, `creer-utilisateurs`, `modifier-utilisateurs` |
 | Rôles | `consulter-roles`, `creer-roles`, `modifier-roles` |
 
@@ -642,9 +799,11 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 
 - ~~Campagnes et fiches d’évaluation~~ → **livré** P1–P5 + lots A–D (§7b + §4)
 - ~~Reclassement / hors classe / reconversion (art. 73–75)~~ → **livré** §4
-- Catalogue formations, concours, PDF **acte** de reclassement → formations = Vague D.4 (ne pas brancher avant API)
+- Concours, PDF **acte** de reclassement → hors D.4
 - ~~Discipline~~ → **livré** §2e
-- Affaires sociales, paie lots, dashboard → vagues D.3–D.6 (ne pas concevoir d’écrans avant l’API)
+- ~~Affaires sociales P1~~ → **livré** §2f (prestations D.3.4 / santé D.3.5 encore hors scope)
+- ~~Catalogue formations~~ → **livré** §2g
+- Paie lots, dashboard → vagues D.5–D.6 (ne pas concevoir d’écrans avant l’API)
 - GED **versioning / recherche** (la GED agent légère est livrée, §2d)
 - Cloisonnement menus par bureau DRHL → Vague F, **après** D.2–D.6
 - Mail / SMS (canal `database` uniquement pour l’instant)
@@ -1228,6 +1387,8 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-15 | **Formation D.4** : `/api/formations` + `POST /integration/stages/{id}/convertir-agent` | Permissions `consulter-formations` / `gerer-formations`. Reconnecter RH / DG / admin. Contrat §2g. Stages d’accueil inchangés. |
+| 2026-09-15 | **Affaires sociales D.3 P1** : `/api/affaires-sociales` (organismes, affiliations, ayants droit, pièces, alerte CNSS, dossier social) | Permissions `consulter-affaires-sociales` / `gerer-affaires-sociales`. Reconnecter RH / DG / admin. Contrat §2f. `nb_enfants` dérivé des ayants droit. Prestations **pas** livrées. |
 | 2026-09-15 | **Discipline vague B** : conservation 5 ans, récidive (antécédents), suspension mise à pied, archivage licenciement | Afficher `conservee_jusqu_au`, `recidive`, `antecedents_5_ans`. Historique : `data.recidive`. Statut agent mis à jour au prononcé. |
 | 2026-09-15 | **Discipline CCN art. 90–91** : 4 types, circuit N+1→RH→DG, pièces, mise à pied 1–8 j, PDF | **Breaking** : DG prononce (`prononcer-discipline`) ; chefs `proposer-discipline` + `mes-rapports` ; `prochaine_etape=prononcer` ; pièce obligatoire avant instruire. Reconnecter. Contrat §2e. |
 | 2026-09-15 | **Discipline D.2** : `/api/discipline` + self-service agent `/moi/…` | Permissions `consulter-discipline` / `gerer-discipline` pour RH. Agent : `GET /discipline/moi/historique` (pas de permission). Reconnecter RH / DG / admin. Contrat §2e. |

@@ -10,7 +10,7 @@
 
 **Objectif :** livrer les modules métier manquants (vie de l’agent + DRHL), **sans cloisonner** par service / bureau. Le cloisonnement vient **après**.
 
-**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline livré.** Prochain module neuf : **D.3 Affaires sociales** (P1).
+**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Prochain : **D.5 Paie**.
 
 ---
 
@@ -112,8 +112,8 @@ Préfixe : `/api/conges/…` et `/api/absences`.
 |-------|--------|---------|--------------------|--------|
 | D.1 | Évaluations & avancements | P1–P5 + lots A–D | Personnel | ✅ |
 | D.2 | Discipline | Types CCN, N+1→RH→DG, pièces, PDF, historique | Personnel + conformité | ✅ |
-| D.3 | Affaires sociales | Organismes, affiliations, ayants droit ; prestations ensuite | Affaires sociales | ⬜ **prochain** |
-| D.4 | Formation | Catalogue, plan annuel, inscriptions, certifications + `convertir-agent` | Formation | ⬜ |
+| D.3 | Affaires sociales | Organismes, affiliations, ayants droit ; prestations ensuite | Affaires sociales | ✅ **P1** |
+| D.4 | Formation | Catalogue, plan annuel, inscriptions, certifications + `convertir-agent` | Formation | ✅ |
 | D.5 | Paie (éléments + lots) | Primes / retenues, lot mensuel, bulletin enrichi | Solde | ⬜ |
 | D.6 | Reporting | Dashboard effectifs, répartitions, exports | Étude et planification | ⬜ |
 
@@ -142,35 +142,35 @@ Préfixe : `/api/discipline`. Permissions : `consulter-discipline` / `gerer-disc
 
 ---
 
-### D.3 — Affaires sociales ⬜
+### D.3 — Affaires sociales ✅ P1
 
 Préfixe : `/api/affaires-sociales`. Permissions : `consulter-affaires-sociales` / `gerer-affaires-sociales`.  
-Réutilise `situation-familiale` (trop pauvre aujourd’hui) et le n° CNSS déjà exigé à l’intégration (pièce, pas encore objet métier).
+Réutilise `situation-familiale` (`nb_enfants` recalculé dès qu’il existe des enfants nominatifs) et le n° CNSS de l’agent (versé dans l’affiliation CNSS).
 
 | # | Tâche | Contenu | Statut |
 |---|--------|---------|--------|
-| D.3.1 | Organismes | CRUD CNSS / mutuelle / complémentaire | ⬜ |
-| D.3.2 | Affiliations | N° , dates, statut ; alerte agent sans affiliation | ⬜ |
-| D.3.3 | Ayants droit | Conjoint / enfants nominatifs + pièces (remplace le seul `nb_enfants`) | ⬜ |
+| D.3.1 | Organismes | CRUD CNSS / mutuelle / complémentaire | ✅ |
+| D.3.2 | Affiliations | N° , dates, statut ; alerte agent sans affiliation | ✅ |
+| D.3.3 | Ayants droit | Conjoint / enfants nominatifs + pièces (remplace le seul `nb_enfants`) | ✅ |
 | D.3.4 | Prestations | Demandes (décès, aides, allocations) → instruire → décider | ⬜ après D.5 |
 | D.3.5 | Santé / AT-MP / dossier retraite | Visites, accidents, pension | ⬜ plus tard |
 
-D.3.1–D.3.3 = **P1** (ex-« sécurité sociale »). D.3.4 calcule des montants : dépend des **éléments de paie** (D.5) pour atterrir sur le bulletin.
+D.3.1–D.3.3 = **P1 livré**. D.3.4 calcule des montants : dépend des **éléments de paie** (D.5) pour atterrir sur le bulletin.
 
 ---
 
-### D.4 — Formation ⬜
+### D.4 — Formation ✅
 
 Préfixe : `/api/formations`. Permissions : `consulter-formations` / `gerer-formations`.  
 Les stages d’**accueil** (`/integration/stages`) restent où ils sont ; ce module = formation **continue** des agents.
 
 | # | Tâche | Contenu | Statut |
 |---|--------|---------|--------|
-| D.4.1 | Catalogue | Interne / externe, durée, organisme, coût | ⬜ |
-| D.4.2 | Plan annuel | Brouillon → validé → exécuté | ⬜ |
-| D.4.3 | Inscriptions | Inscrire, présence, clôturer | ⬜ |
-| D.4.4 | Certifications | Pièce + lien diplôme / reclassement art. 73 déjà livré | ⬜ |
-| D.4.5 | `POST /integration/stages/{id}/convertir-agent` | Stage L3 (accueil → agent) | ⬜ |
+| D.4.1 | Catalogue | Interne / externe, durée, organisme, coût | ✅ |
+| D.4.2 | Plan annuel | Brouillon → validé → exécuté | ✅ |
+| D.4.3 | Inscriptions | Inscrire, présence, clôturer | ✅ |
+| D.4.4 | Certifications | Pièce + lien diplôme / reclassement art. 73 déjà livré | ✅ |
+| D.4.5 | `POST /integration/stages/{id}/convertir-agent` | Stage L3 (accueil → agent) | ✅ |
 
 ---
 
@@ -240,11 +240,11 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
                                                          ↓
                                               D.2 Discipline  ✅
                                                          ↓
-                                              D.3 Affaires sociales (P1)  ← ici
+                                              D.3 Affaires sociales (P1)  ✅
                                                          ↓
-                                              D.4 Formation
+                                              D.4 Formation  ✅
                                                          ↓
-                                              D.5 Paie éléments + lots
+                                              D.5 Paie éléments + lots  ← ici
                                                          ↓
                                               D.6 Reporting
                                                          ↓
@@ -252,8 +252,8 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 ```
 
 1. ~~**D.2 Discipline**~~ **livré**.  
-2. **D.3.1–D.3.3** Affaires sociales (P1) — prochain.  
-3. **D.4** Formation (+ `convertir-agent`).  
+2. ~~**D.3.1–D.3.3** Affaires sociales (P1)~~ **livré**.  
+3. ~~**D.4** Formation (+ `convertir-agent`)~~ **livré**.  
 4. **D.5** Paie, puis **D.3.4** prestations / allocations.  
 5. **D.6** Reporting.  
 6. **Vague F** cloisonnement — seulement une fois le FE branché sur ces modules.
@@ -275,3 +275,5 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 | 2026-09-15 | D.2 | Alignement CCN art. 90–91 : 4 types, N+1→RH→DG, pièces, mise à pied 1–8 j, PDF. Permissions `proposer-discipline` / `prononcer-discipline`. |
 | 2026-09-15 | D.2 | Vague B : conservation 5 ans, antécédents/récidive, mise à pied → `suspendu`, licenciement → archivage. |
 | 2026-09-15 | Plan | Modules D.3–D.6 + Vague F cloisonnement. Décision : **pas de cloison** tant que les modules ne sont pas livrés. Prochain : **D.3**. |
+| 2026-09-15 | D.3 | Affaires sociales P1 : `/affaires-sociales` (organismes, affiliations, ayants droit CCN art. 59, pièces, alerte CNSS, dossier social). Permissions `consulter-affaires-sociales` / `gerer-affaires-sociales`. |
+| 2026-09-15 | D.4 | Formation continue : `/formations` (catalogue, plan annuel, inscriptions CCN art. 92–104, certifications) + `POST /integration/stages/{id}/convertir-agent`. |
