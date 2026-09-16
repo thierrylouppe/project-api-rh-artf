@@ -1,13 +1,15 @@
 # Suivi de projet — Gestion RH API
 
-> Dernière mise à jour : 2026-09-15  
+> Dernière mise à jour : 2026-09-16  
 > Références : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) · [`plan_complet.md`](./plan_complet.md) · [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md) · [`roadmap.md`](./roadmap.md) · [`structuration_par_module.md`](./structuration_par_module.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md)
 
 **Légende :** ⬜ À réaliser · 🔄 En cours · ✅ Réalisé · ⏸ Non réalisé (reporté)
 
 **Base de données :** MySQL `bd_api_rh_artf` (utf8mb4_unicode_ci) sur `127.0.0.1:3306`
 
-**État :** cœur « vie de l’agent » API **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Prochain : **D.5 Paie**. Modules DRHL suivants **globaux** (pas de cloison bureau).
+**État :** cœur « vie de l’agent » API **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Prochain : **Vague E** conformité CCN (modules 3–5), puis **D.5 Paie**. Modules DRHL suivants **globaux** (pas de cloison bureau).
+
+Plan E : [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md).
 
 ---
 
@@ -65,7 +67,7 @@
 
 | Sous-module | Statut | Résumé |
 |-------------|--------|--------|
-| 4.1 Contrats | ✅ | `/carriere/contrats` (alias intégration). Salaire initial auto CDI/CDD |
+| 4.1 Contrats | ✅ | `/carriere/contrats`. Essai art. 49 (1/2/3 mois), délai 30 j art. 52. Salaire min. de classe pendant l’essai |
 | 4.2 Carrière | ✅ | Affectations, nominations, lots, synthèse, **reclassements art. 73–75** |
 | 4.3 Affectations | ✅ | Unitaire + groupée, notes de service |
 | 4.4 Notes administratives | ⬜ | Module dédié non livré (les notes de service d’affectation existent) |
@@ -176,7 +178,7 @@ Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vagu
 
 ## Prochaine étape recommandée
 
-**D.5 Paie** (éléments + lots mensuels).
+**Vague E** — lot **A livré**. Suite : **lot B** (pièces art. 46 + CNSS art. 47), puis C positions, D hors grille. Puis **D.5 Paie**.
 
 Puis D.3.4 Prestations → D.6 Reporting. **Pas** de cloisonnement avant Vague F.
 

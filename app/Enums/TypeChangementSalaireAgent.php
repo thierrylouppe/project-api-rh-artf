@@ -11,6 +11,7 @@ enum TypeChangementSalaireAgent: string
     case RECLASSEMENT        = 'reclassement';
     case HORS_CLASSE         = 'hors_classe';
     case RECONVERSION        = 'reconversion';
+    case CONFIRMATION_ESSAI  = 'confirmation_essai';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum TypeChangementSalaireAgent: string
             self::RECLASSEMENT       => 'Reclassement de classe',
             self::HORS_CLASSE        => 'Hors classe',
             self::RECONVERSION       => 'Reconversion',
+            self::CONFIRMATION_ESSAI => 'Confirmation de période d\'essai',
         };
     }
 }

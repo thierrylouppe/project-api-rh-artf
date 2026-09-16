@@ -11,4 +11,6 @@ interface ContratInterface extends BaseInterface
     public function getActif(int $agentId): mixed;
 
     public function resilier(int $id): mixed;
+
+    public function getEssaisEcheantLe(string $date): Collection;
 }

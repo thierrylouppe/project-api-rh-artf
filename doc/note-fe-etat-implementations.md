@@ -2,13 +2,14 @@
 
 > Document **vivant** : à mettre à jour à chaque livraison API qui impacte le front.  
 > Objectif : un seul point d’entrée pour les échanges FE (quoi appeler, quoi ne plus attendre, où lire le détail).  
-> Dernière mise à jour : **2026-09-15**
+> Dernière mise à jour : **2026-09-16**
 
 Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste résumé.**
 
 | Sujet | Fichier |
 |-------|---------|
-| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; prochain D.5 ; cloisonnement **plus tard** |
+| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; prochain **Vague E** (CCN 3–5) puis D.5 ; cloisonnement **plus tard** |
+| Conformité CCN intégration / carrière / grille | [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — **lot A livré** (essai + 30 j) ; lots B–E à venir |
 | Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
 | Routes carrière, lots, checklist 14/15 | [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md) |
@@ -674,6 +675,32 @@ Préfixe canonique : **`/api/carriere`**. Basculer progressivement ; prévenir l
 - Synthèse : `GET /carriere/agents/{id}` (identité + contrat / affectation / nomination / salaire actuel). **Pas d’alias** `/integration`.
 - Reclassements (art. 73–75) : `GET/POST /carriere/reclassements` — **pas** dans `/avancements`. Lien depuis la fiche agent.
 
+### Contrats — essai art. 49 / délai art. 52 (Vague E lot A)
+
+`GET/POST /carriere/contrats` (alias `/integration/contrats`). Recrutement externe : **`necessite_contrat = true`** (comme Contractuel). Reconnecter après reseed des types.
+
+À la création **CDI/CDD**, l’API pose l’essai et un salaire à l’**échelon 1** (minimum de la classe), même si l’agent a un échelon cible plus élevé.
+
+`data.essai` :
+
+| Champ | Valeurs |
+|-------|---------|
+| `statut` | `en_cours` \| `renouvele` \| `concluant` \| `rompu` \| `non_applicable` (STG/CONS) |
+| `duree_mois` | **1** (classes 1–4) / **2** (5–6) / **3** (7–10) |
+| `prochaine_etape` | `confirmer-essai` tant que l’essai est ouvert, sinon `null` |
+| `peut_renouveler` | `true` seulement si `en_cours` et pas encore renouvelé |
+
+| Méthode | URL | Permission |
+|---------|-----|------------|
+| `POST` | `/carriere/contrats/{id}/renouveler-essai` | `modifier-contrats` |
+| `POST` | `/carriere/contrats/{id}/confirmer-essai` | `modifier-contrats` — passe le salaire à l’échelon prévu |
+| `POST` | `/carriere/contrats/{id}/rompre-essai` | `modifier-contrats` — `{ "commentaire": "…" }` optionnel ; **sans** préavis ni indemnité |
+| `GET` | `/carriere/contrats/alertes/delai-30-jours` | `consulter-contrats` — PDS + 30 j ouvrables sans CDI/CDD |
+
+Notifications : `domaine: contrat` (`essai_renouvele`, `essai_concluant`, `essai_rompu`, `essai_echeance`) ; `domaine: integration` (`contrat_delai_depasse`).
+
+`data.mentions` reprend les mentions art. 52 (identité, essai, emploi, rémunération, **lieu de travail** si affectation active). `data.agent` est une identité légère (`id`, `matricule`, `nom`, `prenom`, `nom_complet`). Champ optionnel à la création : `lieu_recrutement`.
+
 ### Reclassements — art. 73–75 (lot D)
 
 Hors notation. Changement de **classe** ou d’emploi. L’avancement d’échelon (`avancer-echelon`) reste dans la même classe.
@@ -803,6 +830,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 - ~~Discipline~~ → **livré** §2e
 - ~~Affaires sociales P1~~ → **livré** §2f (prestations D.3.4 / santé D.3.5 encore hors scope)
 - ~~Catalogue formations~~ → **livré** §2g
+- Conformité CCN 3–5 lots B–E (pièces, positions, hors grille DG) → [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — **lot A livré** (§4 contrats / essai)
 - Paie lots, dashboard → vagues D.5–D.6 (ne pas concevoir d’écrans avant l’API)
 - GED **versioning / recherche** (la GED agent légère est livrée, §2d)
 - Cloisonnement menus par bureau DRHL → Vague F, **après** D.2–D.6
@@ -1387,6 +1415,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-16 | **Vague E lot A** : essai art. 49 + délai contrat 30 j art. 52 | Recrutement externe : `necessite_contrat=true`. Badge essai + boutons renouveler/confirmer/rompre. File `GET /carriere/contrats/alertes/delai-30-jours`. Voir §4. |
 | 2026-09-15 | **Formation D.4** : `/api/formations` + `POST /integration/stages/{id}/convertir-agent` | Permissions `consulter-formations` / `gerer-formations`. Reconnecter RH / DG / admin. Contrat §2g. Stages d’accueil inchangés. |
 | 2026-09-15 | **Affaires sociales D.3 P1** : `/api/affaires-sociales` (organismes, affiliations, ayants droit, pièces, alerte CNSS, dossier social) | Permissions `consulter-affaires-sociales` / `gerer-affaires-sociales`. Reconnecter RH / DG / admin. Contrat §2f. `nb_enfants` dérivé des ayants droit. Prestations **pas** livrées. |
 | 2026-09-15 | **Discipline vague B** : conservation 5 ans, récidive (antécédents), suspension mise à pied, archivage licenciement | Afficher `conservee_jusqu_au`, `recidive`, `antecedents_5_ans`. Historique : `data.recidive`. Statut agent mis à jour au prononcé. |

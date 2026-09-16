@@ -956,6 +956,173 @@
                 ]
             }
         },
+        "/api/affaires-sociales/affiliations": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Liste des affiliations",
+                "operationId": "listAffiliationsSociales",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Créer une affiliation",
+                "operationId": "storeAffiliationSociale",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/alertes/sans-affiliation-cnss": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Agents sans affiliation CNSS active",
+                "operationId": "alertesSansAffiliationCnss",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/agents/{agent}/affiliations": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Affiliations d'un agent",
+                "operationId": "affiliationsParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/affiliations/{id}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Détail d'une affiliation",
+                "operationId": "showAffiliationSociale",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Modifier une affiliation",
+                "operationId": "updateAffiliationSociale",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Supprimer une affiliation",
+                "operationId": "destroyAffiliationSociale",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/integration/agents": {
             "get": {
                 "tags": [
@@ -1676,6 +1843,282 @@
                 ]
             }
         },
+        "/api/affaires-sociales/ayants-droit": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Liste des ayants droit",
+                "operationId": "listAyantsDroit",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Déclarer un ayant droit",
+                "operationId": "storeAyantDroit",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/agents/{agent}/ayants-droit": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Ayants droit d'un agent",
+                "operationId": "ayantsDroitParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/ayants-droit/{id}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Détail d'un ayant droit",
+                "operationId": "showAyantDroit",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Modifier un ayant droit",
+                "operationId": "updateAyantDroit",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Supprimer un ayant droit",
+                "operationId": "destroyAyantDroit",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/ayants-droit/{id}/pieces": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Pièces d'un ayant droit",
+                "operationId": "listPiecesAyantDroit",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Joindre une pièce à un ayant droit",
+                "operationId": "storePieceAyantDroit",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/ayants-droit/{id}/pieces/{pieceId}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Télécharger une pièce",
+                "operationId": "downloadPieceAyantDroit",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "pieceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Retirer une pièce",
+                "operationId": "destroyPieceAyantDroit",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "pieceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/carriere/agents/{id}": {
             "get": {
                 "tags": [
@@ -1703,6 +2146,275 @@
                     },
                     "404": {
                         "description": "Introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/catalogue": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Catalogue des formations",
+                "operationId": "listCatalogueFormations",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Créer une formation au catalogue",
+                "operationId": "storeCatalogueFormation",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/catalogue/{id}": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Détail d'une formation",
+                "operationId": "showCatalogueFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Modifier une formation",
+                "operationId": "updateCatalogueFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Supprimer une formation",
+                "operationId": "destroyCatalogueFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/certifications": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Liste des certifications",
+                "operationId": "listCertificationsFormation",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Enregistrer une certification",
+                "operationId": "storeCertificationFormation",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/agents/{agent}/certifications": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Certifications d'un agent",
+                "operationId": "certificationsFormationParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/certifications/{id}": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Détail d'une certification",
+                "operationId": "showCertificationFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Supprimer une certification",
+                "operationId": "destroyCertificationFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/certifications/{id}/fichier": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Télécharger la pièce",
+                "operationId": "downloadCertificationFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier"
                     }
                 },
                 "security": [
@@ -2075,10 +2787,10 @@
                 ]
             }
         },
-        "/api/integration/contrats": {
+        "/api/carriere/contrats": {
             "get": {
                 "tags": [
-                    "Intégration — Contrats"
+                    "Carrière — Contrats"
                 ],
                 "summary": "Liste des contrats",
                 "operationId": "listContrats",
@@ -2105,10 +2817,10 @@
             },
             "post": {
                 "tags": [
-                    "Intégration — Contrats"
+                    "Carrière — Contrats"
                 ],
                 "summary": "Créer un contrat",
-                "description": "La signature (transition dossier) se fait via `POST /api/integration/dossiers/{id}/marquer-contrat-signe`.",
+                "description": "CDI/CDD : période d'essai automatique art. 49 (1/2/3 mois selon la classe) et salaire au minimum de la classe. Alias `/api/integration/contrats`.",
                 "operationId": "storeContrat",
                 "requestBody": {
                     "required": true,
@@ -2149,12 +2861,12 @@
                 ]
             }
         },
-        "/api/integration/contrats/{id}": {
+        "/api/carriere/contrats/{id}": {
             "get": {
                 "tags": [
-                    "Intégration — Contrats"
+                    "Carrière — Contrats"
                 ],
-                "summary": "Détail d'un contrat",
+                "summary": "Détail d'un contrat (essai art. 49, mentions art. 52)",
                 "operationId": "showContrat",
                 "parameters": [
                     {
@@ -2195,10 +2907,202 @@
                 ]
             }
         },
-        "/api/integration/agents/{agent}/contrats": {
+        "/api/carriere/contrats/alertes/delai-30-jours": {
             "get": {
                 "tags": [
-                    "Intégration — Contrats"
+                    "Carrière — Contrats"
+                ],
+                "summary": "Dossiers intégrés sans CDI/CDD plus de 30 jours ouvrables après la PDS (art. 52)",
+                "operationId": "alertesDelaiContrat30Jours",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Permission manquante",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error403"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/contrats/{contrat}/renouveler-essai": {
+            "post": {
+                "tags": [
+                    "Carrière — Contrats"
+                ],
+                "summary": "Renouveler la période d'essai une fois (art. 49)",
+                "operationId": "renouvelerEssaiContrat",
+                "parameters": [
+                    {
+                        "name": "contrat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Renouvelé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ContratResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/contrats/{contrat}/confirmer-essai": {
+            "post": {
+                "tags": [
+                    "Carrière — Contrats"
+                ],
+                "summary": "Confirmer l'essai concluant — engagement définitif (art. 49)",
+                "operationId": "confirmerEssaiContrat",
+                "parameters": [
+                    {
+                        "name": "contrat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Confirmé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ContratResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/contrats/{contrat}/rompre-essai": {
+            "post": {
+                "tags": [
+                    "Carrière — Contrats"
+                ],
+                "summary": "Rompre le contrat pendant l'essai, sans préavis ni indemnité (art. 49)",
+                "operationId": "rompreEssaiContrat",
+                "parameters": [
+                    {
+                        "name": "contrat",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "commentaire": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rompu",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ContratResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/agents/{agent}/contrats": {
+            "get": {
+                "tags": [
+                    "Carrière — Contrats"
                 ],
                 "summary": "Contrats d'un agent",
                 "operationId": "listContratsByAgent",
@@ -2234,10 +3138,10 @@
                 ]
             }
         },
-        "/api/integration/contrats/{contrat}/resilier": {
+        "/api/carriere/contrats/{contrat}/resilier": {
             "post": {
                 "tags": [
-                    "Intégration — Contrats"
+                    "Carrière — Contrats"
                 ],
                 "summary": "Résilier un contrat",
                 "operationId": "resilierContrat",
@@ -2271,6 +3175,35 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/integration/stages/{id}/convertir-agent": {
+            "post": {
+                "tags": [
+                    "Intégration — Stages"
+                ],
+                "summary": "Ouvrir un dossier d'intégration agent après clôture du stage",
+                "operationId": "convertirStagiaireAgent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Dossier créé"
                     }
                 },
                 "security": [
@@ -3814,6 +4747,35 @@
                 ]
             }
         },
+        "/api/affaires-sociales/agents/{agent}/dossier-social": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Dossier social d'un agent (affiliations, ayants droit, synthèse CCN)",
+                "operationId": "dossierSocialAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dossier"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/avancements/evaluations": {
             "get": {
                 "tags": [
@@ -4297,6 +5259,214 @@
                 "responses": {
                     "200": {
                         "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/inscriptions": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Liste des inscriptions",
+                "operationId": "listInscriptionsFormation",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Inscrire un agent",
+                "operationId": "storeInscriptionFormation",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/agents/{agent}/inscriptions": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Inscriptions d'un agent",
+                "operationId": "inscriptionsFormationParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/inscriptions/{id}": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Détail d'une inscription",
+                "operationId": "showInscriptionFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Supprimer une inscription",
+                "operationId": "destroyInscriptionFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/inscriptions/{id}/confirmer-presence": {
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Confirmer la présence",
+                "operationId": "confirmerPresenceFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Présente"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/inscriptions/{id}/cloturer": {
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Clôturer une inscription",
+                "operationId": "cloturerInscriptionFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Clôturée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/inscriptions/{id}/annuler": {
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Annuler une inscription",
+                "operationId": "annulerInscriptionFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Annulée"
                     }
                 },
                 "security": [
@@ -5650,6 +6820,125 @@
                 ]
             }
         },
+        "/api/affaires-sociales/organismes": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Liste des organismes sociaux",
+                "operationId": "listOrganismesSociaux",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Créer un organisme",
+                "operationId": "storeOrganismeSocial",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/organismes/{id}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Détail d'un organisme",
+                "operationId": "showOrganismeSocial",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Modifier un organisme",
+                "operationId": "updateOrganismeSocial",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Supprimer un organisme",
+                "operationId": "destroyOrganismeSocial",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/conges/paliers-anciennete": {
             "get": {
                 "tags": [
@@ -5884,6 +7173,278 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/plans": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Plans de formation annuels",
+                "operationId": "listPlansFormation",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Créer un plan annuel (brouillon)",
+                "operationId": "storePlanFormation",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/plans/{id}": {
+            "get": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Détail d'un plan",
+                "operationId": "showPlanFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Modifier un plan en brouillon",
+                "operationId": "updatePlanFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Supprimer un plan en brouillon",
+                "operationId": "destroyPlanFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/plans/{id}/lignes": {
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Ajouter une formation au plan",
+                "operationId": "storeLignePlanFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/plans/{id}/lignes/{ligneId}": {
+            "delete": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Retirer une formation du plan",
+                "operationId": "destroyLignePlanFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "ligneId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/plans/{id}/valider": {
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Valider le plan annuel",
+                "operationId": "validerPlanFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Validé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/plans/{id}/executer": {
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Passer le plan en exécution",
+                "operationId": "executerPlanFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Exécuté"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/formations/plans/{id}/cloturer": {
+            "post": {
+                "tags": [
+                    "Formations"
+                ],
+                "summary": "Clôturer le plan annuel",
+                "operationId": "cloturerPlanFormation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Clôturé"
                     }
                 },
                 "security": [
@@ -8324,7 +9885,107 @@
                     },
                     "statut": {
                         "type": "string",
-                        "example": "BROUILLON"
+                        "example": "actif"
+                    },
+                    "lieu_recrutement": {
+                        "type": "string",
+                        "example": "Brazzaville",
+                        "nullable": true
+                    },
+                    "mentions": {
+                        "properties": {
+                            "noms": {
+                                "type": "string"
+                            },
+                            "nationalite": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "date_naissance": {
+                                "type": "string",
+                                "format": "date",
+                                "nullable": true
+                            },
+                            "lieu_naissance": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "sexe": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "situation_matrimoniale": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "date_recrutement": {
+                                "type": "string",
+                                "format": "date",
+                                "nullable": true
+                            },
+                            "lieu_recrutement": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "emploi": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "remuneration": {
+                                "type": "number",
+                                "nullable": true
+                            },
+                            "lieu_travail": {
+                                "description": "Nom de la structure d'affectation active",
+                                "type": "string",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "essai": {
+                        "properties": {
+                            "statut": {
+                                "type": "string",
+                                "example": "en_cours"
+                            },
+                            "statut_label": {
+                                "type": "string",
+                                "example": "En cours"
+                            },
+                            "duree_mois": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "date_debut": {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            "date_fin": {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            "renouvele": {
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "date_confirmation": {
+                                "type": "string",
+                                "format": "date",
+                                "nullable": true
+                            },
+                            "prochaine_etape": {
+                                "type": "string",
+                                "example": "confirmer-essai",
+                                "nullable": true
+                            },
+                            "peut_renouveler": {
+                                "type": "boolean",
+                                "example": true
+                            }
+                        },
+                        "type": "object"
                     },
                     "created_at": {
                         "type": "string",
@@ -8373,6 +10034,11 @@
                     "remuneration": {
                         "type": "number",
                         "example": 350000,
+                        "nullable": true
+                    },
+                    "lieu_recrutement": {
+                        "type": "string",
+                        "example": "Brazzaville",
                         "nullable": true
                     }
                 },
@@ -9060,10 +10726,6 @@
             "description": "Actes administratifs"
         },
         {
-            "name": "Intégration — Contrats",
-            "description": "Contrats agents"
-        },
-        {
             "name": "Carrière — Affectations",
             "description": "Affectations et notes de service"
         },
@@ -9088,6 +10750,14 @@
             "description": "Prise de service et finalisation"
         },
         {
+            "name": "Affaires sociales",
+            "description": "Organismes, affiliations CNSS, ayants droit (CCN art. 58–59)"
+        },
+        {
+            "name": "Formations",
+            "description": "Formation continue des agents (CCN art. 92–104)"
+        },
+        {
             "name": "Absences",
             "description": "Absences"
         },
@@ -9106,6 +10776,14 @@
         {
             "name": "Congés",
             "description": "Congés"
+        },
+        {
+            "name": "Carrière — Contrats",
+            "description": "Carrière — Contrats"
+        },
+        {
+            "name": "Intégration — Stages",
+            "description": "Intégration — Stages"
         },
         {
             "name": "Notifications",

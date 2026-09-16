@@ -83,7 +83,7 @@ class TypeIntegrationSeeder extends Seeder
                 'nom'                     => 'Recrutement externe',
                 'description'             => 'Nouvel agent recruté par concours ou sélection',
                 'type_acte_administratif' => 'decision_recrutement',
-                'necessite_contrat'       => false,
+                'necessite_contrat'       => true,
             ],
             [
                 'nom'                     => 'Mutation',

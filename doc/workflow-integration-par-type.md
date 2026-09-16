@@ -24,7 +24,7 @@ Ce document décrit le **comportement API réel** selon le type d'intégration, 
 
 | Type | Contrat | DG | Compte | Acte | Préfixe | Particularité |
 |------|---------|----|--------|------|---------|---------------|
-| Recrutement externe | Non | Oui | Oui | `decision_recrutement` | ARTF | Parcours permanent |
+| Recrutement externe | **Oui** | Oui | Oui | `decision_recrutement` | ARTF | Parcours permanent — contrat ≤ 30 j ouvrables (art. 52) |
 | Mutation | Non | Oui | Oui | `decision_mutation` | ARTF | Pièces mutation |
 | Détachement | Non | Oui | Oui | `arrete_detachement` | ARTF | Temporaire |
 | Mise à disposition | Non | Oui | Oui | `note_de_service` | ARTF | Convention MAD |

@@ -21,6 +21,7 @@ class CreateRequest extends FormRequest
             'date_debut'             => ['required', 'date'],
             'date_fin'               => ['nullable', 'date', 'after:date_debut'],
             'remuneration'           => ['nullable', 'numeric', 'min:0'],
+            'lieu_recrutement'       => ['nullable', 'string', 'max:255'],
         ];
     }
 }

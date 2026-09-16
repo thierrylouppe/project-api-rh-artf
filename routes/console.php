@@ -1,6 +1,8 @@
 <?php
 
 use App\Jobs\AppliquerEffetsMiseAPiedJob;
+use App\Jobs\ContratDelai30JoursJob;
+use App\Jobs\ContratEssaiEnFinDateJob;
 use App\Jobs\ConventionStageEnFinDateJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -17,4 +19,14 @@ Schedule::job(new ConventionStageEnFinDateJob)
 
 Schedule::job(new AppliquerEffetsMiseAPiedJob)
     ->dailyAt('08:00')
+    ->withoutOverlapping();
+
+Schedule::job(new ContratEssaiEnFinDateJob)
+    ->weekdays()
+    ->at('08:00')
+    ->withoutOverlapping();
+
+Schedule::job(new ContratDelai30JoursJob)
+    ->weekdays()
+    ->at('08:00')
     ->withoutOverlapping();

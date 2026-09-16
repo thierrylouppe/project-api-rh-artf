@@ -56,4 +56,25 @@ class DossierIntegrationRepository extends BaseRepository implements DossierInte
 
         return (int) substr($dernier, -6);
     }
+
+    public function getIntegresNecessitantContrat(): Collection
+    {
+        return DossierIntegration::query()
+            ->where('statut', StatutDossier::INTEGRE->value)
+            ->whereHas('typeIntegration', function ($query) {
+                $query->where('necessite_contrat', true)
+                    ->where('nom', 'not like', 'Stage%');
+            })
+            ->whereHas('agent', function ($query) {
+                $query->whereNotNull('date_prise_service')
+                    // 42 j. calendaires ≈ 30 j. ouvrables (week-ends) : le filtre PHP affine.
+                    ->whereDate('date_prise_service', '<=', now()->subDays(42)->toDateString());
+            })
+            ->whereDoesntHave('agent.contrats', function ($query) {
+                $query->where('statut', 'actif')
+                    ->whereHas('typeContrat', fn ($type) => $type->whereIn('sigle', ['CDI', 'CDD']));
+            })
+            ->with(['agent', 'typeIntegration'])
+            ->get();
+    }
 }

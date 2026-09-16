@@ -78,7 +78,7 @@ GET /types-integrations
       "id": 1,
       "nom": "Recrutement externe",
       "type_acte_administratif": "decision_recrutement",
-      "necessite_contrat": false,
+      "necessite_contrat": true,
       "necessite_validation_dg": true,
       "necessite_compte_utilisateur": true,
       "prefixe_matricule": null

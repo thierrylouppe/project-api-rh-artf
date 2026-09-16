@@ -102,8 +102,16 @@ $routesCarriere = function (): void {
     Route::get('agents/{agent}/salaires', [SalaireAgentController::class, 'byAgent'])
         ->middleware('permission:consulter-salaires');
 
+    Route::get('contrats/alertes/delai-30-jours', [ContratController::class, 'alertesDelai30Jours'])
+        ->middleware('permission:consulter-contrats');
     Route::apiResource('contrats', ContratController::class)->only(['index', 'store', 'show']);
     Route::post('contrats/{contrat}/resilier', [ContratController::class, 'resilier']);
+    Route::post('contrats/{contrat}/renouveler-essai', [ContratController::class, 'renouvelerEssai'])
+        ->middleware('permission:modifier-contrats');
+    Route::post('contrats/{contrat}/confirmer-essai', [ContratController::class, 'confirmerEssai'])
+        ->middleware('permission:modifier-contrats');
+    Route::post('contrats/{contrat}/rompre-essai', [ContratController::class, 'rompreEssai'])
+        ->middleware('permission:modifier-contrats');
 
     Route::post('affectations/groupee', [LotAffectationController::class, 'store']);
     Route::get('affectations/lots/{lot}', [LotAffectationController::class, 'detail']);

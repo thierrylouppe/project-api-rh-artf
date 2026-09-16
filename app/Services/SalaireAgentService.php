@@ -114,11 +114,13 @@ class SalaireAgentService extends BaseService
     /**
      * Crée le salaire initial d'un agent à partir de sa classe / échelon et de la grille.
      * Réservé aux contrats CDI / CDD. Retourne null si non applicable.
+     * `$echelonForce` : pendant l'essai (art. 49), passer 1 (minimum de la classe).
      */
     public function creerSalaireInitial(
         Agent $agent,
         ?Contrat $contrat = null,
         ?string $motif = null,
+        ?int $echelonForce = null,
     ): ?SalaireAgent {
         if ($contrat !== null) {
             $contrat->loadMissing('typeContrat');
@@ -129,12 +131,12 @@ class SalaireAgentService extends BaseService
             }
         }
 
-        return DB::transaction(function () use ($agent, $contrat, $motif) {
+        return DB::transaction(function () use ($agent, $contrat, $motif, $echelonForce) {
             $agent = $this->agentRepository->findById($agent->id);
             $agent->loadMissing('echelon');
 
             $classe = $this->resoudreClasse($agent);
-            $echelonNumero = $this->resoudreEchelonNumero($agent);
+            $echelonNumero = $echelonForce ?? $this->resoudreEchelonNumero($agent);
             $ligneGrille = $this->trouverLigneGrille($classe->id, $echelonNumero);
 
             $dateDebut = $contrat?->date_debut?->toDateString()
@@ -338,6 +340,45 @@ class SalaireAgentService extends BaseService
                 'date_fin'                 => null,
                 'statut'                   => StatutSalaireAgent::ACTIF,
                 'type_changement'          => $type,
+                'motif'                    => $motif,
+            ]);
+        });
+    }
+
+    /**
+     * Après essai concluant : passe du minimum de classe (échelon 1) à l'échelon prévu sur l'agent.
+     */
+    public function appliquerEchelonCibleApresEssai(Agent $agent, ?string $motif = null): ?SalaireAgent
+    {
+        $agent->loadMissing('echelon');
+        $cible = $this->resoudreEchelonNumero($agent);
+        $actuel = $this->repository->getActuel($agent->id);
+
+        if ($actuel === null) {
+            return $this->creerSalaireInitial($agent, null, $motif);
+        }
+
+        if ((int) $actuel->echelon === $cible) {
+            return $actuel;
+        }
+
+        return DB::transaction(function () use ($agent, $actuel, $cible, $motif) {
+            $ligneGrille = $this->trouverLigneGrille((int) $actuel->classegrillesalariale_id, $cible);
+            $dateDebut   = now()->toDateString();
+
+            $this->repository->cloturerActifs($agent->id, $dateDebut);
+
+            return $this->repository->create([
+                'agent_id'                 => $agent->id,
+                'salaire_id'               => $ligneGrille->id,
+                'classegrillesalariale_id' => $actuel->classegrillesalariale_id,
+                'echelon'                  => $cible,
+                'montant_base'             => $ligneGrille->salaire,
+                'montant_net'              => $ligneGrille->salaire,
+                'date_debut'               => $dateDebut,
+                'date_fin'                 => null,
+                'statut'                   => StatutSalaireAgent::ACTIF,
+                'type_changement'          => TypeChangementSalaireAgent::CONFIRMATION_ESSAI,
                 'motif'                    => $motif,
             ]);
         });

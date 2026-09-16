@@ -15,6 +15,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'date_debut', type: 'string', format: 'date', example: '2026-09-01'),
         new OA\Property(property: 'date_fin', type: 'string', format: 'date', nullable: true),
         new OA\Property(property: 'remuneration', type: 'number', nullable: true, example: 350000),
+        new OA\Property(property: 'lieu_recrutement', type: 'string', nullable: true, example: 'Brazzaville'),
     ]
 )]
 class ContratRequest {}
