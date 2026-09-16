@@ -86,16 +86,13 @@ class ContratService extends BaseService
     }
 
     /**
-     * Durée d'essai CCN art. 49 : classes 1–4 = 1 mois, 5–6 = 2 mois, 7–10 = 3 mois.
+     * Durée d'essai CCN art. 49 / 50 : classes 1–4 = 1 mois, 5–6 = 2 mois, 7–10 = 3 mois.
      */
-    public function dureeEssaiMois(Agent $agent): int
+    public static function dureeEssaiMoisPourNiveau(int $niveau): int
     {
-        $agent->loadMissing('grade');
-        $niveau = (int) ($agent->grade?->niveau ?? 0);
-
         if ($niveau < 1 || $niveau > 10) {
             throw ValidationException::withMessages([
-                'grade_id' => 'Impossible de déterminer la durée d\'essai : l\'agent doit avoir une classe (grade) CCN 1 à 10.',
+                'grade_id' => 'Impossible de déterminer la durée d\'essai : classe CCN 1 à 10 requise.',
             ]);
         }
 
@@ -104,6 +101,13 @@ class ContratService extends BaseService
             $niveau <= 6 => 2,
             default      => 3,
         };
+    }
+
+    public function dureeEssaiMois(Agent $agent): int
+    {
+        $agent->loadMissing('grade');
+
+        return self::dureeEssaiMoisPourNiveau((int) ($agent->grade?->niveau ?? 0));
     }
 
     public function renouvelerEssai(int $id): Contrat

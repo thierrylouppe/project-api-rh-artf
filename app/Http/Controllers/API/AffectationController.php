@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Enums\PieceRapprochement;
 use App\Http\Requests\Affectation\ActiverRequest;
 use App\Http\Requests\Affectation\CreateRequest;
 use App\Http\Requests\Affectation\NoteServiceLotRequest;
@@ -80,9 +81,15 @@ class AffectationController extends BaseController
     #[OA\Post(path: '/api/integration/affectations', operationId: 'storeAffectation', tags: ['Intégration — Affectations'], summary: 'Créer une affectation (alias)', deprecated: true, security: [['bearerAuth' => []]], responses: [new OA\Response(response: 201, description: 'Créée')])]
     public function store(CreateRequest $request): JsonResponse
     {
+        $pieces = [];
+        foreach (PieceRapprochement::toutes() as $piece) {
+            $pieces[$piece->value] = $request->file($piece->champFichier());
+        }
+
         $affectation = $this->service->creerUnitaire(
             $request->validated(),
-            $request->file('note_service')
+            $request->file('note_service'),
+            $pieces
         );
 
         $message = 'Affectation créée — circuit de validation initialisé';

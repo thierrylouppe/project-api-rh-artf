@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Affectation;
 
+use App\Enums\MotifAffectation;
 use App\Http\Requests\Concerns\ValideStructurable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -41,6 +42,13 @@ class GroupeeRequest extends FormRequest
                     $agent['structurable_type'] ?? null,
                     $agent['structurable_id'] ?? null,
                     "agents.{$index}.structurable_id"
+                );
+            }
+
+            if (MotifAffectation::estRapprochement($this->input('motif_code'), $this->input('motif'))) {
+                $validator->errors()->add(
+                    'motif',
+                    'Le rapprochement de conjoints (art. 81) se saisit en affectation unitaire, avec les quatre pièces.'
                 );
             }
         });

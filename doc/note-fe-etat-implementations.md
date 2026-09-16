@@ -8,8 +8,8 @@ Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste ré
 
 | Sujet | Fichier |
 |-------|---------|
-| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; prochain **Vague E** (CCN 3–5) puis D.5 ; cloisonnement **plus tard** |
-| Conformité CCN intégration / carrière / grille | [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — **lot A livré** (essai + 30 j) ; lots B–E à venir |
+| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; Vague E **A–E livrés** ; prochain **D.5** ; cloisonnement **plus tard** |
+| Conformité CCN intégration / carrière / grille | [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A–E livrés** ; D.5 paie ensuite |
 | Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
 | Routes carrière, lots, checklist 14/15 | [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md) |
@@ -723,6 +723,23 @@ Préfixe canonique : **`/api/carriere`**. Basculer progressivement ; prévenir l
 - Synthèse : `GET /carriere/agents/{id}` (identité + contrat / affectation / nomination / salaire actuel). **Pas d’alias** `/integration`.
 - Reclassements (art. 73–75) : `GET/POST /carriere/reclassements` — **pas** dans `/avancements`. Lien depuis la fiche agent.
 - Positions (art. 76–80) : `GET/POST /carriere/positions` — **pas** de PUT statut agent. Détachement = rémunération **coupée**. Voir §2c-bis.
+
+### Réembauche art. 48 / essai emploi supérieur art. 50 / rapprochement art. 81–82 (Vague E lot E)
+
+**Réembauche (art. 48).** Archivage : `POST /personnel/agents/{id}/archiver` accepte `motif_code` (`diminution_activite` | `reorganisation` → priorité **2 ans** automatique) et/ou `prioritaire_reembauche: true`. Champ agent `prioritaire_reembauche_jusquau`.
+
+`POST /integration/agents` (embauche CCN) : `meta.priorite_reembauche` si homonyme (nom+prénom) ou même `numero_cnss` encore dans la fenêtre. **Pas de blocage.** Passé 2 ans : encore **1 an** avec `nouvel_essai_requis: true`.
+
+**Essai emploi supérieur (art. 50).** Nomination : `soumis_a_essai` + `classegrillesalariale_id` (classe **strictement supérieure**). Durée = essai de la classe cible (1/2/3 mois). À l’activation : salaire au **minimum (échelon 1)** de la classe cible.
+
+| Méthode | URL | Effet |
+|---------|-----|--------|
+| `POST` | `/carriere/nominations/{id}/confirmer-essai` | L’agent **reste** dans la classe cible |
+| `POST` | `/carriere/nominations/{id}/rompre-essai` | Rétablit fonction + salaire **précédents** et **réactive** l’ancienne nomination (pas une rétrogradation). Body `{ "commentaire": "…" }` optionnel |
+
+`data.essai` : même vocabulaire que les contrats (`statut`, `duree_mois`, `prochaine_etape`).
+
+**Rapprochement (art. 81–82).** Affectation unitaire : `motif_code=rapprochement_conjoints` (ou `motif` identique). **4 fichiers** obligatoires sinon 422 : `piece_demande_manuscrite`, `piece_acte_mariage`, `piece_note_affectation_conjoint`, `piece_attestation_residence`. Champ libre `commentaire_opportunite` (art. 82). L’API **n’accorde pas** automatiquement — circuit d’affectation inchangé. Pas en lot groupé.
 
 ### Contrats — essai art. 49 / délai art. 52 (Vague E lot A)
 
@@ -1472,6 +1489,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-16 | **Vague E lot E** : réembauche art. 48, essai emploi supérieur art. 50, rapprochement art. 81–82 | Archivage : `motif_code` / `prioritaire_reembauche`. `POST /integration/agents` → `meta.priorite_reembauche` (pas de blocage). Nominations : `soumis_a_essai` + `POST …/confirmer-essai` / `rompre-essai`. Affectation rapprochement : 4 pièces, pas d’accord auto. Voir §4. |
 | 2026-09-16 | **Vague E lot D** : hors grille art. 55 + bonifs annexe 1 | Badge **salaire fonctionnel** si `hors_grille` (DG/DC/DD) : masquer bulletin indiciaire. `POST /salaires-agents` → `data: null` + `meta.salaire_fonctionnel`. Licence/BEP/Master/Doctorat : `meta.annexe1`. Reseed `diplomes` (plus d’emplois classe I–II ; `bonification_echelons`). |
 | 2026-09-16 | **Vague E lot C** : positions art. 76–80 | Écran **Positions** (`/carriere/positions`). DG approuve. **Ne plus** PUT `statut` détachement/dispo/exceptionnelle/drapeau. Détachement : rémunération **non** maintenue. Voir §2c-bis. |
 | 2026-09-16 | **Vague E lot B** : pièces art. 46 + CNSS art. 47 à l’intégration | `deja_salarie`, ACE au pivot embauche, checkbox déjà salarié, `numero_cnss` sur `POST …/integrer`. Reseed types. Voir §3. |

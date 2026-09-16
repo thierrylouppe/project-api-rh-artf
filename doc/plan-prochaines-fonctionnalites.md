@@ -10,8 +10,8 @@
 
 **Objectif :** livrer les modules métier manquants (vie de l’agent + DRHL), **sans cloisonner** par service / bureau. Le cloisonnement vient **après**.
 
-**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Vague E lots **A, B, C, D** livrés.  
-Prochain : Vague E **lot E** (réembauche, essai supérieur, rapprochement) **ou D.5 Paie**.
+**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Vague E lots **A–E** livrés.  
+Prochain : Vague **D.5 Paie**.
 
 ---
 
@@ -188,7 +188,7 @@ Ne pas recoder la grille (annexe 2) ni les reclassements art. 73–75. Primes ar
 | E.B | Pièces + CNSS | Art. 46–47 | ✅ |
 | E.C | Positions | Art. 76–80 — plus de PUT statut nu | ✅ |
 | E.D | Hors grille + accès | Art. 55 DG/DC/DD ; bonifs d’échelon annexe 1 | ✅ |
-| E.E | Compléments | Art. 48, 50, 81–82 | ⬜ (peut suivre D.5) |
+| E.E | Compléments | Art. 48, 50, 81–82 | ✅ |
 
 ---
 

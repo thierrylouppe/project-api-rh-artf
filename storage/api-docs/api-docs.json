@@ -5940,6 +5940,16 @@
                                             "decision",
                                             "note_service"
                                         ]
+                                    },
+                                    "soumis_a_essai": {
+                                        "description": "Essai emploi supérieur art. 50",
+                                        "type": "boolean",
+                                        "nullable": true
+                                    },
+                                    "classegrillesalariale_id": {
+                                        "description": "Classe cible obligatoire si soumis_a_essai",
+                                        "type": "integer",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -6413,6 +6423,93 @@
                     }
                 },
                 "deprecated": true,
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/{nomination}/confirmer-essai": {
+            "post": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Confirmer l'essai d'emploi supérieur (art. 50)",
+                "operationId": "confirmerEssaiNominationCarriere",
+                "parameters": [
+                    {
+                        "name": "nomination",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Essai concluant",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NominationResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/nominations/{nomination}/rompre-essai": {
+            "post": {
+                "tags": [
+                    "Carrière — Nominations"
+                ],
+                "summary": "Rompre l'essai d'emploi supérieur et rétablir la situation précédente (art. 50)",
+                "operationId": "rompreEssaiNominationCarriere",
+                "parameters": [
+                    {
+                        "name": "nomination",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "commentaire": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Essai rompu",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NominationResponse"
+                                }
+                            }
+                        }
+                    }
+                },
                 "security": [
                     {
                         "bearerAuth": []
@@ -9855,6 +9952,19 @@
                         "type": "string",
                         "nullable": true
                     },
+                    "motif_code": {
+                        "type": "string",
+                        "example": "rapprochement_conjoints",
+                        "nullable": true
+                    },
+                    "commentaire_opportunite": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "pieces_rapprochement": {
+                        "type": "object",
+                        "nullable": true
+                    },
                     "date_affectation": {
                         "type": "string",
                         "format": "date"
@@ -9984,6 +10094,24 @@
                         "type": "boolean",
                         "example": false
                     },
+                    "archived_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "motif_archivage": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "motif_archivage_code": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "prioritaire_reembauche_jusquau": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
                     "date_prise_service": {
                         "type": "string",
                         "format": "date",
@@ -10009,6 +10137,23 @@
                             },
                             "dossier": {
                                 "$ref": "#/components/schemas/DossierIntegration"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "meta": {
+                        "properties": {
+                            "priorite_reembauche": {
+                                "properties": {
+                                    "priorite_reembauche": {
+                                        "type": "boolean"
+                                    },
+                                    "nouvel_essai_requis": {
+                                        "type": "boolean",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
                             }
                         },
                         "type": "object"
@@ -10718,6 +10863,48 @@
                     "type_acte_label": {
                         "type": "string",
                         "example": "Décision de nomination"
+                    },
+                    "soumis_a_essai": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "classegrillesalariale_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "nomination_precedente_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "essai": {
+                        "properties": {
+                            "statut": {
+                                "type": "string",
+                                "example": "en_cours"
+                            },
+                            "statut_label": {
+                                "type": "string"
+                            },
+                            "duree_mois": {
+                                "type": "integer",
+                                "example": 2
+                            },
+                            "date_debut": {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            "date_fin": {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            "prochaine_etape": {
+                                "type": "string",
+                                "example": "confirmer-essai",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
                     },
                     "statut": {
                         "type": "string",

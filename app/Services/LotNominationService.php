@@ -49,16 +49,26 @@ class LotNominationService extends BaseService
             ]);
 
             foreach ($data['agents'] as $ligne) {
+                if (filter_var($ligne['soumis_a_essai'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                    $ligne = $this->nominationService->preparerDonneesEssai($ligne);
+                } else {
+                    $ligne['soumis_a_essai'] = false;
+                    unset($ligne['classegrillesalariale_id']);
+                }
+
                 $this->nominationRepository->create([
-                    'agent_id'           => $ligne['agent_id'],
-                    'poste'              => $ligne['poste'],
-                    'structurable_type'  => $ligne['structurable_type'],
-                    'structurable_id'    => $ligne['structurable_id'],
-                    'date_debut'         => $data['date_debut'],
-                    'type_acte'          => $data['type_acte'] ?? TypeActeNomination::DECISION,
-                    'statut'             => StatutNomination::EN_ATTENTE,
-                    'created_by'         => Auth::id(),
-                    'lot_nomination_id'  => $lot->id,
+                    'agent_id'                  => $ligne['agent_id'],
+                    'poste'                     => $ligne['poste'],
+                    'structurable_type'         => $ligne['structurable_type'],
+                    'structurable_id'           => $ligne['structurable_id'],
+                    'date_debut'                => $data['date_debut'],
+                    'type_acte'                 => $data['type_acte'] ?? TypeActeNomination::DECISION,
+                    'statut'                    => StatutNomination::EN_ATTENTE,
+                    'created_by'                => Auth::id(),
+                    'lot_nomination_id'         => $lot->id,
+                    'soumis_a_essai'            => $ligne['soumis_a_essai'],
+                    'classegrillesalariale_id'  => $ligne['classegrillesalariale_id'] ?? null,
+                    'duree_essai_mois'          => $ligne['duree_essai_mois'] ?? null,
                 ]);
             }
 

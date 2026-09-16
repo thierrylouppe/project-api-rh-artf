@@ -4,8 +4,10 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Requests\Nomination\ActiverRequest;
 use App\Http\Requests\Nomination\CloturerRequest;
+use App\Http\Requests\Nomination\ConfirmerEssaiRequest;
 use App\Http\Requests\Nomination\CreateRequest;
 use App\Http\Requests\Nomination\RejeterRequest;
+use App\Http\Requests\Nomination\RompreEssaiRequest;
 use App\Http\Requests\Nomination\UpdateRequest;
 use App\Http\Resources\AffectationResource;
 use App\Http\Resources\AgentResource;
@@ -66,6 +68,8 @@ class NominationController extends BaseController
                     new OA\Property(property: 'structurable_id', type: 'integer', example: 1),
                     new OA\Property(property: 'date_debut', type: 'string', format: 'date', example: '2026-09-01'),
                     new OA\Property(property: 'type_acte', type: 'string', nullable: true, enum: ['arrete', 'decision', 'note_service']),
+                    new OA\Property(property: 'soumis_a_essai', type: 'boolean', nullable: true, description: 'Essai emploi supérieur art. 50'),
+                    new OA\Property(property: 'classegrillesalariale_id', type: 'integer', nullable: true, description: 'Classe cible obligatoire si soumis_a_essai'),
                 ]
             )
         ),
@@ -119,6 +123,41 @@ class NominationController extends BaseController
         return $this->respond(
             $this->service->rejeter($id, $request->validated('commentaire')),
             'Nomination rejetée'
+        );
+    }
+
+    #[OA\Post(
+        path: '/api/carriere/nominations/{nomination}/confirmer-essai',
+        operationId: 'confirmerEssaiNominationCarriere',
+        tags: ['Carrière — Nominations'],
+        summary: 'Confirmer l\'essai d\'emploi supérieur (art. 50)',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'Essai concluant', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse'))]
+    )]
+    public function confirmerEssai(ConfirmerEssaiRequest $request, int $id): JsonResponse
+    {
+        return $this->respond(
+            $this->service->confirmerEssai($id),
+            'Essai d\'emploi supérieur concluant — l\'agent conserve la classe cible'
+        );
+    }
+
+    #[OA\Post(
+        path: '/api/carriere/nominations/{nomination}/rompre-essai',
+        operationId: 'rompreEssaiNominationCarriere',
+        tags: ['Carrière — Nominations'],
+        summary: 'Rompre l\'essai d\'emploi supérieur et rétablir la situation précédente (art. 50)',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'nomination', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [new OA\Property(property: 'commentaire', type: 'string', nullable: true)])),
+        responses: [new OA\Response(response: 200, description: 'Essai rompu', content: new OA\JsonContent(ref: '#/components/schemas/NominationResponse'))]
+    )]
+    public function rompreEssai(RompreEssaiRequest $request, int $id): JsonResponse
+    {
+        return $this->respond(
+            $this->service->rompreEssai($id, $request->validated('commentaire')),
+            'Essai d\'emploi supérieur rompu — fonction et salaire précédents rétablis (pas une rétrogradation)'
         );
     }
 

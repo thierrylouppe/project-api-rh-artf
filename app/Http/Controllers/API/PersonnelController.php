@@ -55,7 +55,15 @@ class PersonnelController extends BaseController
 
     public function archiver(ArchiverRequest $request, int $agent): JsonResponse
     {
-        return $this->respond($this->service->archiver($agent, $request->validated('motif')), 'Agent archivé');
+        $validated = $request->validated();
+
+        return $this->respond(
+            $this->service->archiver($agent, $validated['motif'], [
+                'motif_code'             => $validated['motif_code'] ?? null,
+                'prioritaire_reembauche' => $validated['prioritaire_reembauche'] ?? false,
+            ]),
+            'Agent archivé'
+        );
     }
 
     public function desarchiver(int $agent): JsonResponse

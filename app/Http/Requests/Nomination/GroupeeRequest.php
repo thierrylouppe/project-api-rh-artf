@@ -29,6 +29,8 @@ class GroupeeRequest extends FormRequest
             'agents.*.poste'             => ['required', 'string', 'in:Directeur Général,Directeur Central,Directeur Départemental,Chef de Service,Chef de Bureau'],
             'agents.*.structurable_type' => ['required', 'string', 'in:App\\Models\\Direction,App\\Models\\Service,App\\Models\\Bureau'],
             'agents.*.structurable_id'   => ['required', 'integer'],
+            'agents.*.soumis_a_essai'    => ['nullable', 'boolean'],
+            'agents.*.classegrillesalariale_id' => ['nullable', 'integer', 'exists:classegrillesalariales,id'],
         ];
     }
 
@@ -51,6 +53,14 @@ class GroupeeRequest extends FormRequest
                     $ligne['structurable_type'] ?? null,
                     "agents.{$index}.poste"
                 );
+
+                if (filter_var($ligne['soumis_a_essai'] ?? false, FILTER_VALIDATE_BOOLEAN)
+                    && empty($ligne['classegrillesalariale_id'])) {
+                    $validator->errors()->add(
+                        "agents.{$index}.classegrillesalariale_id",
+                        'La classe cible est obligatoire pour un essai d\'emploi supérieur (art. 50).'
+                    );
+                }
 
                 $type = $ligne['structurable_type'] ?? '';
                 $id   = $ligne['structurable_id'] ?? '';

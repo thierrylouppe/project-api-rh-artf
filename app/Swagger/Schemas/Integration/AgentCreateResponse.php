@@ -15,6 +15,20 @@ use OpenApi\Attributes as OA;
             ],
             type: 'object'
         ),
+        new OA\Property(
+            property: 'meta',
+            properties: [
+                new OA\Property(
+                    property: 'priorite_reembauche',
+                    properties: [
+                        new OA\Property(property: 'priorite_reembauche', type: 'boolean'),
+                        new OA\Property(property: 'nouvel_essai_requis', type: 'boolean', nullable: true),
+                    ],
+                    type: 'object'
+                ),
+            ],
+            type: 'object'
+        ),
         new OA\Property(property: 'message', type: 'string'),
     ]
 )]

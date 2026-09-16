@@ -11,19 +11,23 @@ enum TypeChangementSalaireAgent: string
     case RECLASSEMENT        = 'reclassement';
     case HORS_CLASSE         = 'hors_classe';
     case RECONVERSION        = 'reconversion';
-    case CONFIRMATION_ESSAI  = 'confirmation_essai';
+    case CONFIRMATION_ESSAI      = 'confirmation_essai';
+    case ESSAI_EMPLOI_SUPERIEUR  = 'essai_emploi_superieur';
+    case RESTAURATION_ESSAI      = 'restauration_essai';
 
     public function label(): string
     {
         return match ($this) {
-            self::INITIAL            => 'Salaire initial',
-            self::AVANCEMENT_ECHELON => 'Avancement d\'échelon',
-            self::CORRECTION         => 'Correction',
-            self::REVALORISATION     => 'Revalorisation',
-            self::RECLASSEMENT       => 'Reclassement de classe',
-            self::HORS_CLASSE        => 'Hors classe',
-            self::RECONVERSION       => 'Reconversion',
-            self::CONFIRMATION_ESSAI => 'Confirmation de période d\'essai',
+            self::INITIAL                 => 'Salaire initial',
+            self::AVANCEMENT_ECHELON      => 'Avancement d\'échelon',
+            self::CORRECTION              => 'Correction',
+            self::REVALORISATION          => 'Revalorisation',
+            self::RECLASSEMENT            => 'Reclassement de classe',
+            self::HORS_CLASSE             => 'Hors classe',
+            self::RECONVERSION            => 'Reconversion',
+            self::CONFIRMATION_ESSAI      => 'Confirmation de période d\'essai',
+            self::ESSAI_EMPLOI_SUPERIEUR  => 'Essai emploi supérieur (art. 50)',
+            self::RESTAURATION_ESSAI      => 'Rétablissement après rupture d\'essai (art. 50)',
         };
     }
 }

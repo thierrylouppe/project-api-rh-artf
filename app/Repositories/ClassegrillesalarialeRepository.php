@@ -34,4 +34,9 @@ class ClassegrillesalarialeRepository extends BaseRepository implements Classegr
             ->whereHas('grade', fn ($q) => $q->where('nom', $nom))
             ->first();
     }
+
+    public function findAvecGrade(int $id): Classegrillesalariale
+    {
+        return Classegrillesalariale::query()->with('grade')->findOrFail($id);
+    }
 }

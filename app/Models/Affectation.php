@@ -21,6 +21,9 @@ class Affectation extends Model
         'structurable_type',
         'structurable_id',
         'motif',
+        'motif_code',
+        'commentaire_opportunite',
+        'pieces_rapprochement',
         'note_service',
         'note_service_nom_original',
         'superieur_hierarchique_id',
@@ -32,9 +35,10 @@ class Affectation extends Model
     ];
 
     protected $casts = [
-        'date_affectation' => 'date',
-        'date_fin'         => 'date',
-        'statut'           => StatutAffectation::class,
+        'date_affectation'      => 'date',
+        'date_fin'              => 'date',
+        'statut'                => StatutAffectation::class,
+        'pieces_rapprochement'  => 'array',
     ];
 
     protected array $filterable = ['agent_id', 'statut', 'lot_affectation_id'];

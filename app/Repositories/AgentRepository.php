@@ -103,4 +103,35 @@ class AgentRepository extends BaseRepository implements AgentInterface
             ->where('id', '!=', $excludeAgentId)
             ->exists();
     }
+
+    public function findAvecGrade(int $id): Agent
+    {
+        return Agent::query()->with('grade')->findOrFail($id);
+    }
+
+    public function trouverArchivesPrioritaires(string $nom, string $prenom, ?string $numeroCnss): Collection
+    {
+        $limite = now()->subYear()->toDateString();
+        $nom    = mb_strtolower(trim($nom));
+        $prenom = mb_strtolower(trim($prenom));
+
+        return Agent::query()
+            ->select(['id', 'matricule', 'nom', 'prenom', 'numero_cnss', 'prioritaire_reembauche_jusquau'])
+            ->where('statut', 'archive')
+            ->whereNotNull('prioritaire_reembauche_jusquau')
+            ->whereDate('prioritaire_reembauche_jusquau', '>=', $limite)
+            ->where(function ($q) use ($nom, $prenom, $numeroCnss) {
+                $q->where(function ($homonyme) use ($nom, $prenom) {
+                    $homonyme
+                        ->whereRaw('LOWER(nom) = ?', [$nom])
+                        ->whereRaw('LOWER(prenom) = ?', [$prenom]);
+                });
+
+                if ($numeroCnss !== null && $numeroCnss !== '') {
+                    $q->orWhere('numero_cnss', $numeroCnss);
+                }
+            })
+            ->orderByDesc('prioritaire_reembauche_jusquau')
+            ->get();
+    }
 }

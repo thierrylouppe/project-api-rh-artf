@@ -29,6 +29,8 @@ class AgentResource extends JsonResource
             'statut'               => $this->statut,
             'archived_at'          => $this->archived_at,
             'motif_archivage'      => $this->motif_archivage,
+            'motif_archivage_code' => $this->motif_archivage_code,
+            'prioritaire_reembauche_jusquau' => $this->prioritaire_reembauche_jusquau?->format('Y-m-d'),
             'date_prise_service'   => $this->date_prise_service?->format('Y-m-d'),
             'grade_id'             => $this->when(! $this->relationLoaded('grade'), $this->grade_id),
             'grade'                => new GradeResource($this->whenLoaded('grade')),

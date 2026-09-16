@@ -23,4 +23,13 @@ interface AgentInterface extends BaseInterface
 
     /** Vérifie si un matricule est déjà utilisé par un autre agent. */
     public function matriculeEstPris(string $matricule, int $excludeAgentId): bool;
+
+    public function findAvecGrade(int $id): Agent;
+
+    /**
+     * Archives encore dans la fenêtre art. 48 (2 ans + 1 an sous nouvel essai).
+     *
+     * @return Collection<int, Agent>
+     */
+    public function trouverArchivesPrioritaires(string $nom, string $prenom, ?string $numeroCnss): Collection;
 }

@@ -361,6 +361,12 @@ GET /integration/dossiers/7/documents
 
 Recrutement externe / Contractuel : le pivot inclut le **récépissé ACE**. Champ dossier `deja_salarie` : ajoute carte de travail, certificat de travail, n° CNSS. Agent marié : acte de mariage. `POST …/soumettre` refuse (422) si ces pièces manquent.
 
+Réembauche art. 48 : `POST /personnel/agents/{id}/archiver` avec `motif_code=diminution_activite|reorganisation` (ou `prioritaire_reembauche=true`) pose une priorité de 2 ans. `POST /integration/agents` renvoie `meta.priorite_reembauche` (homonyme ou n° CNSS) **sans bloquer**. Passé 2 ans : encore 1 an avec `nouvel_essai_requis`.
+
+Essai emploi supérieur art. 50 : nomination `soumis_a_essai` + `classegrillesalariale_id`. `POST /carriere/nominations/{id}/confirmer-essai` ou `rompre-essai` (rétablit l’ancienne nomination / salaire).
+
+Rapprochement art. 81 : affectation unitaire `motif_code=rapprochement_conjoints` + 4 fichiers, sinon 422. Pas d’accord automatique.
+
 **Pièces obligatoires typiques**
 
 | type_document_id | Libellé |

@@ -72,6 +72,17 @@ class NominationRepository extends BaseRepository implements NominationInterface
             ]);
     }
 
+    public function reactiver(int $id): Nomination
+    {
+        $nomination = $this->findById($id);
+        $nomination->update([
+            'statut'   => StatutNomination::ACTIVE,
+            'date_fin' => null,
+        ]);
+
+        return $nomination->fresh();
+    }
+
     public function getHistoriqueByAgent(int $agentId): Collection
     {
         return Nomination::query()

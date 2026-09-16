@@ -178,7 +178,7 @@ Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vagu
 
 ## Prochaine étape recommandée
 
-**Vague E** — lots **A**, **B**, **C** et **D** livrés. Suite : **lot E** (réembauche / essai supérieur / rapprochement) ou **D.5 Paie**.
+**Vague E** — lots **A–E** livrés. Suite : **D.5 Paie**.
 
 Puis D.3.4 Prestations → D.6 Reporting. **Pas** de cloisonnement avant Vague F.
 

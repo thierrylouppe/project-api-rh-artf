@@ -18,6 +18,8 @@ interface NominationInterface extends BaseInterface
 
     public function cloturerActivePourAgent(int $agentId, ?int $saufId = null): void;
 
+    public function reactiver(int $id): Nomination;
+
     public function getHistoriqueByAgent(int $agentId): Collection;
 
     public function postesVacants(): Collection;

@@ -8,7 +8,7 @@
 
 **Objectif :** aligner l’**intégration**, la **carrière** et la **grille / salaire de base** sur les délais, plafonds et éligibilités CCN — **sans** ouvrir la paie (primes / lots = Vague **D.5**).
 
-**État :** lots **A** (essai + contrat 30 j) et **B** (pièces art. 46 + CNSS art. 47) livrés. Lots C–E ⬜. Ne pas relancer art. 73–75 (déjà livrés). Ne pas recoder la formule de grille (annexe 2 déjà conforme).
+**État :** lots **A–E** livrés. D.5 (paie) ensuite. Ne pas relancer art. 73–75 (déjà livrés). Ne pas recoder la formule de grille (annexe 2 déjà conforme).
 
 ---
 
@@ -40,14 +40,14 @@ Chaîne : Route → FormRequest → Controller → **Service** → **Interface**
 |--------|------------------|-----------|
 | Pièces art. 46 | Seed embauche : liste + ACE ; conditionnels mariage / déjà salarié | Livré (lot B) |
 | Art. 47 CNSS | Immatriculation à `integrer` + affiliation CNSS | Livré (lot B) |
-| Art. 48 réembauche | — | Priorité 2 ans absente |
-| Art. 49 essai | Table `contrats` : dates + rémunération seulement | **1 / 2 / 3 mois**, renouvelable 1 fois, min. de classe : **absent** |
-| Art. 50 essai poste supérieur | — | Absent |
+| Art. 48 réembauche | Flag `prioritaire_reembauche_jusquau` + meta à la création | Livré (lot E) |
+| Art. 49 essai | Table `contrats` : dates + 1/2/3 mois | Livré (lot A) |
+| Art. 50 essai poste supérieur | Nomination `soumis_a_essai` + confirmer/rompre | Livré (lot E) |
 | Art. 52 contrat 30 j | Recrutement externe : `necessite_contrat = false` | Lettre + contrat sous **30 jours ouvrables** ; mentions essai / emploi / rémunération |
 | Art. 54 stage | Convention + `gratification` libre | Prime transport non cadrée (→ D.5) |
 | Art. 73–75 | `ReclassementService` | **Conforme** |
 | Art. 76–80 | `StatutAgent` + `PUT` libre | Aucune règle 5 ans / 3 ans / 2 ans × 2 / préavis 3 mois ; doc FE **fausse** sur le détachement (rémunération) |
-| Art. 81–82 rapprochement | Affectation générique | Pas de dossier type |
+| Art. 81–82 rapprochement | Motif + 4 pièces, pas d’accord auto | Livré (lot E) |
 | Annexe 2 grille | `SalaireService::generateGrille` | **Conforme** (point 300, 10 × 12) |
 | Art. 55 hors grille | `creerSalaireInitial` pour tout CDI/CDD | DG / DC / DD peuvent recevoir un salaire indiciaire |
 | Annexe 1 accès | `DiplomeSeeder` préremplit classe | Pas de règle ; classes I–II seedées comme « diplômes » ; bonifs d’échelon absentes |
@@ -70,7 +70,7 @@ Lot A  Art. 49–52 — essai + contrat d’engagement
 | **B** | Pièces CCN + CNSS obligatoire à l’intégration CDI/CDD | Haute | ✅ |
 | **C** | Dossier de position (détachement / dispo / exceptionnelle / drapeau) + effets | Haute (carrière vivante) | ✅ |
 | **D** | Pas de grille pour DG/DC/DD ; bonifs d’échelon d’accès | Moyenne | ✅ |
-| **E** | Réembauche 2 ans, essai poste supérieur, mutation rapprochement | Moyenne / plus tard | ⬜ |
+| **E** | Réembauche 2 ans, essai poste supérieur, mutation rapprochement | Moyenne / plus tard | ✅ |
 
 Coder **A → B → C** avant D.5. **D** avant D.5 si possible (sinon le lot paie recréera des salaires indiciaires pour le DG). **E** peut suivre D.5.
 
@@ -334,7 +334,7 @@ Ajouter le diplôme **Maîtrise** (classe VIII, bonif 0) — aujourd’hui absen
 
 À coder **après A–D** (ou après D.5). Moins bloquant pour l’embauche courante.
 
-### 8.1 Réembauche (art. 48)
+### 8.1 Réembauche (art. 48) ✅
 
 - Sur archivage / licenciement : si motif `diminution_activite` \| `reorganisation` (champ motif à ajouter au flux rupture **quand** il existera). En V1 E : flag manuel RH `prioritaire_reembauche_jusquau` (date = licenciement + **2 ans**).
 - À la création d’un dossier recrutement externe : si homonyme / ancien `numero_cnss` dans la fenêtre → `meta.priorite_reembauche: true` (pas de blocage des autres candidats).
@@ -342,12 +342,12 @@ Ajouter le diplôme **Maîtrise** (classe VIII, bonif 0) — aujourd’hui absen
 
 Rupture complète art. 105–117 : **hors E** (préavis, indemnités = autre plan).
 
-### 8.2 Essai emploi supérieur (art. 50)
+### 8.2 Essai emploi supérieur (art. 50) ✅
 
 - Sur **nomination** vers une fonction de classe supérieure : option `soumis_a_essai` ; durée = essai de la **classe cible** (lot A).
 - Si `rompre-essai` dans ce contexte : **rétablir** fonction + salaire **précédents** (pas une rétrogradation). Historique nomination : clôturer la nouvelle, réactiver l’ancienne.
 
-### 8.3 Rapprochement de conjoints (art. 81–82)
+### 8.3 Rapprochement de conjoints (art. 81–82) ✅
 
 - Motif d’affectation `rapprochement_conjoints`.
 - Pièces : demande manuscrite, acte de mariage, note d’affectation du conjoint, attestation de résidence.

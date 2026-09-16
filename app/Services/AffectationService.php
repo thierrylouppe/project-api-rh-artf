@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Enums\MotifAffectation;
+use App\Enums\PieceRapprochement;
 use App\Enums\StatutAffectation;
 use App\Interfaces\AffectationInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
@@ -17,6 +19,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use ZipArchive;
 
 /** @property AffectationInterface $repository */
@@ -35,6 +38,14 @@ class AffectationService extends BaseService
     {
         $data['created_by'] = $data['created_by'] ?? Auth::id();
         $data['statut']     = StatutAffectation::EN_ATTENTE_VALIDATION;
+
+        foreach (PieceRapprochement::toutes() as $piece) {
+            unset($data[$piece->champFichier()]);
+        }
+
+        if (MotifAffectation::estRapprochement($data['motif_code'] ?? null, $data['motif'] ?? null)) {
+            $data['motif_code'] = MotifAffectation::RAPPROCHEMENT_CONJOINTS->value;
+        }
 
         // Résolution automatique du supérieur hiérarchique si non fourni
         if (empty($data['superieur_hierarchique_id']) && ! empty($data['structurable_type']) && ! empty($data['structurable_id'])) {
@@ -221,12 +232,28 @@ class AffectationService extends BaseService
         return $this->repository->getActive($agentId);
     }
 
-    public function creerUnitaire(array $data, ?UploadedFile $noteService = null): Affectation
+    public function creerUnitaire(array $data, ?UploadedFile $noteService = null, array $piecesRapprochement = []): Affectation
     {
+        $agentId = (int) $data['agent_id'];
+
         if ($noteService !== null) {
-            $agentId                           = $data['agent_id'];
             $data['note_service']              = $noteService->store("affectations/{$agentId}/notes-service", 'local');
             $data['note_service_nom_original'] = $noteService->getClientOriginalName();
+        }
+
+        if (MotifAffectation::estRapprochement($data['motif_code'] ?? null, $data['motif'] ?? null)) {
+            $stockees = [];
+            foreach (PieceRapprochement::toutes() as $piece) {
+                $fichier = $piecesRapprochement[$piece->value] ?? null;
+                if (! $fichier instanceof UploadedFile) {
+                    throw ValidationException::withMessages([
+                        $piece->champFichier() => $piece->label().' est obligatoire pour un rapprochement de conjoints (art. 81).',
+                    ]);
+                }
+                $stockees[$piece->value] = $fichier->store("affectations/{$agentId}/rapprochement", 'local');
+            }
+            $data['pieces_rapprochement'] = $stockees;
+            $data['motif_code']           = MotifAffectation::RAPPROCHEMENT_CONJOINTS->value;
         }
 
         return $this->create($data);

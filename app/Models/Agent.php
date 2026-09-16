@@ -40,12 +40,15 @@ class Agent extends Model
         'archived_at',
         'archived_by',
         'motif_archivage',
+        'motif_archivage_code',
+        'prioritaire_reembauche_jusquau',
     ];
 
     protected $casts = [
         'date_naissance' => 'date',
         'date_prise_service' => 'date',
         'archived_at' => 'datetime',
+        'prioritaire_reembauche_jusquau' => 'date',
     ];
 
     protected array $filterable = ['nom', 'prenom', 'matricule', 'statut', 'genre', 'type_integration_id'];

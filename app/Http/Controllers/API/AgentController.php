@@ -92,6 +92,9 @@ class AgentController extends BaseController
                 'agent'   => new AgentResource($result['agent']),
                 'dossier' => new DossierIntegrationResource($result['dossier']),
             ],
+            'meta' => [
+                'priorite_reembauche' => $result['priorite_reembauche'],
+            ],
             'message' => 'Fiche agent créée — dossier d\'intégration initialisé automatiquement (réf. ' . $result['dossier']->reference . ')',
         ], 201);
     }

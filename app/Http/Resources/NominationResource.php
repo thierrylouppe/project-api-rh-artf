@@ -29,6 +29,21 @@ class NominationResource extends JsonResource
             'date_fin'          => $this->date_fin?->format('Y-m-d'),
             'type_acte'         => $this->type_acte?->value ?? $this->type_acte,
             'type_acte_label'   => $this->type_acte?->label(),
+            'soumis_a_essai'    => (bool) $this->soumis_a_essai,
+            'classegrillesalariale_id' => $this->classegrillesalariale_id,
+            'nomination_precedente_id' => $this->nomination_precedente_id,
+            'essai'             => $this->when(
+                $this->soumis_a_essai || $this->essai_statut !== null,
+                fn () => [
+                    'statut'            => $this->essai_statut?->value,
+                    'statut_label'      => $this->essai_statut?->label(),
+                    'duree_mois'        => $this->duree_essai_mois,
+                    'date_debut'        => $this->date_debut_essai?->format('Y-m-d'),
+                    'date_fin'          => $this->date_fin_essai?->format('Y-m-d'),
+                    'date_confirmation' => $this->date_confirmation_essai?->format('Y-m-d'),
+                    'prochaine_etape'   => $this->essai_statut?->estOuvert() ? 'confirmer-essai' : null,
+                ]
+            ),
             'statut'            => $this->statut?->value,
             'statut_label'      => $this->statut?->label(),
             'validations'       => ValidationWorkflowResource::collection($this->whenLoaded('validations')),

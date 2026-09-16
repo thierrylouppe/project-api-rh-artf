@@ -137,6 +137,8 @@ $routesCarriere = function (): void {
     Route::post('nominations/{nomination}/activer', [NominationController::class, 'activer']);
     Route::post('nominations/{nomination}/cloturer', [NominationController::class, 'cloturer']);
     Route::post('nominations/{nomination}/rejeter', [NominationController::class, 'rejeter']);
+    Route::post('nominations/{nomination}/confirmer-essai', [NominationController::class, 'confirmerEssai']);
+    Route::post('nominations/{nomination}/rompre-essai', [NominationController::class, 'rompreEssai']);
     Route::get('nominations/{nomination}/acte', [NominationController::class, 'acte']);
 };
 
