@@ -62,4 +62,18 @@ class SalaireAgentRepository extends BaseRepository implements SalaireAgentInter
                 'date_fin' => $dateFin,
             ]);
     }
+
+    public function getCouvrantPeriode(string $debut, string $fin): Collection
+    {
+        return SalaireAgent::with(['salaire', 'classe.categorie', 'classe.grade'])
+            ->where('date_debut', '<=', $fin)
+            ->where(function ($q) use ($debut) {
+                $q->whereNull('date_fin')->orWhere('date_fin', '>=', $debut);
+            })
+            ->orderByDesc('date_debut')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('agent_id')
+            ->keyBy('agent_id');
+    }
 }

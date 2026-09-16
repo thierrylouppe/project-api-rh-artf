@@ -14,4 +14,7 @@ interface AyantDroitInterface extends BaseInterface
     public function countTutelleActives(int $agentId, ?int $excludeId = null): int;
 
     public function existsEnfantForAgent(int $agentId): bool;
+
+    /** Ayants droit actifs, groupés par agent_id. */
+    public function getActifsGroupesParAgent(): Collection;
 }

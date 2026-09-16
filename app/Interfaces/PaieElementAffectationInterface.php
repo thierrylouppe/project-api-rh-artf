@@ -21,4 +21,7 @@ interface PaieElementAffectationInterface extends BaseInterface
 
     /** Affectations dont la période chevauche [debut, fin]. */
     public function getCouvrantPeriode(int $agentId, string $debut, string $fin): Collection;
+
+    /** Toutes les affectations chevauchant [debut, fin]. */
+    public function getCouvrantPeriodeTous(string $debut, string $fin): Collection;
 }

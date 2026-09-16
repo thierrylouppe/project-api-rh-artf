@@ -80,6 +80,34 @@ class SanctionRepository extends BaseRepository implements SanctionInterface
             ->get();
     }
 
+    public function getPrononceesDepuisTous(string $depuis): Collection
+    {
+        return Sanction::query()
+            ->where('statut', StatutSanction::VALIDEE)
+            ->where(function ($query) use ($depuis) {
+                $query->whereDate('date_decision', '>=', $depuis)
+                    ->orWhere(function ($inner) use ($depuis) {
+                        $inner->whereNull('date_decision')->whereDate('created_at', '>=', $depuis);
+                    });
+            })
+            ->with(['typeSanction'])
+            ->orderByDesc('date_decision')
+            ->get()
+            ->groupBy('agent_id');
+    }
+
+    public function getMisesAPiedCouvrant(string $debut, string $fin): Collection
+    {
+        return $this->queryMisesAPiedValidees()
+            ->whereDate('date_debut_effet', '<=', $fin)
+            ->where(function ($query) use ($debut) {
+                $query->whereNull('date_fin_effet')->orWhereDate('date_fin_effet', '>=', $debut);
+            })
+            ->with(['typeSanction'])
+            ->get()
+            ->groupBy('agent_id');
+    }
+
     public function getMisesAPiedEnCours(string $jour): Collection
     {
         return $this->queryMisesAPiedValidees()

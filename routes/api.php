@@ -394,6 +394,8 @@ Route::middleware('auth:sanctum')->prefix('paie')->group(function () {
         ->middleware('permission:gerer-salaires');
     Route::get('lots/{id}', [PaieLotController::class, 'show'])
         ->middleware('permission:consulter-salaires');
+    Route::put('lots/{id}', [PaieLotController::class, 'update'])
+        ->middleware('permission:gerer-salaires');
     Route::delete('lots/{id}', [PaieLotController::class, 'destroy'])
         ->middleware('permission:gerer-salaires');
     Route::post('lots/{id}/generer', [PaieLotController::class, 'generer'])
@@ -404,6 +406,8 @@ Route::middleware('auth:sanctum')->prefix('paie')->group(function () {
         ->middleware('permission:gerer-salaires');
     Route::post('lots/{id}/cloturer', [PaieLotController::class, 'cloturer'])
         ->middleware('permission:gerer-salaires');
+    Route::get('lots/{id}/export', [PaieLotController::class, 'export'])
+        ->middleware('permission:consulter-salaires');
     Route::get('lots/{id}/lignes', [PaieLotController::class, 'lignes'])
         ->middleware('permission:consulter-salaires');
     Route::get('lots/{id}/lignes/{ligneId}/bulletin', [PaieLotController::class, 'bulletin'])

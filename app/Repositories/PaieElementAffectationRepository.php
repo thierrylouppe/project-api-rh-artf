@@ -87,4 +87,17 @@ class PaieElementAffectationRepository extends BaseRepository implements PaieEle
             ->orderBy('date_debut')
             ->get();
     }
+
+    public function getCouvrantPeriodeTous(string $debut, string $fin): Collection
+    {
+        return PaieElementAffectation::query()
+            ->with('element')
+            ->where('date_debut', '<=', $fin)
+            ->where(function ($q) use ($debut) {
+                $q->whereNull('date_fin')->orWhere('date_fin', '>=', $debut);
+            })
+            ->orderBy('date_debut')
+            ->get()
+            ->groupBy('agent_id');
+    }
 }

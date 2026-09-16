@@ -17,4 +17,7 @@ interface SalaireAgentInterface extends BaseInterface
     public function existsPourAgent(int $agentId): bool;
 
     public function cloturerActifs(int $agentId, string $dateFin): void;
+
+    /** Salaires dont la période chevauche [debut, fin], un par agent (le plus récent). */
+    public function getCouvrantPeriode(string $debut, string $fin): Collection;
 }

@@ -12,7 +12,7 @@
 
 **Objectif :** produire un **lot de paie mensuel** conforme CCN (base + éléments + net) **sans casser** grille, salaire indiciaire, bulletin simplifié.
 
-**État :** D.5.1–D.5.4 **livrés**. D.5.5 ⬜ (reportable).
+**État :** D.5.1–D.5.5 **livrés**.
 
 ---
 
@@ -184,14 +184,14 @@ Seeder **système**. `montant_defaut = null` pour tout montant comité de direct
 | `prime_representation` | prime | mensuel | montant_fixe | Non | DD uniquement |
 | `prime_fin_annee` | prime | annuel | formule_ccn | **Oui** si `mois = 12` | Art. 56 (voir § 8) |
 | `prime_risque` | prime | mensuel | montant_fixe | Non | Affectation RH (fonctions chauffeur / planton / veilleur / convoyeur **absentes** du seeder actuel → pas d’auto) |
-| `prime_vestimentaire` | prime | semestriel | montant_fixe | Non, **si** affectation + mois ∈ `{6,12}` | Tous en service |
+| `prime_vestimentaire` | prime | semestriel | montant_fixe | **Oui** si `montant_defaut` **et** mois ∈ `{6,12}` (affectation gagne si présente) | Tous en service sauf stagiaires |
 | `prime_caisse` | prime | mensuel | montant_fixe | Non | Affectation (pas de fonction « caissier » seedée) |
 | `prime_panier` | prime | journalier | montant_fixe | Non | `quantite` × montant |
 | `prime_astreinte` | prime | ponctuel | montant_fixe | Non | 422 si HS déjà payées **dès qu’un élément HS existe** (V1 : pas d’élément HS → pas de contrôle) |
 | `prime_logement` | prime | mensuel | montant_fixe | Non | Affectation (nécessités de service) |
 | `prime_exceptionnelle` | prime | ponctuel | montant_fixe | Non | `motif` obligatoire (note DG) |
 | `prime_transport_stagiaire` | prime | mensuel | montant_fixe | Non | `statut = stagiaire` (art. 54) |
-| `indemnite_transport` | indemnite | mensuel | montant_fixe | Non | En service |
+| `indemnite_transport` | indemnite | mensuel | montant_fixe | **Oui** si `montant_defaut` (affectation gagne si présente) | En service sauf stagiaires |
 | `indemnite_deplacement_affectation` | indemnite | ponctuel | montant_fixe | Non | |
 | `indemnite_deplacement_conges` | indemnite | ponctuel | montant_fixe | Non | |
 | `indemnite_interim` | indemnite | mensuel | montant_fixe | Non | 422 si durée d’intérim > 6 mois sauf maladie/AT (contrôle sur `date_debut` affectation) |
@@ -201,9 +201,9 @@ Seeder **système**. `montant_defaut = null` pour tout montant comité de direct
 | `allocation_rentree_scolaire` | allocation | annuel | montant_fixe | **Oui** si `mois = 9` **et** `montant_defaut` renseigné | Tout salarié en activité |
 | `allocation_consommation` | allocation | mensuel | montant_fixe | Non | DC, DD |
 | `allocation_arbre_noel` | allocation | annuel | montant_fixe | **Oui** si `mois = 12` **et** montant renseigné | `nb` = min(3, enfants 0–16) ; 1 part forfaitaire si 0 enfant (art. 58) |
-| `allocations_familiales` | allocation | mensuel | montant_fixe | Non | Taux « textes en vigueur » → paramétrable, pas inventé |
-| `supplement_familial` | allocation | mensuel | montant_fixe | Non | Idem |
-| `retenue_cnss` | retenue | mensuel | pourcentage_base ou montant_fixe | Non | Paramétrable |
+| `allocations_familiales` | allocation | mensuel | montant_fixe | **Oui** si `montant_defaut` × enfants à charge art. 59 (affectation gagne si présente) | Taux « textes en vigueur » → paramétrable, pas inventé |
+| `supplement_familial` | allocation | mensuel | montant_fixe | **Oui** si `montant_defaut` et ≥ 1 enfant à charge | Idem |
+| `retenue_cnss` | retenue | mensuel | pourcentage_base | **Oui** si `taux_defaut` % base (affectation gagne si présente) | Paramétrable — **ne pas inventer** le taux |
 | `retenue_autre` | retenue | ponctuel | montant_fixe | Non | Acompte, prêt… |
 | `indemnite_retraite` | indemnite | ponctuel | formule_ccn | **Inactif** V1 | Art. 119 |
 | `capital_deces` | indemnite | ponctuel | formule_ccn | **Inactif** V1 | Art. 121 → D.3.4 |
@@ -283,14 +283,15 @@ Lecture : `permission:consulter-salaires`. Écriture / transitions : `permission
 | Méthode | URI | Action |
 |---------|-----|--------|
 | `GET` | `/paie/lots` | Filtres `annee`, `mois`, `statut` |
-| `POST` | `/paie/lots` | Créer **brouillon** `{ annee, mois }` — 422 si période déjà existante |
-| `GET` | `/paie/lots/{id}` | Lot + totaux + `nb_anomalies` |
+| `POST` | `/paie/lots` | Créer **brouillon** `{ annee, mois, commentaire? }` — 422 si période déjà existante |
+| `GET` | `/paie/lots/{id}` | Lot + totaux + `nb_anomalies` + `actions` + `periode_label` |
+| `PUT` | `/paie/lots/{id}` | Commentaire seulement, tant que pas `valide` / `cloture` |
 | `DELETE` | `/paie/lots/{id}` | Uniquement `brouillon` (ou `genere` sans validation) |
 | `POST` | `/paie/lots/{id}/generer` | Calcule / recalcule les lignes. Autorisé : `brouillon`, `genere`, `controle`. **422** si `valide` / `cloture`. → `genere` |
 | `POST` | `/paie/lots/{id}/controler` | Anomalies (ne bloque pas). → `controle` |
 | `POST` | `/paie/lots/{id}/valider` | 422 si anomalies **bloquantes** (voir § 9.3). → `valide` |
 | `POST` | `/paie/lots/{id}/cloturer` | Figé. → `cloture` |
-| `GET` | `/paie/lots/{id}/lignes` | Pagination |
+| `GET` | `/paie/lots/{id}/lignes` | Collection. Filtres `agent_id`, `hors_grille`, `q` |
 | `GET` | `/paie/lots/{id}/lignes/{ligneId}` | Ligne + détails |
 | `GET` | `/paie/agents/{agent}/bulletins` | Historique des lignes clôturées |
 
@@ -374,11 +375,28 @@ Sinon `n × montant_defaut`.
 
 1 × `montant_defaut` par agent en activité (la CCN ne multiplie pas par enfant).
 
-### 8.7 Intérim (art. 57)
+### 8.7 Allocations familiales / supplément familial (art. 59) — auto si paramétré
+
+Pas de taux inventé. Si `montant_defaut` est saisi :
+
+- `allocations_familiales` = `montant_defaut ×` nombre d’enfants **à charge** (`AyantDroit::estACharge`, limites d’âge art. 59).
+- `supplement_familial` = `montant_defaut` si ≥ 1 enfant à charge.
+
+Stagiaires exclus. Une affectation du même code **remplace** l’auto.
+
+### 8.8 Vestimentaire, transport, CNSS — auto si paramétré
+
+- `prime_vestimentaire` : juin et décembre si `montant_defaut`.
+- `indemnite_transport` : chaque mois si `montant_defaut`.
+- `retenue_cnss` : `taux_defaut` % du salaire de base (ou fonctionnel hors grille). Taux **non** seedé.
+
+Affectation RH **gagne** si elle couvre le mois. Stagiaires exclus (le transport stagiaire reste une affectation art. 54).
+
+### 8.9 Intérim (art. 57)
 
 À partir du **premier mois**. Si `date_debut` de l’affectation + 6 mois dépassés au mois du lot → 422, sauf `meta.cause` ∈ `{maladie, accident_travail}`.
 
-### 8.8 Art. 55 — absence / positions
+### 8.10 Art. 55 — absence / positions
 
 - Agent `detachement` ou `disponibilite` : **exclu** du lot (rémunération déjà coupée).
 - `position_exceptionnelle` / `sous_le_drapeau` : **inclus** si un `salaire_agent` actif existe (la Vague E ne coupe pas ces deux-là).
@@ -401,14 +419,14 @@ Interdit : revenir en arrière après `valide`. Supprimer : `brouillon` uniqueme
 
 Agents candidats au **dernier jour du mois** :
 
-1. `statut = actif` (et positions qui ne coupent pas, § 8.8) **avec** `salaire_agent` `actif` dont `date_debut ≤ fin_mois` et (`date_fin` null ou ≥ début mois)  
+1. `statut = actif` (et positions qui ne coupent pas, § 8.10) **avec** `salaire_agent` `actif` dont `date_debut ≤ fin_mois` et (`date_fin` null ou ≥ début mois)  
    **ou** `estHorsGrille()`  
    **ou** stagiaire avec affectation.
 2. Pour chacun, transaction : upsert ligne, **replace** des détails (idempotent).
 3. Détail `source=base` : `montant_base` (0 si hors grille).
-4. Détails `calcul_auto` : ancienneté ; + fin d’année / arbre / rentrée selon le mois.
+4. Détails `calcul_auto` : ancienneté ; fin d’année / arbre / rentrée selon le mois ; vestimentaire / transport / allocations familiales / supplément familial / CNSS **si paramétrés** (une affectation du même code **prime**).
 5. Détails `affectation` : affectations dont la période **chevauche** le mois, et dont `periodicite` / `mois_declenchement` matche.
-6. Totaux.
+6. Totaux. Préchargement bulk (salaires, affectations, ayants, sanctions) — pas de N+1 par agent.
 
 ### 9.2 Recalcul
 
@@ -464,6 +482,8 @@ Ne **pas** modifier le bulletin indiciaire existant (contrat FE actuel).
 | `PaieLotTest` | Unique période, circuit statuts, hors grille sans fonctionnel → bloquante, regen, 422 valider si bloquante, 422 generer si clôturé | ✅ |
 | `PaieFinAnneeTest` | Décembre : présence / prorata position / licenciement | ✅ |
 | `PaieBulletinTest` | PDF 200 sur ligne générée ; bulletin `/salaires-agents/{id}/bulletin` **inchangé** (régression) | ✅ |
+| `PaieExportTest` | 422 avant validation ; CSV/PDF 200 après `valide` ; format invalide 422 | ✅ |
+| `PaieComplementsTest` | Autos paramétrés art. 58–59 / CNSS, actions lot, filtres lignes, snapshot, delete snapshot | ✅ |
 
 Permission : un user `rh` (comme les autres Feature). 401 / 403 smoke léger.
 
@@ -492,8 +512,8 @@ Ne pas ouvrir D.5.4 avant qu’un lot `genere` existe en test.
 | 3 | `/paie/affectations` | D.5.2 | ✅ |
 | 4–7 | Lots + calculs CCN | D.5.3 | ✅ |
 | 8 | Bulletin enrichi | D.5.4 | ✅ |
-| 9 | Export | D.5.5 | ⬜ reportable |
-| 10 | Contrat FE + Swagger | — | ⬜ |
+| 9 | Export | D.5.5 | ✅ |
+| 10 | Contrat FE + Swagger | — | ✅ |
 
 Checklist d’un domaine à chaque session : voir [`architecture.md`](./architecture.md) § 5.
 
@@ -522,6 +542,7 @@ Checklist d’un domaine à chaque session : voir [`architecture.md`](./architec
 | `database/seeders/DatabaseSeeder.php` | `PaieElementSeeder` après fonctions |
 | `PermissionSeeder` / `RoleSeeder` | **inchangés** V1 |
 | `resources/views/pdf/bulletin-paie.blade.php` | **nouveau** |
+| `resources/views/pdf/export-paie-lot.blade.php` | **nouveau** |
 | `note-fe-etat-implementations.md` | § contrat `/paie` **après** D.5.1 minimum (liste + un POST) |
 | `AyantDroitInterface` | Lecture seulement depuis `PaieLotService` (pas d’écriture affaires sociales) |
 | `SanctionInterface` | Lecture mises à pied / licenciement pour anomalies et fin d’année |
@@ -561,5 +582,9 @@ D.5.1 : voir [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.
 | 2026-09-16 | Découpage technique (tables, enums, API, calculs, ordre de code). Branche `feature/paie-d5`. |
 | 2026-09-16 | **D.5.1** : `/api/paie/elements` + seeder 29 codes CCN. Tests `PaieElementTest`. |
 | 2026-09-16 | **D.5.2** : `/api/paie/affectations` (éligibilité fonction / stagiaire, chevauchement). Tests `PaieAffectationTest`. |
+| 2026-09-16 | **D.5.3** : lots mensuels (générer / contrôler / valider / clôturer) + calculs CCN. |
+| 2026-09-16 | **D.5.4** : bulletin PDF enrichi. Bulletin indiciaire inchangé. |
+| 2026-09-16 | **D.5.5** : export CSV/PDF du lot validé ou clôturé. Vague D.5 close. |
+| 2026-09-16 | Compléments D.5 : autos paramétrés (art. 59, vestimentaire, transport, CNSS), génération sans N+1, `PUT` commentaire, `actions` / filtres lignes. |
 
 *La convention collective prime sur ce plan en cas de conflit.*

@@ -32,13 +32,35 @@ class PaieLotRepository extends BaseRepository implements PaieLotInterface
         return PaieLot::query()->where('annee', $annee)->where('mois', $mois)->first();
     }
 
-    public function getLignes(int $lotId): Collection
+    public function getLignes(int $lotId, array $filters = []): Collection
     {
-        return PaieLotLigne::query()
+        $query = PaieLotLigne::query()
             ->where('lot_id', $lotId)
-            ->with(['agent:id,matricule,nom,prenom,statut', 'details', 'salaireAgent.salaire'])
-            ->orderBy('id')
-            ->get();
+            ->with(['agent:id,matricule,nom,prenom,statut', 'details', 'salaireAgent.salaire']);
+
+        if (! empty($filters['agent_id'])) {
+            $query->where('agent_id', (int) $filters['agent_id']);
+        }
+
+        if (array_key_exists('hors_grille', $filters) && $filters['hors_grille'] !== '' && $filters['hors_grille'] !== null) {
+            $horsGrille = filter_var($filters['hors_grille'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($horsGrille !== null) {
+                $query->where('hors_grille', $horsGrille);
+            }
+        }
+
+        if (! empty($filters['q'])) {
+            $terme = (string) $filters['q'];
+            $query->whereHas('agent', function ($agent) use ($terme) {
+                $agent->where(function ($w) use ($terme) {
+                    $w->where('nom', 'like', "%{$terme}%")
+                        ->orWhere('prenom', 'like', "%{$terme}%")
+                        ->orWhere('matricule', 'like', "%{$terme}%");
+                });
+            });
+        }
+
+        return $query->orderBy('id')->get();
     }
 
     public function getLigne(int $lotId, int $ligneId): PaieLotLigne
@@ -71,10 +93,23 @@ class PaieLotRepository extends BaseRepository implements PaieLotInterface
 
     public function creerDetails(int $ligneId, array $details): void
     {
-        foreach ($details as $detail) {
-            $detail['ligne_id'] = $ligneId;
-            PaieLotLigneDetail::query()->create($detail);
+        if ($details === []) {
+            return;
         }
+
+        $now = now();
+        $rows = array_map(function (array $detail) use ($ligneId, $now) {
+            $detail['ligne_id'] = $ligneId;
+            $detail['created_at'] = $now;
+            $detail['updated_at'] = $now;
+            if (array_key_exists('meta', $detail)) {
+                $detail['meta'] = $detail['meta'] === null ? null : json_encode($detail['meta']);
+            }
+
+            return $detail;
+        }, $details);
+
+        PaieLotLigneDetail::query()->insert($rows);
     }
 
     public function updateLigne(int $ligneId, array $data): void
@@ -93,6 +128,17 @@ class PaieLotRepository extends BaseRepository implements PaieLotInterface
                         StatutPaieLot::CLOTURE->value,
                     ]));
             })
+            ->exists();
+    }
+
+    public function existeSnapshotElementVerrouille(int $elementId): bool
+    {
+        return PaieLotLigneDetail::query()
+            ->where('paie_element_id', $elementId)
+            ->whereHas('ligne.lot', fn ($lot) => $lot->whereIn('statut', [
+                StatutPaieLot::VALIDE->value,
+                StatutPaieLot::CLOTURE->value,
+            ]))
             ->exists();
     }
 }

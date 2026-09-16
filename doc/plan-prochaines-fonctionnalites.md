@@ -1,7 +1,7 @@
 # Prochaines fonctionnalités — suivi d’implémentation
 
 > Document **vivant** : cocher au fur et à mesure.  
-> Dernière mise à jour : **2026-09-16** (D.5.4 bulletin enrichi)  
+> Dernière mise à jour : **2026-09-16** (D.5 Paie livré)  
 > Architecture obligatoire : [`architecture.md`](./architecture.md)  
 > Plan long : [`plan_complet.md`](./plan_complet.md)  
 > Contrat FE actuel : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md)  
@@ -12,7 +12,7 @@
 **Objectif :** livrer les modules métier manquants (vie de l’agent + DRHL), **sans cloisonner** par service / bureau. Le cloisonnement vient **après**.
 
 **État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Vague E lots **A–E** livrés.  
-Prochain : Vague **D.5 Paie** (D.5.1–D.5.4 livrés) — [`plan-module-paie.md`](./plan-module-paie.md). Suite : **D.5.5** export (reportable).
+Prochain : **D.6 Reporting** (dashboard) — cloisonnement **plus tard**. D.5 Paie **livré**.
 
 ---
 
@@ -117,7 +117,7 @@ Préfixe : `/api/conges/…` et `/api/absences`.
 | D.3 | Affaires sociales | Organismes, affiliations, ayants droit ; prestations ensuite | Affaires sociales | ✅ **P1** |
 | D.4 | Formation | Catalogue, plan annuel, inscriptions, certifications + `convertir-agent` | Formation | ✅ |
 | **E** | Conformité CCN 3–5 | Essai, contrat 30 j, pièces/CNSS, positions 76–80, hors grille DG | Personnel + Solde | ⬜ |
-| D.5 | Paie (éléments + lots) | Primes / retenues, lot mensuel, bulletin enrichi | Solde | ⬜ |
+| D.5 | Paie (éléments + lots) | Primes / retenues, lot mensuel, bulletin enrichi, export | Solde | ✅ |
 | D.6 | Reporting | Dashboard effectifs, répartitions, exports | Étude et planification | ⬜ |
 
 Détail D.1 : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notation.md) + [`plan-evaluation-complements.md`](./plan-evaluation-complements.md).
@@ -193,7 +193,7 @@ Ne pas recoder la grille (annexe 2) ni les reclassements art. 73–75. Primes ar
 
 ---
 
-### D.5 — Paie (éléments + lots) ⬜
+### D.5 — Paie (éléments + lots) ✅
 
 Découpage : [`plan-module-paie.md`](./plan-module-paie.md) (branche `feature/paie-d5`).
 
@@ -207,7 +207,7 @@ Préfixe nouveau : `/api/paie`. Permissions existantes `consulter-salaires` / `g
 | D.5.2 | Affectation agent | Période, montant | ✅ |
 | D.5.3 | Lot mensuel | Générer → contrôler → valider → clôturer | ✅ |
 | D.5.4 | Bulletin enrichi | Base + éléments + net (nouveau endpoint ou champ optionnel) | ✅ |
-| D.5.5 | Export masse salariale | CSV / PDF | ⬜ (peut aller dans D.6) |
+| D.5.5 | Export masse salariale | CSV / PDF | ✅ |
 
 ---
 
@@ -307,5 +307,7 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 | 2026-09-16 | D.5.2 | Affectations `/api/paie/affectations` (éligibilité, chevauchement). |
 | 2026-09-16 | D.5.3 | Lots `/api/paie/lots` : génération CCN (base, ancienneté, fin d’année, affectations), contrôle, validation, clôture. |
 | 2026-09-16 | D.5.4 | Bulletin PDF enrichi `GET /api/paie/lots/{id}/lignes/{ligneId}/bulletin`. Bulletin indiciaire inchangé. |
+| 2026-09-16 | D.5.5 | Export masse `GET /api/paie/lots/{id}/export?format=csv\|pdf` (lot validé / clôturé). |
+| 2026-09-16 | D.5 | Compléments : génération bulk, autos paramétrés (AF, SFT, vestimentaire, transport, CNSS), `PUT` commentaire, `actions` / filtres. |
 | 2026-09-16 | E.A | Lot A livré : essai art. 49, délai 30 j art. 52, `necessite_contrat` recrutement externe, jobs d’alerte. |
 | 2026-09-16 | E.B | Lot B livré : pièces art. 46 (ACE, mariage, déjà salarié), CNSS art. 47 à `integrer`. |

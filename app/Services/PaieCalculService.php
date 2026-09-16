@@ -58,6 +58,24 @@ class PaieCalculService
         return $this->arrondirFcfa($montantDefaut);
     }
 
+    public function montantAllocationsFamiliales(float $montantUnitaire, int $nbEnfantsACharge): int
+    {
+        if ($montantUnitaire <= 0 || $nbEnfantsACharge <= 0) {
+            return 0;
+        }
+
+        return $this->arrondirFcfa($montantUnitaire * $nbEnfantsACharge);
+    }
+
+    public function montantPourcentageBase(float $base, float $tauxPourcent): int
+    {
+        if ($base <= 0 || $tauxPourcent <= 0) {
+            return 0;
+        }
+
+        return $this->arrondirFcfa($base * $tauxPourcent / 100);
+    }
+
     public function montantFormationAfrique(float $base): int
     {
         return $this->arrondirFcfa($base * 0.85);

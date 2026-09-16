@@ -10,7 +10,7 @@ use App\Enums\SensPaieElement;
 use App\Enums\SourceDetailPaie;
 use App\Enums\StatutAgent;
 use App\Enums\StatutPaieLot;
-use App\Enums\StatutSanction;
+use App\Enums\TypeAyantDroit;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\AyantDroitInterface;
 use App\Interfaces\PaieElementAffectationInterface;
@@ -19,6 +19,7 @@ use App\Interfaces\PaieLotInterface;
 use App\Interfaces\SalaireAgentInterface;
 use App\Interfaces\SanctionInterface;
 use App\Models\Agent;
+use App\Models\AyantDroit;
 use App\Models\PaieElement;
 use App\Models\PaieElementAffectation;
 use App\Models\PaieLot;
@@ -47,11 +48,11 @@ class PaieLotService extends BaseService
         parent::__construct($repository);
     }
 
-    public function getLignes(int $lotId): Collection
+    public function getLignes(int $lotId, array $filters = []): Collection
     {
         $this->repository->findById($lotId);
 
-        return $this->repository->getLignes($lotId);
+        return $this->repository->getLignes($lotId, $filters);
     }
 
     public function getLigne(int $lotId, int $ligneId): PaieLotLigne
@@ -77,16 +78,17 @@ class PaieLotService extends BaseService
         $debut = Carbon::create($lot->annee, $lot->mois, 1)->startOfDay();
         $fin = $debut->copy()->endOfMonth()->startOfDay();
         $elements = $this->elementsIndex();
+        $ctx = $this->contexte($debut, $fin, $elements);
 
-        DB::transaction(function () use ($lot, $debut, $fin, $elements) {
+        DB::transaction(function () use ($lot, $ctx, $elements) {
             $this->repository->supprimerLignes((int) $lot->id);
 
             $totalGains = 0;
             $totalRetenues = 0;
             $nbLignes = 0;
 
-            foreach ($this->agentsCandidats($debut, $fin, $elements) as $agent) {
-                $resultat = $this->genererLigne($lot, $agent, $debut, $fin, $elements);
+            foreach ($this->agentsCandidats($ctx, $elements) as $agent) {
+                $resultat = $this->genererLigne($lot, $agent, $ctx);
                 $totalGains += $resultat['gains'];
                 $totalRetenues += $resultat['retenues'];
                 $nbLignes++;
@@ -126,16 +128,20 @@ class PaieLotService extends BaseService
         $debut = Carbon::create($lot->annee, $lot->mois, 1)->startOfDay();
         $fin = $debut->copy()->endOfMonth()->startOfDay();
         $elements = $this->elementsIndex();
+        $ctx = $this->contexte($debut, $fin, $elements);
+        $agents = $this->agentsPourControle()->keyBy('id');
+        $lignes = $this->repository->getLignes((int) $lot->id);
         $anomalies = [];
 
-        foreach ($this->repository->getLignes((int) $lot->id) as $ligne) {
-            $anomalies = array_merge($anomalies, $this->anomaliesLigne($lot, $ligne, $debut, $fin, $elements));
+        foreach ($lignes as $ligne) {
+            $agent = $agents->get($ligne->agent_id) ?? $ligne->agent;
+            $anomalies = array_merge($anomalies, $this->anomaliesLigne($lot, $ligne, $ctx, $agent instanceof Agent ? $agent : null));
         }
 
-        $anomalies = array_merge($anomalies, $this->anomaliesGlobales($lot, $debut, $fin));
+        $anomalies = array_merge($anomalies, $this->anomaliesGlobales($lot, $ctx, $agents));
 
         $compteParLigne = collect($anomalies)->groupBy('agent_id');
-        foreach ($this->repository->getLignes((int) $lot->id) as $ligne) {
+        foreach ($lignes as $ligne) {
             $this->repository->updateLigne((int) $ligne->id, [
                 'nb_anomalies' => $compteParLigne->get($ligne->agent_id, collect())->count(),
             ]);
@@ -220,6 +226,16 @@ class PaieLotService extends BaseService
         return $data;
     }
 
+    protected function beforeUpdate(int $id, array $data): array
+    {
+        $lot = $this->lot($id);
+        abort_unless($lot->statut->peutModifier(), 422, 'Impossible de modifier un lot validé ou clôturé.');
+
+        return [
+            'commentaire' => $data['commentaire'] ?? null,
+        ];
+    }
+
     private function lot(int $id): PaieLot
     {
         $lot = $this->repository->findById($id);
@@ -238,59 +254,86 @@ class PaieLotService extends BaseService
 
     /**
      * @param  Collection<string, PaieElement>  $elements
+     */
+    private function contexte(Carbon $debut, Carbon $fin, Collection $elements): PaieLotContexte
+    {
+        $debutAnnee = Carbon::create($debut->year, 1, 1)->startOfDay();
+
+        return new PaieLotContexte(
+            salaires: $this->salaireAgentRepository->getCouvrantPeriode($debut->toDateString(), $fin->toDateString()),
+            affectations: $this->affectationRepository->getCouvrantPeriodeTous($debut->toDateString(), $fin->toDateString()),
+            ayants: $this->ayantDroitRepository->getActifsGroupesParAgent(),
+            sanctions: $this->sanctionRepository->getPrononceesDepuisTous($debutAnnee->toDateString()),
+            misesAPied: $this->sanctionRepository->getMisesAPiedCouvrant($debutAnnee->toDateString(), $fin->toDateString()),
+            elements: $elements,
+            debut: $debut,
+            fin: $fin,
+        );
+    }
+
+    /**
+     * @param  Collection<string, PaieElement>  $elements
      * @return Collection<int, Agent>
      */
-    private function agentsCandidats(Carbon $debut, Carbon $fin, Collection $elements): Collection
+    private function agentsCandidats(PaieLotContexte $ctx, Collection $elements): Collection
     {
-        $statuts = [
+        return $this->agentsPourControle()
+            ->filter(fn (Agent $agent) => $this->estCandidat($agent, $ctx, $elements))
+            ->values();
+    }
+
+    /** @return Collection<int, Agent> */
+    private function agentsPourControle(): Collection
+    {
+        return $this->agentRepository->getByStatuts([
             StatutAgent::ACTIF->value,
             StatutAgent::SUSPENDU->value,
             StatutAgent::POSITION_EXCEPTIONNELLE->value,
             StatutAgent::SOUS_LE_DRAPEAU->value,
             StatutAgent::STAGIAIRE->value,
-        ];
-
-        return $this->agentRepository->getByStatuts($statuts)
-            ->filter(fn (Agent $agent) => $this->estCandidat($agent, $debut, $fin, $elements))
-            ->values();
+        ]);
     }
 
     /**
      * @param  Collection<string, PaieElement>  $elements
      */
-    private function estCandidat(Agent $agent, Carbon $debut, Carbon $fin, Collection $elements): bool
+    private function estCandidat(Agent $agent, PaieLotContexte $ctx, Collection $elements): bool
     {
         if ((string) $agent->statut === StatutAgent::STAGIAIRE->value) {
-            return $this->affectationsDuMois($agent, $debut, $fin, $elements)->isNotEmpty();
+            return $this->affectationsDuMois((int) $agent->id, $ctx, $elements)->isNotEmpty();
         }
 
         if ($agent->estHorsGrille()) {
             return true;
         }
 
-        return $this->salaireCouvrant((int) $agent->id, $debut, $fin) !== null;
+        return $ctx->salaire((int) $agent->id) !== null;
     }
 
     /**
-     * @param  Collection<string, PaieElement>  $elements
      * @return array{gains: int, retenues: int}
      */
-    private function genererLigne(PaieLot $lot, Agent $agent, Carbon $debut, Carbon $fin, Collection $elements): array
+    private function genererLigne(PaieLot $lot, Agent $agent, PaieLotContexte $ctx): array
     {
-        $salaire = $this->salaireCouvrant((int) $agent->id, $debut, $fin);
+        $salaire = $ctx->salaire((int) $agent->id);
         $horsGrille = $agent->estHorsGrille();
-        $affectations = $this->affectationsDuMois($agent, $debut, $fin, $elements);
-        $montantFonctionnel = $this->montantAffectationCode($affectations, CodePaieElement::SALAIRE_FONCTIONNEL, 0, $agent, $debut);
+        $affectations = $this->affectationsDuMois((int) $agent->id, $ctx, $ctx->elements);
+        $montantFonctionnel = $this->montantAffectationCode($affectations, CodePaieElement::SALAIRE_FONCTIONNEL, 0, $agent, $ctx->debut);
         $montantBase = $horsGrille ? 0 : $this->calcul->arrondirFcfa((float) ($salaire?->montant_base ?? 0));
         $baseAnciennete = $horsGrille ? $montantFonctionnel : $montantBase;
+        $codesAffectes = $affectations
+            ->map(fn (PaieElementAffectation $item) => $item->element?->code)
+            ->filter()
+            ->values()
+            ->all();
 
         $details = [];
         $details[] = $this->detailBase($montantBase);
 
         $details = array_merge(
             $details,
-            $this->detailsAuto($lot, $agent, $elements, $baseAnciennete, $fin),
-            $this->detailsAffectations($affectations, $agent, $baseAnciennete, $salaire, $debut),
+            $this->detailsAuto($lot, $agent, $ctx, $baseAnciennete, $codesAffectes),
+            $this->detailsAffectations($affectations, $agent, $baseAnciennete, $salaire, $ctx->debut),
         );
 
         $gains = 0;
@@ -313,7 +356,7 @@ class PaieLotService extends BaseService
             'total_retenues' => $retenues,
             'montant_net' => $gains - $retenues,
             'nb_anomalies' => 0,
-            'snapshot_agent' => $this->snapshotAgent($agent),
+            'snapshot_agent' => $this->snapshotAgent($agent, $salaire),
         ]);
 
         $this->repository->creerDetails((int) $ligne->id, $details);
@@ -339,12 +382,19 @@ class PaieLotService extends BaseService
     }
 
     /**
-     * @param  Collection<string, PaieElement>  $elements
+     * @param  list<string>  $codesAffectes
      * @return list<array<string, mixed>>
      */
-    private function detailsAuto(PaieLot $lot, Agent $agent, Collection $elements, int $base, Carbon $finMois): array
+    private function detailsAuto(PaieLot $lot, Agent $agent, PaieLotContexte $ctx, int $base, array $codesAffectes): array
     {
+        if ((string) $agent->statut === StatutAgent::STAGIAIRE->value) {
+            return [];
+        }
+
         $details = [];
+        $elements = $ctx->elements;
+        $finMois = $ctx->fin;
+        $mois = (int) $lot->mois;
         $montantAnciennete = 0;
 
         $ancienneteEl = $elements->get(CodePaieElement::PRIME_ANCIENNETE->value);
@@ -363,7 +413,7 @@ class PaieLotService extends BaseService
 
         if ((int) $lot->mois === 12) {
             $finAnneeEl = $elements->get(CodePaieElement::PRIME_FIN_ANNEE->value);
-            if ($finAnneeEl instanceof PaieElement && $finAnneeEl->actif && ! $this->licenciementFauteLourde((int) $agent->id, (int) $lot->annee)) {
+            if ($finAnneeEl instanceof PaieElement && $finAnneeEl->actif && ! $this->licenciementFauteLourde((int) $agent->id, (int) $lot->annee, $ctx)) {
                 $annees = $this->calcul->anneesRevolues($agent->date_prise_service, $finMois);
                 if ($annees >= 1 && $base > 0) {
                     $details[] = $this->detailElement(
@@ -376,7 +426,7 @@ class PaieLotService extends BaseService
 
             $arbreEl = $elements->get(CodePaieElement::ALLOCATION_ARBRE_NOEL->value);
             if ($arbreEl instanceof PaieElement && $arbreEl->actif && $arbreEl->montant_defaut !== null) {
-                $nb = $this->nbEnfantsArbreNoel((int) $agent->id, $finMois);
+                $nb = $this->nbEnfantsArbreNoel((int) $agent->id, $finMois, $ctx);
                 $details[] = $this->detailElement(
                     $arbreEl,
                     $this->calcul->montantArbreNoel((float) $arbreEl->montant_defaut, $nb),
@@ -397,7 +447,126 @@ class PaieLotService extends BaseService
             }
         }
 
+        $nbEnfants = $this->nbEnfantsACharge((int) $agent->id, $finMois, $ctx);
+
+        $this->ajouterAutoParametre(
+            $details,
+            $elements,
+            $codesAffectes,
+            CodePaieElement::PRIME_VESTIMENTAIRE,
+            $mois,
+            function (PaieElement $element): ?array {
+                if ($element->montant_defaut === null) {
+                    return null;
+                }
+
+                return [$this->calcul->arrondirFcfa((float) $element->montant_defaut), null];
+            },
+        );
+
+        $this->ajouterAutoParametre(
+            $details,
+            $elements,
+            $codesAffectes,
+            CodePaieElement::INDEMNITE_TRANSPORT,
+            $mois,
+            function (PaieElement $element): ?array {
+                if ($element->montant_defaut === null) {
+                    return null;
+                }
+
+                return [$this->calcul->arrondirFcfa((float) $element->montant_defaut), null];
+            },
+        );
+
+        $this->ajouterAutoParametre(
+            $details,
+            $elements,
+            $codesAffectes,
+            CodePaieElement::ALLOCATIONS_FAMILIALES,
+            $mois,
+            function (PaieElement $element) use ($nbEnfants): ?array {
+                $montant = $this->calcul->montantAllocationsFamiliales((float) ($element->montant_defaut ?? 0), $nbEnfants);
+                if ($montant <= 0) {
+                    return null;
+                }
+
+                return [$montant, ['nb_enfants_a_charge' => $nbEnfants]];
+            },
+        );
+
+        $this->ajouterAutoParametre(
+            $details,
+            $elements,
+            $codesAffectes,
+            CodePaieElement::SUPPLEMENT_FAMILIAL,
+            $mois,
+            function (PaieElement $element) use ($nbEnfants): ?array {
+                if ($element->montant_defaut === null || $nbEnfants <= 0) {
+                    return null;
+                }
+
+                return [
+                    $this->calcul->arrondirFcfa((float) $element->montant_defaut),
+                    ['nb_enfants_a_charge' => $nbEnfants],
+                ];
+            },
+        );
+
+        $this->ajouterAutoParametre(
+            $details,
+            $elements,
+            $codesAffectes,
+            CodePaieElement::RETENUE_CNSS,
+            $mois,
+            function (PaieElement $element) use ($base): ?array {
+                $taux = (float) ($element->taux_defaut ?? 0);
+                $montant = $this->calcul->montantPourcentageBase($base, $taux);
+                if ($montant <= 0) {
+                    return null;
+                }
+
+                return [$montant, ['taux' => $taux, 'base' => $base]];
+            },
+        );
+
         return $details;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $details
+     * @param  Collection<string, PaieElement>  $elements
+     * @param  list<string>  $codesAffectes
+     * @param  callable(PaieElement): ?array{0: int, 1: ?array<string, mixed>}  $resolver
+     */
+    private function ajouterAutoParametre(
+        array &$details,
+        Collection $elements,
+        array $codesAffectes,
+        CodePaieElement $code,
+        int $mois,
+        callable $resolver,
+    ): void {
+        if (in_array($code->value, $codesAffectes, true)) {
+            return;
+        }
+
+        $element = $elements->get($code->value);
+        if (! $element instanceof PaieElement || ! $element->actif) {
+            return;
+        }
+
+        if (! $this->periodiciteMatche($element, $mois)) {
+            return;
+        }
+
+        $resolu = $resolver($element);
+        if ($resolu === null) {
+            return;
+        }
+
+        [$montant, $meta] = $resolu;
+        $details[] = $this->detailElement($element, $montant, SourceDetailPaie::CALCUL_AUTO, $meta);
     }
 
     /**
@@ -452,17 +621,16 @@ class PaieLotService extends BaseService
      * @param  Collection<string, PaieElement>  $elements
      * @return Collection<int, PaieElementAffectation>
      */
-    private function affectationsDuMois(Agent $agent, Carbon $debut, Carbon $fin, Collection $elements): Collection
+    private function affectationsDuMois(int $agentId, PaieLotContexte $ctx, Collection $elements): Collection
     {
-        return $this->affectationRepository
-            ->getCouvrantPeriode((int) $agent->id, $debut->toDateString(), $fin->toDateString())
-            ->filter(function (PaieElementAffectation $affectation) use ($elements, $debut) {
+        return $ctx->affectationsAgent($agentId)
+            ->filter(function (PaieElementAffectation $affectation) use ($elements, $ctx) {
                 $element = $affectation->element ?? $elements->get((string) $affectation->element?->code);
                 if (! $element instanceof PaieElement || ! $element->actif) {
                     return false;
                 }
 
-                return $this->periodiciteMatche($element, (int) $debut->month);
+                return $this->periodiciteMatche($element, (int) $ctx->debut->month);
             })
             ->values();
     }
@@ -481,20 +649,6 @@ class PaieLotService extends BaseService
             PeriodicitePaieElement::SEMESTRIEL,
             PeriodicitePaieElement::ANNUEL,
         ], true);
-    }
-
-    private function salaireCouvrant(int $agentId, Carbon $debut, Carbon $fin): ?SalaireAgent
-    {
-        return $this->salaireAgentRepository->getByAgent($agentId)
-            ->filter(function (SalaireAgent $salaire) use ($debut, $fin) {
-                if ($salaire->date_debut === null || $salaire->date_debut->gt($fin)) {
-                    return false;
-                }
-
-                return $salaire->date_fin === null || $salaire->date_fin->gte($debut);
-            })
-            ->sortByDesc(fn (SalaireAgent $salaire) => $salaire->date_debut?->toDateString())
-            ->first();
     }
 
     /**
@@ -604,7 +758,7 @@ class PaieLotService extends BaseService
     /**
      * @return array<string, mixed>
      */
-    private function snapshotAgent(Agent $agent): array
+    private function snapshotAgent(Agent $agent, ?SalaireAgent $salaire): array
     {
         $agent->loadMissing(['fonction', 'grade']);
 
@@ -617,22 +771,32 @@ class PaieLotService extends BaseService
             'fonction' => $agent->fonction?->nom,
             'fonction_sigle' => $agent->fonction?->sigle,
             'grade' => $agent->grade?->nom,
+            'classe_id' => $salaire?->classegrillesalariale_id,
+            'classe' => $salaire?->classe?->categorie?->sigle,
+            'echelon' => $salaire?->echelon,
             'date_prise_service' => $agent->date_prise_service?->toDateString(),
         ];
     }
 
-    private function nbEnfantsArbreNoel(int $agentId, Carbon $au): int
+    private function nbEnfantsArbreNoel(int $agentId, Carbon $au, PaieLotContexte $ctx): int
     {
-        return $this->ayantDroitRepository->getByAgent($agentId)
-            ->filter(fn ($ayant) => $ayant->estEligibleArbreNoel($au))
+        return $ctx->ayantsAgent($agentId)
+            ->filter(fn ($ayant) => $ayant instanceof AyantDroit && $ayant->estEligibleArbreNoel($au))
             ->count();
     }
 
-    private function licenciementFauteLourde(int $agentId, int $annee): bool
+    private function nbEnfantsACharge(int $agentId, Carbon $au, PaieLotContexte $ctx): int
     {
-        $depuis = sprintf('%04d-01-01', $annee);
+        return $ctx->ayantsAgent($agentId)
+            ->filter(fn ($ayant) => $ayant instanceof AyantDroit
+                && $ayant->type === TypeAyantDroit::ENFANT
+                && $ayant->estACharge($au))
+            ->count();
+    }
 
-        return $this->sanctionRepository->getPrononceesDepuis($agentId, $depuis)
+    private function licenciementFauteLourde(int $agentId, int $annee, PaieLotContexte $ctx): bool
+    {
+        return $ctx->sanctionsAgent($agentId)
             ->contains(function (Sanction $sanction) use ($annee) {
                 $code = $sanction->typeSanction?->code;
                 if ($code !== CodeTypeSanction::LICENCIEMENT) {
@@ -663,10 +827,9 @@ class PaieLotService extends BaseService
     }
 
     /**
-     * @param  Collection<string, PaieElement>  $elements
      * @return list<array<string, mixed>>
      */
-    private function anomaliesLigne(PaieLot $lot, PaieLotLigne $ligne, Carbon $debut, Carbon $fin, Collection $elements): array
+    private function anomaliesLigne(PaieLot $lot, PaieLotLigne $ligne, PaieLotContexte $ctx, ?Agent $agent): array
     {
         $anomalies = [];
         $agentId = (int) $ligne->agent_id;
@@ -683,9 +846,8 @@ class PaieLotService extends BaseService
             }
         }
 
-        $agent = $this->agentRepository->findById($agentId);
         if ($agent instanceof Agent) {
-            foreach ($this->affectationsDuMois($agent, $debut, $fin, $elements) as $affectation) {
+            foreach ($this->affectationsDuMois($agentId, $ctx, $ctx->elements) as $affectation) {
                 $element = $affectation->element;
                 if (! $element instanceof PaieElement) {
                     continue;
@@ -698,18 +860,17 @@ class PaieLotService extends BaseService
                         sprintf('Montant manquant pour %s.', $element->libelle),
                     );
                 }
-                if ($this->interimDepasse($affectation, $element, $debut)) {
+                if ($this->interimDepasse($affectation, $element, $ctx->debut)) {
                     $anomalies[] = $this->anomalie('interim_6_mois', 'bloquante', $agentId, 'Intérim au-delà de six mois sans cause maladie / accident du travail (art. 57).');
                 }
             }
         }
 
-        foreach ($this->sanctionsMiseAPied($agentId, $debut, $fin) as $sanction) {
+        if ($this->sanctionsMiseAPied($agentId, $ctx->debut, $ctx->fin, $ctx)->isNotEmpty()) {
             $anomalies[] = $this->anomalie('mise_a_pied', 'info', $agentId, 'Mise à pied dont les jours tombent dans le mois (prorata non appliqué en V1).');
-            unset($sanction);
         }
 
-        if ((int) $lot->mois === 12 && $this->aMiseAPiedDansAnnee($agentId, (int) $lot->annee)) {
+        if ((int) $lot->mois === 12 && $this->aMiseAPiedDansAnnee($agentId, $ctx)) {
             $anomalies[] = $this->anomalie('fin_annee_mise_a_pied', 'info', $agentId, 'Mise à pied dans l\'année : refus possible de la prime de fin d\'année (art. 56).');
         }
 
@@ -717,24 +878,29 @@ class PaieLotService extends BaseService
     }
 
     /**
+     * @param  Collection<int, Agent>  $agents
      * @return list<array<string, mixed>>
      */
-    private function anomaliesGlobales(PaieLot $lot, Carbon $debut, Carbon $fin): array
+    private function anomaliesGlobales(PaieLot $lot, PaieLotContexte $ctx, Collection $agents): array
     {
         $anomalies = [];
+        $elements = $ctx->elements;
 
-        foreach ($this->agentRepository->getByStatuts([StatutAgent::ACTIF->value, StatutAgent::SUSPENDU->value, StatutAgent::POSITION_EXCEPTIONNELLE->value, StatutAgent::SOUS_LE_DRAPEAU->value]) as $agent) {
-            if ($agent->estHorsGrille()) {
+        foreach ($agents as $agent) {
+            if (! $agent instanceof Agent || $agent->estHorsGrille()) {
                 continue;
             }
-            if ($this->salaireCouvrant((int) $agent->id, $debut, $fin) !== null) {
+            if ((string) $agent->statut === StatutAgent::STAGIAIRE->value) {
+                continue;
+            }
+            if ($ctx->salaire((int) $agent->id) !== null) {
                 continue;
             }
             $anomalies[] = $this->anomalie('sans_base', 'bloquante', (int) $agent->id, 'Agent actif sans salaire_agent couvrant le mois.');
         }
 
         if ((int) $lot->mois === 12) {
-            $arbre = $this->elementRepository->findByCode(CodePaieElement::ALLOCATION_ARBRE_NOEL->value);
+            $arbre = $elements->get(CodePaieElement::ALLOCATION_ARBRE_NOEL->value);
             if ($arbre instanceof PaieElement && $arbre->actif && $arbre->montant_defaut === null) {
                 $anomalies[] = $this->anomalie('prime_sans_parametre', 'info', null, 'Allocation arbre de Noël ignorée : montant_defaut non paramétré.');
             }
@@ -755,7 +921,7 @@ class PaieLotService extends BaseService
         }
 
         if ((int) $lot->mois === 9) {
-            $rentree = $this->elementRepository->findByCode(CodePaieElement::ALLOCATION_RENTREE_SCOLAIRE->value);
+            $rentree = $elements->get(CodePaieElement::ALLOCATION_RENTREE_SCOLAIRE->value);
             if ($rentree instanceof PaieElement && $rentree->actif && $rentree->montant_defaut === null) {
                 $anomalies[] = $this->anomalie('prime_sans_parametre', 'info', null, 'Allocation rentrée scolaire ignorée : montant_defaut non paramétré.');
             }
@@ -767,16 +933,10 @@ class PaieLotService extends BaseService
     /**
      * @return Collection<int, Sanction>
      */
-    private function sanctionsMiseAPied(int $agentId, Carbon $debut, Carbon $fin): Collection
+    private function sanctionsMiseAPied(int $agentId, Carbon $debut, Carbon $fin, PaieLotContexte $ctx): Collection
     {
-        return $this->sanctionRepository->getByAgent($agentId)
+        return $ctx->misesAPiedAgent($agentId)
             ->filter(function (Sanction $sanction) use ($debut, $fin) {
-                if ($sanction->statut !== StatutSanction::VALIDEE) {
-                    return false;
-                }
-                if ($sanction->typeSanction?->code !== CodeTypeSanction::MISE_A_PIED) {
-                    return false;
-                }
                 $d = $sanction->date_debut_effet;
                 $f = $sanction->date_fin_effet ?? $d;
                 if ($d === null) {
@@ -788,12 +948,9 @@ class PaieLotService extends BaseService
             ->values();
     }
 
-    private function aMiseAPiedDansAnnee(int $agentId, int $annee): bool
+    private function aMiseAPiedDansAnnee(int $agentId, PaieLotContexte $ctx): bool
     {
-        $debut = Carbon::create($annee, 1, 1)->startOfDay();
-        $fin = Carbon::create($annee, 12, 31)->startOfDay();
-
-        return $this->sanctionsMiseAPied($agentId, $debut, $fin)->isNotEmpty();
+        return $ctx->misesAPiedAgent($agentId)->isNotEmpty();
     }
 
     /**

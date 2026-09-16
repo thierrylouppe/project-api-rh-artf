@@ -6,6 +6,7 @@ use App\Enums\CodePaieElement;
 use App\Enums\NaturePaieElement;
 use App\Interfaces\PaieElementAffectationInterface;
 use App\Interfaces\PaieElementInterface;
+use App\Interfaces\PaieLotInterface;
 use App\Models\PaieElement;
 
 /** @property PaieElementInterface $repository */
@@ -14,6 +15,7 @@ class PaieElementService extends BaseService
     public function __construct(
         PaieElementInterface $repository,
         private readonly PaieElementAffectationInterface $affectationRepository,
+        private readonly PaieLotInterface $lotRepository,
     ) {
         parent::__construct($repository);
     }
@@ -96,6 +98,12 @@ class PaieElementService extends BaseService
             $this->affectationRepository->existsByElement($id),
             422,
             'Impossible de supprimer un élément déjà affecté à un agent.'
+        );
+
+        abort_if(
+            $this->lotRepository->existeSnapshotElementVerrouille($id),
+            422,
+            'Impossible de supprimer un élément déjà figé dans un lot validé ou clôturé.'
         );
 
         return $this->repository->delete($id);

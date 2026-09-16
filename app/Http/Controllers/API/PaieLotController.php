@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Requests\PaieLot\CreateRequest;
+use App\Http\Requests\PaieLot\ExportRequest;
+use App\Http\Requests\PaieLot\UpdateRequest;
 use App\Http\Resources\PaieLotLigneResource;
 use App\Http\Resources\PaieLotResource;
 use App\Services\PaieBulletinService;
+use App\Services\PaieExportService;
 use App\Services\PaieLotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +21,7 @@ class PaieLotController extends BaseController
     public function __construct(
         PaieLotService $service,
         private readonly PaieBulletinService $bulletinService,
+        private readonly PaieExportService $exportService,
     ) {
         parent::__construct($service);
     }
@@ -86,6 +90,20 @@ class PaieLotController extends BaseController
         return parent::destroy($id);
     }
 
+    #[OA\Put(
+        path: '/api/paie/lots/{id}',
+        operationId: 'updatePaieLot',
+        tags: ['Paie'],
+        summary: 'Modifier le commentaire d\'un lot non verrouillé',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        responses: [new OA\Response(response: 200, description: 'Mis à jour')]
+    )]
+    public function update(UpdateRequest $request, int $id): JsonResponse
+    {
+        return $this->respond($this->service->update($id, $request->validated()), 'Lot de paie mis à jour');
+    }
+
     #[OA\Post(
         path: '/api/paie/lots/{id}/generer',
         operationId: 'genererPaieLot',
@@ -151,13 +169,18 @@ class PaieLotController extends BaseController
         tags: ['Paie'],
         summary: 'Lignes d\'un lot de paie',
         security: [['bearerAuth' => []]],
-        parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'agent_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'hors_grille', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'q', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+        ],
         responses: [new OA\Response(response: 200, description: 'Liste')]
     )]
-    public function lignes(int $id): JsonResponse
+    public function lignes(Request $request, int $id): JsonResponse
     {
         return $this->collectionResponse(
-            PaieLotLigneResource::collection($this->service->getLignes($id))
+            PaieLotLigneResource::collection($this->service->getLignes($id, $request->query()))
         );
     }
 
@@ -195,6 +218,23 @@ class PaieLotController extends BaseController
     public function bulletin(int $id, int $ligneId): Response
     {
         return $this->bulletinService->genererPdf($id, $ligneId);
+    }
+
+    #[OA\Get(
+        path: '/api/paie/lots/{id}/export',
+        operationId: 'exportPaieLot',
+        tags: ['Paie'],
+        summary: 'Export masse salariale CSV ou PDF',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'format', in: 'query', required: true, schema: new OA\Schema(type: 'string', enum: ['csv', 'pdf'])),
+        ],
+        responses: [new OA\Response(response: 200, description: 'Fichier')]
+    )]
+    public function export(ExportRequest $request, int $id): Response
+    {
+        return $this->exportService->exporter($id, $request->validated('format'));
     }
 
     #[OA\Get(

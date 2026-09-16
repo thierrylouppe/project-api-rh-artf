@@ -38,7 +38,7 @@ class AgentRepository extends BaseRepository implements AgentInterface
     public function getByStatuts(array $statuts): Collection
     {
         return Agent::query()
-            ->with(['fonction', 'nominationActive', 'salaireActuel.salaire'])
+            ->with(['fonction', 'grade', 'nominationActive', 'salaireActuel.salaire'])
             ->whereIn('statut', $statuts)
             ->orderBy('nom')
             ->orderBy('prenom')

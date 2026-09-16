@@ -32,7 +32,7 @@ class PaieBulletinService
         abort_unless($lot instanceof PaieLot, 404, 'Lot de paie introuvable.');
 
         $snapshot = $ligne->snapshot_agent ?? [];
-        $periode = sprintf('%04d-%02d', $lot->annee, $lot->mois);
+        $periode = $lot->periodeCode();
         $matricule = $snapshot['matricule'] ?? $ligne->agent_id;
 
         $pdf = Pdf::loadView('pdf.bulletin-paie', [
@@ -41,7 +41,7 @@ class PaieBulletinService
             'snapshot' => $snapshot,
             'gains' => $gains,
             'retenues' => $retenues,
-            'periode_label' => $this->libellePeriode($lot),
+            'periode_label' => $lot->periodeLabel(),
         ]);
 
         return $pdf->stream("bulletin-paie-{$matricule}-{$periode}.pdf");
@@ -59,25 +59,5 @@ class PaieBulletinService
                 default => 5,
             },
         };
-    }
-
-    private function libellePeriode(PaieLot $lot): string
-    {
-        $mois = [
-            1 => 'janvier',
-            2 => 'février',
-            3 => 'mars',
-            4 => 'avril',
-            5 => 'mai',
-            6 => 'juin',
-            7 => 'juillet',
-            8 => 'août',
-            9 => 'septembre',
-            10 => 'octobre',
-            11 => 'novembre',
-            12 => 'décembre',
-        ];
-
-        return ($mois[(int) $lot->mois] ?? (string) $lot->mois).' '.$lot->annee;
     }
 }

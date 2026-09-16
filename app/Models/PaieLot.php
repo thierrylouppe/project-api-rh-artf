@@ -90,4 +90,29 @@ class PaieLot extends Model
             ->where('severite', 'bloquante')
             ->count();
     }
+
+    public function periodeCode(): string
+    {
+        return sprintf('%04d-%02d', $this->annee, $this->mois);
+    }
+
+    public function periodeLabel(): string
+    {
+        $mois = [
+            1 => 'janvier',
+            2 => 'février',
+            3 => 'mars',
+            4 => 'avril',
+            5 => 'mai',
+            6 => 'juin',
+            7 => 'juillet',
+            8 => 'août',
+            9 => 'septembre',
+            10 => 'octobre',
+            11 => 'novembre',
+            12 => 'décembre',
+        ];
+
+        return ($mois[(int) $this->mois] ?? (string) $this->mois).' '.$this->annee;
+    }
 }

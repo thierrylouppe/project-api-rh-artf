@@ -10,7 +10,7 @@ interface PaieLotInterface extends BaseInterface
 {
     public function findByPeriode(int $annee, int $mois): ?PaieLot;
 
-    public function getLignes(int $lotId): Collection;
+    public function getLignes(int $lotId, array $filters = []): Collection;
 
     public function getLigne(int $lotId, int $ligneId): PaieLotLigne;
 
@@ -26,4 +26,6 @@ interface PaieLotInterface extends BaseInterface
     public function updateLigne(int $ligneId, array $data): void;
 
     public function existeSnapshotVerrouille(int $agentId, int $elementId): bool;
+
+    public function existeSnapshotElementVerrouille(int $elementId): bool;
 }

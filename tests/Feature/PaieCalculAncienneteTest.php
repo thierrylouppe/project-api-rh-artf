@@ -38,6 +38,9 @@ class PaieCalculAncienneteTest extends TestCase
         $this->assertSame(50_000, $calcul->montantArbreNoel(25_000, 2));
         $this->assertSame(75_000, $calcul->montantArbreNoel(25_000, 5));
         $this->assertSame(85_000, $calcul->montantFormationAfrique(100_000));
+        $this->assertSame(15_000, $calcul->montantAllocationsFamiliales(5_000, 3));
+        $this->assertSame(0, $calcul->montantAllocationsFamiliales(5_000, 0));
+        $this->assertSame(4_000, $calcul->montantPourcentageBase(100_000, 4));
     }
 
     public function test_bareme_mission(): void

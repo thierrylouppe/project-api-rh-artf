@@ -65,4 +65,14 @@ class AyantDroitRepository extends BaseRepository implements AyantDroitInterface
             ->where('type', TypeAyantDroit::ENFANT)
             ->exists();
     }
+
+    public function getActifsGroupesParAgent(): Collection
+    {
+        return AyantDroit::query()
+            ->where('actif', true)
+            ->orderByRaw("CASE WHEN type = 'conjoint' THEN 0 ELSE 1 END")
+            ->orderBy('date_naissance')
+            ->get()
+            ->groupBy('agent_id');
+    }
 }

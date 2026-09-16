@@ -46,8 +46,18 @@ enum StatutPaieLot: string
         return $this === self::VALIDE;
     }
 
+    public function peutModifier(): bool
+    {
+        return ! $this->estVerrouille();
+    }
+
     public function estVerrouille(): bool
     {
         return in_array($this, [self::VALIDE, self::CLOTURE], true);
+    }
+
+    public function peutExporter(): bool
+    {
+        return $this->estVerrouille();
     }
 }
