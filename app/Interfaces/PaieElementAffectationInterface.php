@@ -18,4 +18,7 @@ interface PaieElementAffectationInterface extends BaseInterface
     ): ?PaieElementAffectation;
 
     public function existsByElement(int $elementId): bool;
+
+    /** Affectations dont la période chevauche [debut, fin]. */
+    public function getCouvrantPeriode(int $agentId, string $debut, string $fin): Collection;
 }

@@ -11,6 +11,9 @@ interface AgentInterface extends BaseInterface
 
     public function getByStatut(string $statut): Collection;
 
+    /** @param  list<string>  $statuts */
+    public function getByStatuts(array $statuts): Collection;
+
     /** Agents dont le dossier est INTEGRE, hors stagiaires. */
     public function getIntegres(array $filters = []): Collection;
 

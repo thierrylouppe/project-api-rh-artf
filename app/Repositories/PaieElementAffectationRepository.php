@@ -74,4 +74,17 @@ class PaieElementAffectationRepository extends BaseRepository implements PaieEle
     {
         return PaieElementAffectation::query()->where('paie_element_id', $elementId)->exists();
     }
+
+    public function getCouvrantPeriode(int $agentId, string $debut, string $fin): Collection
+    {
+        return PaieElementAffectation::query()
+            ->with('element')
+            ->where('agent_id', $agentId)
+            ->where('date_debut', '<=', $fin)
+            ->where(function ($q) use ($debut) {
+                $q->whereNull('date_fin')->orWhere('date_fin', '>=', $debut);
+            })
+            ->orderBy('date_debut')
+            ->get();
+    }
 }

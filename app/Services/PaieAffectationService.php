@@ -10,6 +10,7 @@ use App\Enums\StatutAgent;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\PaieElementAffectationInterface;
 use App\Interfaces\PaieElementInterface;
+use App\Interfaces\PaieLotInterface;
 use App\Models\Agent;
 use App\Models\PaieElement;
 use App\Models\PaieElementAffectation;
@@ -24,6 +25,7 @@ class PaieAffectationService extends BaseService
         PaieElementAffectationInterface $repository,
         private readonly PaieElementInterface $elementRepository,
         private readonly AgentInterface $agentRepository,
+        private readonly PaieLotInterface $lotRepository,
     ) {
         parent::__construct($repository);
     }
@@ -61,10 +63,20 @@ class PaieAffectationService extends BaseService
         ]);
     }
 
+    public function delete(int $id): bool
+    {
+        $affectation = $this->repository->findById($id);
+        abort_unless($affectation instanceof PaieElementAffectation, 404, 'Affectation introuvable.');
+        $this->assertPasVerrouillee($affectation);
+
+        return parent::delete($id);
+    }
+
     protected function beforeUpdate(int $id, array $data): array
     {
         $affectation = $this->repository->findById($id);
         abort_unless($affectation instanceof PaieElementAffectation, 404, 'Affectation introuvable.');
+        $this->assertPasVerrouillee($affectation);
 
         unset($data['agent_id'], $data['paie_element_id'], $data['created_by']);
 
@@ -327,6 +339,18 @@ class PaieAffectationService extends BaseService
     /**
      * @param  array<string, mixed>  $data
      */
+    private function assertPasVerrouillee(PaieElementAffectation $affectation): void
+    {
+        abort_if(
+            $this->lotRepository->existeSnapshotVerrouille(
+                (int) $affectation->agent_id,
+                (int) $affectation->paie_element_id,
+            ),
+            422,
+            'Cette affectation est figée dans un lot de paie validé ou clôturé.'
+        );
+    }
+
     private function assertChevauchement(Agent $agent, PaieElement $element, array $data, ?int $excludeId): void
     {
         $chevauche = $this->repository->findChevauchement(

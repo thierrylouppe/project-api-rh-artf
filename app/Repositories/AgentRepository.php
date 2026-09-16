@@ -32,7 +32,17 @@ class AgentRepository extends BaseRepository implements AgentInterface
 
     public function getByStatut(string $statut): Collection
     {
-        return Agent::where('statut', $statut)->get();
+        return $this->getByStatuts([$statut]);
+    }
+
+    public function getByStatuts(array $statuts): Collection
+    {
+        return Agent::query()
+            ->with(['fonction', 'nominationActive', 'salaireActuel.salaire'])
+            ->whereIn('statut', $statuts)
+            ->orderBy('nom')
+            ->orderBy('prenom')
+            ->get();
     }
 
     public function getIntegres(array $filters = []): Collection
@@ -112,7 +122,7 @@ class AgentRepository extends BaseRepository implements AgentInterface
     public function trouverArchivesPrioritaires(string $nom, string $prenom, ?string $numeroCnss): Collection
     {
         $limite = now()->subYear()->toDateString();
-        $nom    = mb_strtolower(trim($nom));
+        $nom = mb_strtolower(trim($nom));
         $prenom = mb_strtolower(trim($prenom));
 
         return Agent::query()

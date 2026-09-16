@@ -53,6 +53,7 @@ use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OrganismeSocialController;
 use App\Http\Controllers\API\PaieAffectationController;
 use App\Http\Controllers\API\PaieElementController;
+use App\Http\Controllers\API\PaieLotController;
 use App\Http\Controllers\API\PalierAncienneteCongeController;
 use App\Http\Controllers\API\ParametreApplicationController;
 use App\Http\Controllers\API\ParametregrileController;
@@ -386,6 +387,29 @@ Route::middleware('auth:sanctum')->prefix('paie')->group(function () {
         ->middleware('permission:gerer-salaires');
     Route::delete('affectations/{id}', [PaieAffectationController::class, 'destroy'])
         ->middleware('permission:gerer-salaires');
+
+    Route::get('lots', [PaieLotController::class, 'index'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('lots', [PaieLotController::class, 'store'])
+        ->middleware('permission:gerer-salaires');
+    Route::get('lots/{id}', [PaieLotController::class, 'show'])
+        ->middleware('permission:consulter-salaires');
+    Route::delete('lots/{id}', [PaieLotController::class, 'destroy'])
+        ->middleware('permission:gerer-salaires');
+    Route::post('lots/{id}/generer', [PaieLotController::class, 'generer'])
+        ->middleware('permission:gerer-salaires');
+    Route::post('lots/{id}/controler', [PaieLotController::class, 'controler'])
+        ->middleware('permission:gerer-salaires');
+    Route::post('lots/{id}/valider', [PaieLotController::class, 'valider'])
+        ->middleware('permission:gerer-salaires');
+    Route::post('lots/{id}/cloturer', [PaieLotController::class, 'cloturer'])
+        ->middleware('permission:gerer-salaires');
+    Route::get('lots/{id}/lignes', [PaieLotController::class, 'lignes'])
+        ->middleware('permission:consulter-salaires');
+    Route::get('lots/{id}/lignes/{ligneId}', [PaieLotController::class, 'ligne'])
+        ->middleware('permission:consulter-salaires');
+    Route::get('agents/{agent}/bulletins', [PaieLotController::class, 'bulletinsAgent'])
+        ->middleware('permission:consulter-salaires');
 });
 
 // ============================================================

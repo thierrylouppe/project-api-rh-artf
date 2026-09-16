@@ -54,6 +54,7 @@ use App\Interfaces\NotificationInterface;
 use App\Interfaces\OrganismeSocialInterface;
 use App\Interfaces\PaieElementAffectationInterface;
 use App\Interfaces\PaieElementInterface;
+use App\Interfaces\PaieLotInterface;
 use App\Interfaces\PalierAncienneteCongeInterface;
 use App\Interfaces\ParametreApplicationInterface;
 use App\Interfaces\ParametregrileInterface;
@@ -134,6 +135,7 @@ use App\Repositories\NotificationRepository;
 use App\Repositories\OrganismeSocialRepository;
 use App\Repositories\PaieElementAffectationRepository;
 use App\Repositories\PaieElementRepository;
+use App\Repositories\PaieLotRepository;
 use App\Repositories\PalierAncienneteCongeRepository;
 use App\Repositories\ParametreApplicationRepository;
 use App\Repositories\ParametregrileRepository;
@@ -255,6 +257,7 @@ class AppServiceProvider extends ServiceProvider
         // Module Paie D.5
         PaieElementInterface::class => PaieElementRepository::class,
         PaieElementAffectationInterface::class => PaieElementAffectationRepository::class,
+        PaieLotInterface::class => PaieLotRepository::class,
         // Module 1.3 — Administration système
         NotificationInterface::class => NotificationRepository::class,
         UserInterface::class => UserRepository::class,

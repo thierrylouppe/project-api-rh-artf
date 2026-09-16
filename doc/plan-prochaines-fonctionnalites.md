@@ -1,7 +1,7 @@
 # Prochaines fonctionnalités — suivi d’implémentation
 
 > Document **vivant** : cocher au fur et à mesure.  
-> Dernière mise à jour : **2026-09-16** (D.5 Paie — découpage technique)  
+> Dernière mise à jour : **2026-09-16** (D.5.3 lots de paie)  
 > Architecture obligatoire : [`architecture.md`](./architecture.md)  
 > Plan long : [`plan_complet.md`](./plan_complet.md)  
 > Contrat FE actuel : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md)  
@@ -12,7 +12,7 @@
 **Objectif :** livrer les modules métier manquants (vie de l’agent + DRHL), **sans cloisonner** par service / bureau. Le cloisonnement vient **après**.
 
 **État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Vague E lots **A–E** livrés.  
-Prochain : Vague **D.5 Paie** (D.5.1–D.5.2 livrés) — [`plan-module-paie.md`](./plan-module-paie.md). Suite : **D.5.3** lots.
+Prochain : Vague **D.5 Paie** (D.5.1–D.5.3 livrés) — [`plan-module-paie.md`](./plan-module-paie.md). Suite : **D.5.4** bulletin enrichi.
 
 ---
 
@@ -205,7 +205,7 @@ Préfixe nouveau : `/api/paie`. Permissions existantes `consulter-salaires` / `g
 |---|--------|---------|--------|
 | D.5.1 | Référentiel d’éléments | Primes, indemnités, retenues (récurrent / ponctuel) | ✅ |
 | D.5.2 | Affectation agent | Période, montant | ✅ |
-| D.5.3 | Lot mensuel | Générer → contrôler → valider → clôturer | ⬜ |
+| D.5.3 | Lot mensuel | Générer → contrôler → valider → clôturer | ✅ |
 | D.5.4 | Bulletin enrichi | Base + éléments + net (nouveau endpoint ou champ optionnel) | ⬜ |
 | D.5.5 | Export masse salariale | CSV / PDF | ⬜ (peut aller dans D.6) |
 
@@ -305,5 +305,6 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 | 2026-09-16 | D.5 | Découpage technique paie : [`plan-module-paie.md`](./plan-module-paie.md). Code non commencé. |
 | 2026-09-16 | D.5.1 | Référentiel `/api/paie/elements` + seeder CCN art. 54–59. |
 | 2026-09-16 | D.5.2 | Affectations `/api/paie/affectations` (éligibilité, chevauchement). |
+| 2026-09-16 | D.5.3 | Lots `/api/paie/lots` : génération CCN (base, ancienneté, fin d’année, affectations), contrôle, validation, clôture. |
 | 2026-09-16 | E.A | Lot A livré : essai art. 49, délai 30 j art. 52, `necessite_contrat` recrutement externe, jobs d’alerte. |
 | 2026-09-16 | E.B | Lot B livré : pièces art. 46 (ACE, mariage, déjà salarié), CNSS art. 47 à `integrer`. |
