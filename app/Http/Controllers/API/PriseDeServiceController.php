@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Requests\DossierIntegration\IntegrerRequest;
 use App\Http\Requests\PriseDeService\CreateRequest;
 use App\Http\Resources\PriseDeServiceResource;
 use App\Services\AgentService;
@@ -75,19 +76,23 @@ class PriseDeServiceController extends BaseController
         operationId: 'integrerDossier',
         tags: ['Intégration — Prise de service'],
         summary: 'Finaliser l\'intégration administrative',
-        description: 'Clôture le workflow : dossier INTEGRE, compte éventuel, checklist post-intégration.',
+        description: 'Clôture le workflow : dossier INTEGRE, immatriculation CNSS art. 47 (embauche), compte éventuel, checklist post-intégration. Body optionnel : `numero_cnss`.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(name: 'dossier', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(ref: '#/components/schemas/IntegrerDossierRequest')
+        ),
         responses: [
             new OA\Response(response: 200, description: 'Intégration finalisée'),
             new OA\Response(response: 401, description: 'Non authentifié', content: new OA\JsonContent(ref: '#/components/schemas/Error401')),
         ]
     )]
-    public function integrer(int $dossierId): JsonResponse
+    public function integrer(IntegrerRequest $request, int $dossierId): JsonResponse
     {
-        $result = $this->dossierService->integrer($dossierId);
+        $result = $this->dossierService->integrer($dossierId, $request->validated());
 
         $data = ['dossier' => new \App\Http\Resources\DossierIntegrationResource($result['dossier'])];
 

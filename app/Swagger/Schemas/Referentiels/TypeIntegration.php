@@ -14,6 +14,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'necessite_contrat', type: 'boolean', example: true),
         new OA\Property(property: 'necessite_validation_dg', type: 'boolean', example: true),
         new OA\Property(property: 'necessite_compte_utilisateur', type: 'boolean', example: true),
+        new OA\Property(property: 'est_embauche_ccn', type: 'boolean', example: true, description: 'Recrutement externe / Contractuel (art. 46–47)'),
         new OA\Property(property: 'prefixe_matricule', type: 'string', nullable: true, example: 'ARTF'),
         new OA\Property(property: 'duree_max_mois', type: 'integer', nullable: true, example: null),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),

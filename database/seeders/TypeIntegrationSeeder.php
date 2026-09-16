@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PieceCcnArt46;
 use App\Models\TypeDocument;
 use App\Models\TypeIntegration;
 use Illuminate\Database\Seeder;
@@ -11,70 +12,77 @@ class TypeIntegrationSeeder extends Seeder
     /**
      * Documents obligatoires par type d'intégration (référencés par nom).
      * Doit correspondre aux entrées de TypeDocumentSeeder.
+     *
+     * @return array<string, list<string>>
      */
-    private const DOCUMENTS_PAR_TYPE = [
-        'Recrutement externe' => [
-            'Curriculum vitae',
-            'Demande',
-            'Diplôme',
-            'Engagement',
-            'Certificat de nationalité',
-            'Casier judiciaire',
-            'Certificat médical',
-            'Acte de naissance',
-        ],
-        'Mutation' => [
-            'Curriculum vitae',
-            'Demande',
-            'Diplôme',
-            'Engagement',
-            'Certificat de nationalité',
-        ],
-        'Détachement' => [
-            'Curriculum vitae',
-            'Demande',
-            'Diplôme',
-            'Engagement',
-        ],
-        'Mise à disposition' => [
-            'Curriculum vitae',
-            'Demande',
-            'Diplôme',
-            'Engagement',
-        ],
-        'Réintégration' => [
-            'Curriculum vitae',
-            'Demande',
-            'Engagement',
-        ],
-        'Contractuel' => [
-            'Curriculum vitae',
-            'Demande',
-            'Diplôme',
-            'Engagement',
-            'Certificat de nationalité',
-            'Casier judiciaire',
-            'Certificat médical',
-            'Acte de naissance',
-        ],
-        'Stage professionnel' => [
-            'Demande de stage adressée au Directeur Général',
-            'Lettre de recommandation de l\'établissement',
-            'Convention de stage',
-        ],
-        'Stage académique' => [
-            'Demande de stage adressée au Directeur Général',
-            'Lettre de recommandation de l\'établissement',
-            'Convention de stage',
-            'Certificat de scolarité',
-        ],
-        'Stage de qualification' => [
-            'Demande de stage adressée au Directeur Général',
-            'Lettre de recommandation de l\'établissement',
-            'Convention de stage',
-            'Décision de mise en stage',
-        ],
-    ];
+    private static function documentsParType(): array
+    {
+        return [
+            'Recrutement externe' => [
+                'Curriculum vitae',
+                'Demande',
+                'Diplôme',
+                'Engagement',
+                'Certificat de nationalité',
+                'Casier judiciaire',
+                'Certificat médical',
+                'Acte de naissance',
+                PieceCcnArt46::ACE->value,
+            ],
+            'Mutation' => [
+                'Curriculum vitae',
+                'Demande',
+                'Diplôme',
+                'Engagement',
+                'Certificat de nationalité',
+            ],
+            'Détachement' => [
+                'Curriculum vitae',
+                'Demande',
+                'Diplôme',
+                'Engagement',
+            ],
+            'Mise à disposition' => [
+                'Curriculum vitae',
+                'Demande',
+                'Diplôme',
+                'Engagement',
+            ],
+            'Réintégration' => [
+                'Curriculum vitae',
+                'Demande',
+                'Engagement',
+            ],
+            'Contractuel' => [
+                'Curriculum vitae',
+                'Demande',
+                'Diplôme',
+                'Engagement',
+                'Certificat de nationalité',
+                'Casier judiciaire',
+                'Certificat médical',
+                'Acte de naissance',
+                PieceCcnArt46::ACE->value,
+            ],
+            'Stage professionnel' => [
+                'Demande de stage adressée au Directeur Général',
+                'Lettre de recommandation de l\'établissement',
+                'Convention de stage',
+            ],
+            'Stage académique' => [
+                'Demande de stage adressée au Directeur Général',
+                'Lettre de recommandation de l\'établissement',
+                'Convention de stage',
+                'Certificat de scolarité',
+            ],
+            'Stage de qualification' => [
+                'Demande de stage adressée au Directeur Général',
+                'Lettre de recommandation de l\'établissement',
+                'Convention de stage',
+                'Décision de mise en stage',
+            ],
+        ];
+    }
 
     public function run(): void
     {
@@ -147,7 +155,7 @@ class TypeIntegrationSeeder extends Seeder
         foreach ($types as $data) {
             $typeIntegration = TypeIntegration::updateOrCreate(['nom' => $data['nom']], $data);
 
-            $nomsDocuments = self::DOCUMENTS_PAR_TYPE[$data['nom']] ?? [];
+            $nomsDocuments = self::documentsParType()[$data['nom']] ?? [];
 
             if ($nomsDocuments !== []) {
                 $ids = TypeDocument::whereIn('nom', $nomsDocuments)->pluck('id');

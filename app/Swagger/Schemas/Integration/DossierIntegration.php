@@ -16,6 +16,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'nombre_postes', type: 'integer', nullable: true, example: 1),
         new OA\Property(property: 'motif', type: 'string', nullable: true),
         new OA\Property(property: 'notes', type: 'string', nullable: true),
+        new OA\Property(property: 'deja_salarie', type: 'boolean', example: false),
         new OA\Property(property: 'type_integration_id', type: 'integer', example: 1),
         new OA\Property(property: 'demandeur_id', type: 'integer', nullable: true),
         new OA\Property(property: 'agent_id', type: 'integer', nullable: true),

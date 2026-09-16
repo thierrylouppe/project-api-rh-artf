@@ -19,6 +19,7 @@ class DossierIntegrationResource extends JsonResource
             'nombre_postes'        => $this->nombre_postes,
             'motif'                => $this->motif,
             'notes'                => $this->notes,
+            'deja_salarie'         => (bool) $this->deja_salarie,
             'type_integration_id'  => $this->when(! $this->relationLoaded('typeIntegration'), $this->type_integration_id),
             'type_integration'     => new TypeIntegrationResource($this->whenLoaded('typeIntegration')),
             'demandeur_id'         => $this->when(! $this->relationLoaded('demandeur'), $this->demandeur_id),

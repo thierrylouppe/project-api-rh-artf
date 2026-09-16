@@ -23,6 +23,7 @@ class CreateRequest extends FormRequest
             'date_demande'         => ['nullable', 'date'],
             'motif'                => ['nullable', 'string'],
             'notes'                => ['nullable', 'string'],
+            'deja_salarie'         => ['nullable', 'boolean'],
         ];
     }
 }

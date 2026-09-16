@@ -359,6 +359,8 @@ Répéter pour chaque pièce. Consulter les documents déposés :
 GET /integration/dossiers/7/documents
 ```
 
+Recrutement externe / Contractuel : le pivot inclut le **récépissé ACE**. Champ dossier `deja_salarie` : ajoute carte de travail, certificat de travail, n° CNSS. Agent marié : acte de mariage. `POST …/soumettre` refuse (422) si ces pièces manquent.
+
 **Pièces obligatoires typiques**
 
 | type_document_id | Libellé |
@@ -499,14 +501,18 @@ POST /integration/validations/11/renvoyer
 
 Un seul appel suffit pour :
 1. Clôturer le dossier → statut **`INTEGRE`**
-2. Créer le compte applicatif **uniquement si** `necessite_compte_utilisateur = true`
-3. Retourner la liste des **tâches post-intégration** filtrées selon le type
+2. Immatriculer à la CNSS (art. 47) si embauche CDI/CDD — body optionnel `{ "numero_cnss": "…" }` (422 si absent et `agent.numero_cnss` vide)
+3. Créer le compte applicatif **uniquement si** `necessite_compte_utilisateur = true`
+4. Retourner la liste des **tâches post-intégration** filtrées selon le type
 
 **Requête**
 ```
 POST /integration/dossiers/7/integrer
 ```
-*(body vide)*
+```json
+{ "numero_cnss": "101234567" }
+```
+*(body vide accepté si `agent.numero_cnss` est déjà renseigné, ou pour un stage)*
 
 **Réponse `200` — recrutement externe / contractuel**
 ```json

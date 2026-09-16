@@ -178,7 +178,7 @@ Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vagu
 
 ## Prochaine étape recommandée
 
-**Vague E** — lot **A livré**. Suite : **lot B** (pièces art. 46 + CNSS art. 47), puis C positions, D hors grille. Puis **D.5 Paie**.
+**Vague E** — lots **A** et **B** livrés. Suite : **lot C** (positions art. 76–80), puis D hors grille. Puis **D.5 Paie**.
 
 Puis D.3.4 Prestations → D.6 Reporting. **Pas** de cloisonnement avant Vague F.
 

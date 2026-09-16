@@ -8,7 +8,7 @@
 
 **Objectif :** aligner l’**intégration**, la **carrière** et la **grille / salaire de base** sur les délais, plafonds et éligibilités CCN — **sans** ouvrir la paie (primes / lots = Vague **D.5**).
 
-**État :** lot **A livré** (essai + contrat 30 j). Lots B–E ⬜. Ne pas relancer art. 73–75 (déjà livrés). Ne pas recoder la formule de grille (annexe 2 déjà conforme).
+**État :** lots **A** (essai + contrat 30 j) et **B** (pièces art. 46 + CNSS art. 47) livrés. Lots C–E ⬜. Ne pas relancer art. 73–75 (déjà livrés). Ne pas recoder la formule de grille (annexe 2 déjà conforme).
 
 ---
 
@@ -38,8 +38,8 @@ Chaîne : Route → FormRequest → Controller → **Service** → **Interface**
 
 | Sujet | Code aujourd’hui | Écart CCN |
 |--------|------------------|-----------|
-| Pièces art. 46 | Seed recrutement : CV, demande, diplôme, nationalité, casier, médical, naissance | Manquent mariage, récépissé ACE, carte / certificat de travail, n° CNSS si déjà salarié |
-| Art. 47 CNSS | Champ + alerte affaires sociales | Pas d’immatriculation à l’intégration |
+| Pièces art. 46 | Seed embauche : liste + ACE ; conditionnels mariage / déjà salarié | Livré (lot B) |
+| Art. 47 CNSS | Immatriculation à `integrer` + affiliation CNSS | Livré (lot B) |
 | Art. 48 réembauche | — | Priorité 2 ans absente |
 | Art. 49 essai | Table `contrats` : dates + rémunération seulement | **1 / 2 / 3 mois**, renouvelable 1 fois, min. de classe : **absent** |
 | Art. 50 essai poste supérieur | — | Absent |
@@ -67,7 +67,7 @@ Lot A  Art. 49–52 — essai + contrat d’engagement
 | Lot | Livrable | Priorité | Statut |
 |-----|----------|----------|--------|
 | **A** | Essai 1/2/3 mois, renouvellement ×1, rupture sans préavis, contrat sous 30 j, mentions | Haute (légal embauche) | ✅ |
-| **B** | Pièces CCN + CNSS obligatoire à l’intégration CDI/CDD | Haute | ⬜ |
+| **B** | Pièces CCN + CNSS obligatoire à l’intégration CDI/CDD | Haute | ✅ |
 | **C** | Dossier de position (détachement / dispo / exceptionnelle / drapeau) + effets | Haute (carrière vivante) | ⬜ |
 | **D** | Pas de grille pour DG/DC/DD ; bonifs d’échelon d’accès | Moyenne | ⬜ |
 | **E** | Réembauche 2 ans, essai poste supérieur, mutation rapprochement | Moyenne / plus tard | ⬜ |

@@ -18,6 +18,7 @@ use App\Models\DossierIntegration;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /** @property DossierIntegrationInterface $repository */
 class DossierIntegrationService extends BaseService
@@ -35,6 +36,7 @@ class DossierIntegrationService extends BaseService
         private readonly CompteIntegrationService $compteService,
         private readonly NotificationService $notificationService,
         private readonly UserInterface $userRepository,
+        private readonly AffiliationSocialeService $affiliationSocialeService,
     ) {
         parent::__construct($repository);
     }
@@ -62,6 +64,8 @@ class DossierIntegrationService extends BaseService
 
     public function soumettre(int $id): DossierIntegration
     {
+        $this->assertDocumentsObligatoiresDeposesSiEmbauche($id);
+
         return $this->transitionner($id, StatutDossier::SOUMIS, 'Dossier soumis pour étude RH');
     }
 
@@ -77,18 +81,19 @@ class DossierIntegrationService extends BaseService
 
     public function marquerComplet(int $id): DossierIntegration
     {
-        if (! $this->documentDossierService->tousObligatoiresDeposes($id)) {
-            $manquants = $this->documentDossierService->getDocumentsObligatoiresManquants($id)
-                ->pluck('type_document.nom')
-                ->implode(', ');
+        $etat = $this->documentDossierService->getEtatDocuments($id);
 
-            abort(422, "Impossible de marquer le dossier complet : documents obligatoires manquants ({$manquants}).");
+        $manquants = collect($etat['manquants'])
+            ->filter(fn (array $item) => $item['est_obligatoire']);
+
+        if ($manquants->isNotEmpty()) {
+            $noms = $manquants->pluck('type_document.nom')->implode(', ');
+
+            abort(422, "Impossible de marquer le dossier complet : documents obligatoires manquants ({$noms}).");
         }
 
-        $nonValides = $this->documentDossierService->getDocumentsObligatoiresNonValides($id);
-
-        if ($nonValides->isNotEmpty()) {
-            $noms = $nonValides->pluck('typeDocument.nom')->implode(', ');
+        if ($etat['non_valides']->isNotEmpty()) {
+            $noms = $etat['non_valides']->pluck('typeDocument.nom')->implode(', ');
 
             abort(422, "Impossible de marquer le dossier complet : documents obligatoires non validés ({$noms}).");
         }
@@ -98,6 +103,8 @@ class DossierIntegrationService extends BaseService
 
     public function validerRH(int $id): DossierIntegration
     {
+        $this->assertDocumentsObligatoiresDeposesSiEmbauche($id);
+
         $dossier = $this->transitionner($id, StatutDossier::VALIDE_RH, 'Validation RH effectuée');
         $dossier->load('typeIntegration');
 
@@ -227,13 +234,16 @@ class DossierIntegrationService extends BaseService
      * Depuis VALIDE_DG : crée automatiquement le compte utilisateur si le type
      * le requiert (`necessite_compte_utilisateur`), puis retourne les tâches post-intégration.
      *
+     * @param  array{numero_cnss?: string|null}  $data
      * @return array{dossier: DossierIntegration, compte: ?object, taches_post_integration: array}
      */
-    public function integrer(int $id): array
+    public function integrer(int $id, array $data = []): array
     {
-        return DB::transaction(function () use ($id) {
+        return DB::transaction(function () use ($id, $data) {
             $dossier = $this->repository->findById($id);
             $dossier->load('typeIntegration', 'agent.contratActif');
+
+            $this->assurerImmatriculationCnss($dossier, $data['numero_cnss'] ?? null);
 
             $depuisValideeDG = $dossier->statut === StatutDossier::VALIDE_DG;
 
@@ -490,6 +500,46 @@ class DossierIntegrationService extends BaseService
         }
 
         return $niveaux;
+    }
+
+    private function assertDocumentsObligatoiresDeposesSiEmbauche(int $id): void
+    {
+        $dossier = $this->repository->findById($id);
+        $dossier->loadMissing('typeIntegration');
+
+        if (! $dossier->typeIntegration?->estEmbaucheCcn()) {
+            return;
+        }
+
+        $manquants = $this->documentDossierService->getDocumentsObligatoiresManquants($id);
+
+        if ($manquants->isNotEmpty()) {
+            abort(422, 'Documents obligatoires manquants ('.$manquants->pluck('type_document.nom')->implode(', ').').');
+        }
+    }
+
+    private function assurerImmatriculationCnss(DossierIntegration $dossier, ?string $numeroPayload): void
+    {
+        if (! $dossier->typeIntegration?->estEmbaucheCcn()) {
+            return;
+        }
+
+        abort_if(
+            $dossier->agent_id === null,
+            422,
+            'Impossible d\'intégrer sans fiche agent : immatriculation CNSS obligatoire (art. 47).'
+        );
+
+        $agent  = $this->agentRepository->findById((int) $dossier->agent_id);
+        $numero = trim((string) ($numeroPayload ?? $agent->numero_cnss ?? ''));
+
+        if ($numero === '') {
+            throw ValidationException::withMessages([
+                'numero_cnss' => 'Immatriculation CNSS obligatoire (art. 47).',
+            ]);
+        }
+
+        $this->affiliationSocialeService->assurerAffiliationCnss((int) $agent->id, $numero);
     }
 
     private function transitionner(int $id, StatutDossier $cible, string $commentaire): DossierIntegration

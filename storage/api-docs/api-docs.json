@@ -7514,7 +7514,7 @@
                     "Intégration — Prise de service"
                 ],
                 "summary": "Finaliser l'intégration administrative",
-                "description": "Clôture le workflow : dossier INTEGRE, compte éventuel, checklist post-intégration.",
+                "description": "Clôture le workflow : dossier INTEGRE, immatriculation CNSS art. 47 (embauche), compte éventuel, checklist post-intégration. Body optionnel : `numero_cnss`.",
                 "operationId": "integrerDossier",
                 "parameters": [
                     {
@@ -7526,6 +7526,16 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IntegrerDossierRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Intégration finalisée"
@@ -10196,6 +10206,10 @@
                         "type": "string",
                         "nullable": true
                     },
+                    "deja_salarie": {
+                        "type": "boolean",
+                        "example": false
+                    },
                     "type_integration_id": {
                         "type": "integer",
                         "example": 1
@@ -10291,6 +10305,11 @@
                     "notes": {
                         "type": "string",
                         "nullable": true
+                    },
+                    "deja_salarie": {
+                        "description": "Art. 46 : pièces précédent employeur si true",
+                        "type": "boolean",
+                        "example": false
                     }
                 },
                 "type": "object"
@@ -10331,6 +10350,17 @@
                     },
                     "message": {
                         "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "IntegrerDossierRequest": {
+                "properties": {
+                    "numero_cnss": {
+                        "description": "Art. 47 — obligatoire à l'intégration CDI/CDD si agent.numero_cnss est vide",
+                        "type": "string",
+                        "example": "101234567",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -10604,6 +10634,11 @@
                         "type": "boolean",
                         "example": true
                     },
+                    "est_embauche_ccn": {
+                        "description": "Recrutement externe / Contractuel (art. 46–47)",
+                        "type": "boolean",
+                        "example": true
+                    },
                     "prefixe_matricule": {
                         "type": "string",
                         "example": "ARTF",
@@ -10644,6 +10679,10 @@
                         "example": true
                     },
                     "necessite_compte_utilisateur": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "est_embauche_ccn": {
                         "type": "boolean",
                         "example": true
                     },

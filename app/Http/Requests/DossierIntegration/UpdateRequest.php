@@ -18,6 +18,7 @@ class UpdateRequest extends FormRequest
             'nombre_postes'  => ['nullable', 'integer', 'min:1'],
             'motif'          => ['nullable', 'string'],
             'notes'          => ['nullable', 'string'],
+            'deja_salarie'   => ['nullable', 'boolean'],
         ];
     }
 }

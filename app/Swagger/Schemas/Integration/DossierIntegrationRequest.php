@@ -23,6 +23,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'date_demande', type: 'string', format: 'date', nullable: true, example: '2026-08-10'),
         new OA\Property(property: 'motif', type: 'string', nullable: true, example: 'Besoin de renfort'),
         new OA\Property(property: 'notes', type: 'string', nullable: true),
+        new OA\Property(property: 'deja_salarie', type: 'boolean', example: false, description: 'Art. 46 : pièces précédent employeur si true'),
     ]
 )]
 class DossierIntegrationRequest {}

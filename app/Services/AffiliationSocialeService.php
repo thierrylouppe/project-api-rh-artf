@@ -69,6 +69,31 @@ class AffiliationSocialeService extends BaseService
         return $model->load(['agent:id,matricule,nom,prenom,numero_cnss,statut', 'organisme']);
     }
 
+    public function assurerAffiliationCnss(int $agentId, string $numero): AffiliationSociale
+    {
+        $organisme = $this->organismeRepository->findByCode('CNSS');
+        abort_if(
+            $organisme === null,
+            422,
+            'Organisme CNSS introuvable. Vérifiez le référentiel des organismes sociaux.'
+        );
+
+        $existante = $this->repository->findActiveForAgentAndOrganisme($agentId, (int) $organisme->id);
+        if ($existante !== null) {
+            $this->synchroniserNumeroCnss($existante);
+
+            return $existante;
+        }
+
+        return $this->create([
+            'agent_id'           => $agentId,
+            'organisme_id'       => $organisme->id,
+            'numero_affiliation' => $numero,
+            'date_debut'         => now()->toDateString(),
+            'statut'             => StatutAffiliation::ACTIVE->value,
+        ]);
+    }
+
     protected function beforeUpdate(int $id, array $data): array
     {
         $affiliation = $this->repository->findById($id);

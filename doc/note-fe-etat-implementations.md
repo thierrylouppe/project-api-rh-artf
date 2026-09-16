@@ -655,10 +655,21 @@ Deux chemins API ; le FE actuel utilise **B**.
 
 À faire côté FE :
 
-- Flags `TypeIntegration` (`necessite_contrat`, `necessite_validation_dg`, `necessite_compte_utilisateur`, `estUnStage`) pour afficher/masquer les étapes.
+- Flags `TypeIntegration` (`necessite_contrat`, `necessite_validation_dg`, `necessite_compte_utilisateur`, `estUnStage`, **`est_embauche_ccn`**) pour afficher/masquer les étapes.
 - Checklist : `GET /integration/dossiers/{id}/taches-post-integration`. Compter uniquement `obligatoire === true`.
 - Étapes **14** (affectation) et **15** (nomination) : **optionnelles**, liens vers écrans carrière (`agent_id` prérempli). `INTEGRE` **ne dépend plus** d’une affectation ni d’une nomination.
 - Ne plus attendre `AFFECTE` / `NOMME` sur le dossier après activation carrière.
+
+### Pièces art. 46 / CNSS art. 47 (Vague E lot B)
+
+Reconnecter après reseed `TypeDocument` / `TypeIntegration`.
+
+- Recrutement externe et Contractuel : `est_embauche_ccn = true`. Pivot **+** récépissé ACE. Mutation / détachement / stages inchangés.
+- Champ dossier **`deja_salarie`** (bool, défaut `false`) en create/update. Si `true` : carte de travail, certificat de travail, n° CNSS (pièce **ou** `agent.numero_cnss`).
+- Acte de mariage obligatoire seulement si `situation_familiale.statut_matrimonial = marie`.
+- `GET /integration/dossiers/{id}/documents` : `manquants[].est_obligatoire` reflète ces conditions. Les pièces conditionnelles restent **uploadables** même quand elles ne sont pas encore obligatoires.
+- `POST …/soumettre` et `POST …/valider-rh` : **422** si pièces obligatoires manquantes (embauche CCN).
+- `POST …/integrer` : body optionnel `{ "numero_cnss": "…" }`. Obligatoire si l’agent n’a pas encore de n° (CDI/CDD). Crée l’affiliation CNSS active. Stages : pas de contrôle CNSS. Carte de travail PDF : hors V1.
 
 Détail : [`workflow-integration-par-type.md`](./workflow-integration-par-type.md).
 
@@ -830,7 +841,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 - ~~Discipline~~ → **livré** §2e
 - ~~Affaires sociales P1~~ → **livré** §2f (prestations D.3.4 / santé D.3.5 encore hors scope)
 - ~~Catalogue formations~~ → **livré** §2g
-- Conformité CCN 3–5 lots B–E (pièces, positions, hors grille DG) → [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — **lot A livré** (§4 contrats / essai)
+- Conformité CCN 3–5 lots C–E (positions, hors grille DG) → [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A** et **B** livrés
 - Paie lots, dashboard → vagues D.5–D.6 (ne pas concevoir d’écrans avant l’API)
 - GED **versioning / recherche** (la GED agent légère est livrée, §2d)
 - Cloisonnement menus par bureau DRHL → Vague F, **après** D.2–D.6
@@ -1415,6 +1426,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-16 | **Vague E lot B** : pièces art. 46 + CNSS art. 47 à l’intégration | `deja_salarie`, ACE au pivot embauche, checkbox déjà salarié, `numero_cnss` sur `POST …/integrer`. Reseed types. Voir §3. |
 | 2026-09-16 | **Vague E lot A** : essai art. 49 + délai contrat 30 j art. 52 | Recrutement externe : `necessite_contrat=true`. Badge essai + boutons renouveler/confirmer/rompre. File `GET /carriere/contrats/alertes/delai-30-jours`. Voir §4. |
 | 2026-09-15 | **Formation D.4** : `/api/formations` + `POST /integration/stages/{id}/convertir-agent` | Permissions `consulter-formations` / `gerer-formations`. Reconnecter RH / DG / admin. Contrat §2g. Stages d’accueil inchangés. |
 | 2026-09-15 | **Affaires sociales D.3 P1** : `/api/affaires-sociales` (organismes, affiliations, ayants droit, pièces, alerte CNSS, dossier social) | Permissions `consulter-affaires-sociales` / `gerer-affaires-sociales`. Reconnecter RH / DG / admin. Contrat §2f. `nb_enfants` dérivé des ayants droit. Prestations **pas** livrées. |

@@ -30,12 +30,14 @@ class DossierIntegration extends Model
         'date_demande',
         'motif',
         'notes',
+        'deja_salarie',
     ];
 
     protected $casts = [
-        'date_demande' => 'date',
+        'date_demande'  => 'date',
         'nombre_postes' => 'integer',
-        'statut' => StatutDossier::class,
+        'deja_salarie'  => 'boolean',
+        'statut'        => StatutDossier::class,
     ];
 
     protected array $filterable = ['statut', 'type_integration_id', 'demandeur_id', 'agent_id'];

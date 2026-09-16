@@ -50,6 +50,14 @@ class TypeIntegration extends Model
         return str_starts_with($this->nom, 'Stage');
     }
 
+    /**
+     * Embauche CDI/CDD ARTF (art. 46–47) : Recrutement externe et Contractuel.
+     */
+    public function estEmbaucheCcn(): bool
+    {
+        return (bool) $this->necessite_contrat && ! $this->estUnStage();
+    }
+
     public function circuitValidation(): HasMany
     {
         return $this->hasMany(CircuitValidationTypeIntegration::class)

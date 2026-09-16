@@ -15,6 +15,7 @@ class TypeIntegrationListResource extends JsonResource
             'necessite_contrat'            => $this->necessite_contrat,
             'necessite_validation_dg'      => $this->necessite_validation_dg,
             'necessite_compte_utilisateur' => $this->necessite_compte_utilisateur,
+            'est_embauche_ccn'             => $this->estEmbaucheCcn(),
             'prefixe_matricule'            => $this->prefixe_matricule,
             'type_acte_administratif'      => $this->type_acte_administratif,
         ];

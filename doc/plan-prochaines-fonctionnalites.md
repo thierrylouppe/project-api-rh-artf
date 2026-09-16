@@ -185,7 +185,7 @@ Ne pas recoder la grille (annexe 2) ni les reclassements art. 73–75. Primes ar
 | # | Lot | Contenu | Statut |
 |---|-----|---------|--------|
 | E.A | Essai + contrat 30 j | Art. 49–52 — durées 1/2/3 mois, renouvellement ×1, `necessite_contrat` | ✅ |
-| E.B | Pièces + CNSS | Art. 46–47 | ⬜ |
+| E.B | Pièces + CNSS | Art. 46–47 | ✅ |
 | E.C | Positions | Art. 76–80 — plus de PUT statut nu | ⬜ |
 | E.D | Hors grille + accès | Art. 55 DG/DC/DD ; bonifs d’échelon annexe 1 | ⬜ |
 | E.E | Compléments | Art. 48, 50, 81–82 | ⬜ (peut suivre D.5) |
@@ -300,3 +300,4 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 | 2026-09-15 | D.4 | Formation continue : `/formations` (catalogue, plan annuel, inscriptions CCN art. 92–104, certifications) + `POST /integration/stages/{id}/convertir-agent`. |
 | 2026-09-16 | E | Plan conformité CCN modules 3–5 (essai, contrat 30 j, pièces/CNSS, positions 76–80, hors grille). **Avant D.5.** |
 | 2026-09-16 | E.A | Lot A livré : essai art. 49, délai 30 j art. 52, `necessite_contrat` recrutement externe, jobs d’alerte. |
+| 2026-09-16 | E.B | Lot B livré : pièces art. 46 (ACE, mariage, déjà salarié), CNSS art. 47 à `integrer`. |

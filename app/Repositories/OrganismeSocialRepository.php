@@ -37,4 +37,9 @@ class OrganismeSocialRepository extends BaseRepository implements OrganismeSocia
             ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
             ->exists();
     }
+
+    public function findByCode(string $code): ?OrganismeSocial
+    {
+        return OrganismeSocial::query()->where('code', $code)->first();
+    }
 }

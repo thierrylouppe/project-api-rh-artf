@@ -24,7 +24,7 @@ Ce document décrit le **comportement API réel** selon le type d'intégration, 
 
 | Type | Contrat | DG | Compte | Acte | Préfixe | Particularité |
 |------|---------|----|--------|------|---------|---------------|
-| Recrutement externe | **Oui** | Oui | Oui | `decision_recrutement` | ARTF | Parcours permanent — contrat ≤ 30 j ouvrables (art. 52) |
+| Recrutement externe | **Oui** | Oui | Oui | `decision_recrutement` | ARTF | Contrat ≤ 30 j (art. 52) ; pièces art. 46 + CNSS art. 47 |
 | Mutation | Non | Oui | Oui | `decision_mutation` | ARTF | Pièces mutation |
 | Détachement | Non | Oui | Oui | `arrete_detachement` | ARTF | Temporaire |
 | Mise à disposition | Non | Oui | Oui | `note_de_service` | ARTF | Convention MAD |
@@ -43,7 +43,7 @@ Ce document décrit le **comportement API réel** selon le type d'intégration, 
 2. Création fiche agent + dossier (BROUILLON)
 3. Contrat (si necessite_contrat)
 4. Dépôt des pièces justificatives
-5. Validation documents → DOSSIER_COMPLET
+5. Validation documents → DOSSIER_COMPLET (art. 46 : ACE toujours ; mariage / déjà salarié selon le dossier)
 6. Validation RH → circuit hiérarchique (DG filtré si necessite_validation_dg=false)
 7. Fin de circuit → VALIDE_DG
 ```
