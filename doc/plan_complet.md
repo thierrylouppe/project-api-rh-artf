@@ -4,7 +4,7 @@
 > Références : [`suivi_projet.md`](./suivi_projet.md) · [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) · [`integration.md`](./integration.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md) · [`architecture.md`](./architecture.md) · [`structuration_par_module.md`](./structuration_par_module.md)
 
 **État au 2026-09-15 :** V1–V4 livrées (intégration, salaires, dossier agent, notifications, congés, évaluations P1–P5 + reclassements art. 73–75).  
-**Prochain :** Phase 9.2 / D.5 — Paie. Puis prestations D.3.4, reporting — **sans cloisonnement** par bureau.  
+**Prochain :** Phase 9.2 / D.5 — Paie ([`plan-module-paie.md`](./plan-module-paie.md)). Puis prestations D.3.4, reporting — **sans cloisonnement** par bureau.  
 **Objectif :** API RH opérationnelle de bout en bout, architecture inchangée (Controller → Service → Interface → Repository).
 
 **Contrainte frontend :** tout ce qui est déjà livré côté API est **déjà consommé par le frontend**. Toute évolution backend doit préserver (ou versionner) le contrat existant ; les correctifs / ajouts se font en **extension**, pas en rupture.
@@ -272,7 +272,7 @@ Toujours **sans cloisonnement**. Logistique hors périmètre.
 | # | Module | Contenu | Vague | Statut |
 |---|---|---|---|---|
 | 9.1 | Formation | Catalogue, plan, inscriptions, certifications + `convertir-agent` | D.4 | ✅ |
-| 9.2 | Paie | Éléments (primes / retenues), lot mensuel, bulletin enrichi | D.5 | ⬜ |
+| 9.2 | Paie | Éléments (primes / retenues), lot mensuel, bulletin enrichi | D.5 — [`plan-module-paie.md`](./plan-module-paie.md) | ⬜ |
 | 9.3 | Reporting | Dashboard effectifs, répartitions, exports | D.6 | ⬜ |
 | 9.4 | GED RH versionnée | Classement, archivage, versions | — | ⬜ reporté |
 | 9.5 | SMS | Après mail | — | ⏸ |

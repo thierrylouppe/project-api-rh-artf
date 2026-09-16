@@ -8,7 +8,7 @@
 
 **Objectif :** aligner l’**intégration**, la **carrière** et la **grille / salaire de base** sur les délais, plafonds et éligibilités CCN — **sans** ouvrir la paie (primes / lots = Vague **D.5**).
 
-**État :** lots **A–E** livrés. D.5 (paie) ensuite. Ne pas relancer art. 73–75 (déjà livrés). Ne pas recoder la formule de grille (annexe 2 déjà conforme).
+**État :** lots **A–E** livrés. D.5 (paie) ensuite — [`plan-module-paie.md`](./plan-module-paie.md). Ne pas relancer art. 73–75 (déjà livrés). Ne pas recoder la formule de grille (annexe 2 déjà conforme).
 
 ---
 
@@ -401,7 +401,7 @@ Permissions : **pas** de nouvelle permission en A/B/D. Lot C : réutiliser `cons
 7. Hors grille DG/DC/DD + bonifs diplômes  
 8. Lot E si le métier le demande  
 
-Après **A–D** : Vague **D.5** Paie (les primes s’appuient sur un salaire de base et des positions déjà justes).
+Après **A–D** : Vague **D.5** Paie — [`plan-module-paie.md`](./plan-module-paie.md) (les primes s’appuient sur un salaire de base et des positions déjà justes).
 
 ---
 

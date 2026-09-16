@@ -218,6 +218,7 @@ Les éléments suivants doivent **toujours** être délégués à un Service (ou
 | Création contrat + affectation + nomination + salaire | `ContratagentService` |
 | Calcul note d'évaluation (/20) | `EvaluationService` |
 | Calcul jours de congé (hors week-end et fériés) | `DemandeCongeService` |
+| Calcul paie (ancienneté, barèmes mission, lot mensuel) | `PaieCalculService` / `PaieLotService` — [`plan-module-paie.md`](./plan-module-paie.md) |
 | Validation workflow N+1 / RH | Service du domaine concerné |
 | Envoi de notifications | `NotificationService` ou Notifications Laravel via Service |
 | Génération PDF | Service + vue Blade (DomPDF) |
@@ -319,6 +320,7 @@ Avant toute PR ou commit de feature :
 |----------|---------|
 | [`instruction_projet.md`](./instruction_projet.md) | Spec complète, modules, TODOs, seeders |
 | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) | Suivi d’implémentation des vagues restantes |
+| [`plan-module-paie.md`](./plan-module-paie.md) | Vague D.5 — éléments, lots, bulletin enrichi |
 | Ce fichier | Règles d'architecture et checklist d'implémentation |
 | `.cursor/rules/architecture-layers.mdc` | Règle Cursor pour l'agent IA |
 

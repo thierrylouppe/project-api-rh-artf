@@ -1,17 +1,18 @@
 # Prochaines fonctionnalités — suivi d’implémentation
 
 > Document **vivant** : cocher au fur et à mesure.  
-> Dernière mise à jour : **2026-09-16** (Vague E conformité CCN planifiée avant D.5)  
+> Dernière mise à jour : **2026-09-16** (D.5 Paie — découpage technique)  
 > Architecture obligatoire : [`architecture.md`](./architecture.md)  
 > Plan long : [`plan_complet.md`](./plan_complet.md)  
 > Contrat FE actuel : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md)  
 > Cible métier : [`organigramme-drhl.md`](./organigramme-drhl.md)  
-> Droit ARTF (barèmes, délais, éligibilité) : [`convention-collective-artf.md`](./convention-collective-artf.md)
+> Droit ARTF (barèmes, délais, éligibilité) : [`convention-collective-artf.md`](./convention-collective-artf.md)  
+> Paie D.5 : [`plan-module-paie.md`](./plan-module-paie.md)
 
 **Objectif :** livrer les modules métier manquants (vie de l’agent + DRHL), **sans cloisonner** par service / bureau. Le cloisonnement vient **après**.
 
 **État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Vague E lots **A–E** livrés.  
-Prochain : Vague **D.5 Paie**.
+Prochain : Vague **D.5 Paie** (D.5.1 livré) — [`plan-module-paie.md`](./plan-module-paie.md). Suite : **D.5.2** affectations.
 
 ---
 
@@ -194,13 +195,15 @@ Ne pas recoder la grille (annexe 2) ni les reclassements art. 73–75. Primes ar
 
 ### D.5 — Paie (éléments + lots) ⬜
 
+Découpage : [`plan-module-paie.md`](./plan-module-paie.md) (branche `feature/paie-d5`).
+
 **Extension** de `/salaires-agents` : ne pas casser grille, salaire indiciaire, bulletin simplifié.
 
-Préfixe nouveau : `/api/paie`. Permissions existantes `consulter-salaires` / `gerer-salaires` (ou `gerer-paie` en plus, soft launch).
+Préfixe nouveau : `/api/paie`. Permissions existantes `consulter-salaires` / `gerer-salaires` (pas de `gerer-paie` en V1).
 
 | # | Tâche | Contenu | Statut |
 |---|--------|---------|--------|
-| D.5.1 | Référentiel d’éléments | Primes, indemnités, retenues (récurrent / ponctuel) | ⬜ |
+| D.5.1 | Référentiel d’éléments | Primes, indemnités, retenues (récurrent / ponctuel) | ✅ |
 | D.5.2 | Affectation agent | Période, montant | ⬜ |
 | D.5.3 | Lot mensuel | Générer → contrôler → valider → clôturer | ⬜ |
 | D.5.4 | Bulletin enrichi | Base + éléments + net (nouveau endpoint ou champ optionnel) | ⬜ |
@@ -299,5 +302,7 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 | 2026-09-15 | D.3 | Affaires sociales P1 : `/affaires-sociales` (organismes, affiliations, ayants droit CCN art. 59, pièces, alerte CNSS, dossier social). Permissions `consulter-affaires-sociales` / `gerer-affaires-sociales`. |
 | 2026-09-15 | D.4 | Formation continue : `/formations` (catalogue, plan annuel, inscriptions CCN art. 92–104, certifications) + `POST /integration/stages/{id}/convertir-agent`. |
 | 2026-09-16 | E | Plan conformité CCN modules 3–5 (essai, contrat 30 j, pièces/CNSS, positions 76–80, hors grille). **Avant D.5.** |
+| 2026-09-16 | D.5 | Découpage technique paie : [`plan-module-paie.md`](./plan-module-paie.md). Code non commencé. |
+| 2026-09-16 | D.5.1 | Référentiel `/api/paie/elements` + seeder CCN art. 54–59. |
 | 2026-09-16 | E.A | Lot A livré : essai art. 49, délai 30 j art. 52, `necessite_contrat` recrutement externe, jobs d’alerte. |
 | 2026-09-16 | E.B | Lot B livré : pièces art. 46 (ACE, mariage, déjà salarié), CNSS art. 47 à `integrer`. |

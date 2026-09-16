@@ -51,6 +51,7 @@ use App\Http\Controllers\API\MotifAdministratifController;
 use App\Http\Controllers\API\NominationController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OrganismeSocialController;
+use App\Http\Controllers\API\PaieElementController;
 use App\Http\Controllers\API\PalierAncienneteCongeController;
 use App\Http\Controllers\API\ParametreApplicationController;
 use App\Http\Controllers\API\ParametregrileController;
@@ -355,6 +356,22 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware('permission:gerer-salaires');
     Route::get('salaires-agents/{id}/bulletin', [SalaireAgentController::class, 'bulletinById'])
         ->middleware('permission:consulter-salaires');
+});
+
+// ============================================================
+// MODULE PAIE D.5 — éléments, affectations, lots
+// ============================================================
+Route::middleware('auth:sanctum')->prefix('paie')->group(function () {
+    Route::get('elements', [PaieElementController::class, 'index'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('elements', [PaieElementController::class, 'store'])
+        ->middleware('permission:gerer-salaires');
+    Route::get('elements/{id}', [PaieElementController::class, 'show'])
+        ->middleware('permission:consulter-salaires');
+    Route::put('elements/{id}', [PaieElementController::class, 'update'])
+        ->middleware('permission:gerer-salaires');
+    Route::delete('elements/{id}', [PaieElementController::class, 'destroy'])
+        ->middleware('permission:gerer-salaires');
 });
 
 // ============================================================

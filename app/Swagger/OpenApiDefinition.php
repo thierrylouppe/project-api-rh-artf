@@ -55,4 +55,6 @@ MD
 #[OA\Tag(name: 'Intégration — Prise de service', description: 'Prise de service et finalisation')]
 #[OA\Tag(name: 'Affaires sociales', description: 'Organismes, affiliations CNSS, ayants droit (CCN art. 58–59)')]
 #[OA\Tag(name: 'Formations', description: 'Formation continue des agents (CCN art. 92–104)')]
+#[OA\Tag(name: 'Paie', description: 'Éléments de paie, lots mensuels, bulletin enrichi (CCN art. 54–59)')]
+#[OA\Tag(name: 'Paie', description: 'Éléments de paie, lots mensuels, bulletin enrichi (CCN art. 54–59)')]
 class OpenApiDefinition {}

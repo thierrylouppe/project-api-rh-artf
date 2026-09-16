@@ -52,6 +52,7 @@ use App\Interfaces\NominationInterface;
 use App\Interfaces\NoteEvaluationInterface;
 use App\Interfaces\NotificationInterface;
 use App\Interfaces\OrganismeSocialInterface;
+use App\Interfaces\PaieElementInterface;
 use App\Interfaces\PalierAncienneteCongeInterface;
 use App\Interfaces\ParametreApplicationInterface;
 use App\Interfaces\ParametregrileInterface;
@@ -130,6 +131,7 @@ use App\Repositories\NominationRepository;
 use App\Repositories\NoteEvaluationRepository;
 use App\Repositories\NotificationRepository;
 use App\Repositories\OrganismeSocialRepository;
+use App\Repositories\PaieElementRepository;
 use App\Repositories\PalierAncienneteCongeRepository;
 use App\Repositories\ParametreApplicationRepository;
 use App\Repositories\ParametregrileRepository;
@@ -248,6 +250,8 @@ class AppServiceProvider extends ServiceProvider
         ParametregrileInterface::class => ParametregrileRepository::class,
         SalaireInterface::class => SalaireRepository::class,
         SalaireAgentInterface::class => SalaireAgentRepository::class,
+        // Module Paie D.5
+        PaieElementInterface::class => PaieElementRepository::class,
         // Module 1.3 — Administration système
         NotificationInterface::class => NotificationRepository::class,
         UserInterface::class => UserRepository::class,

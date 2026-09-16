@@ -2,7 +2,7 @@
 > Construction par module fonctionnel. Chaque module est autonome et livrable indépendamment.  
 > Documents de référence : [`instruction_projet.md`](./instruction_projet.md) · [`architecture.md`](./architecture.md) · [`structuration_par_module.md`](./structuration_par_module.md)
 
-**État d’implémentation (2026-09-16) :** ce fichier décrit *comment* construire. Le **statut réel** est dans [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) et [`suivi_projet.md`](./suivi_projet.md). Cœur API **livré**. D.2–D.4 **livrés**. Prochain : Vague E conformité CCN 3–5, puis D.5 Paie.
+**État d’implémentation (2026-09-16) :** ce fichier décrit *comment* construire. Le **statut réel** est dans [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) et [`suivi_projet.md`](./suivi_projet.md). Cœur API **livré**. D.2–D.4 **livrés**. Vague E **livrée**. Prochain : D.5 Paie ([`plan-module-paie.md`](./plan-module-paie.md)).
 
 ---
 

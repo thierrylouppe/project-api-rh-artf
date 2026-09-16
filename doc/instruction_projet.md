@@ -9,7 +9,7 @@
 **Nom :** Gestion RH API  
 **Type :** API REST pour la gestion des ressources humaines d'une administration publique  
 **Objectif :** Couvrir le cycle de vie complet d'un agent : recrutement → contrat → affectation/nomination → évaluation → avancement → congés → salaires → sanctions → affaires sociales → formation → paie  
-**Statut actuel :** cœur « vie de l’agent » API livré, **discipline (D.2)**, **affaires sociales P1 (D.3)** et **formation (D.4)** livrées. Prochain : paie (D.5), puis reporting — **modules globaux, pas de cloisonnement par bureau**. Voir [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).
+**Statut actuel :** cœur « vie de l’agent » API livré, **discipline (D.2)**, **affaires sociales P1 (D.3)** et **formation (D.4)** livrées. Prochain : paie (D.5) — [`plan-module-paie.md`](./plan-module-paie.md), puis reporting — **modules globaux, pas de cloisonnement par bureau**. Voir [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).
 
 **Droit applicable :** Convention collective de l’ARTF du **10 janvier 2019** — transcription de référence : [`convention-collective-artf.md`](./convention-collective-artf.md). Toute règle métier (délais, barèmes, éligibilité, positions, sanctions, primes, congés) se lit **d’abord** dans ce fichier. En cas de conflit avec un plan ou un référentiel logiciel, **la convention prime**.
 
