@@ -8,6 +8,7 @@ use App\Enums\PeriodicitePaieElement;
 use App\Enums\SensPaieElement;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PaieElement extends Model
 {
@@ -50,6 +51,11 @@ class PaieElement extends Model
         'actif' => true,
         'systeme' => false,
     ];
+
+    public function affectations(): HasMany
+    {
+        return $this->hasMany(PaieElementAffectation::class, 'paie_element_id');
+    }
 
     public function aParametrer(): bool
     {

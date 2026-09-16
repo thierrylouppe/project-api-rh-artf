@@ -121,4 +121,15 @@ enum CodePaieElement: string
     {
         return $this->meta()['libelle'];
     }
+
+    /** Versé par le moteur de lot, pas par une affectation RH. */
+    public function estCalculeAuto(): bool
+    {
+        return in_array($this, [
+            self::PRIME_ANCIENNETE,
+            self::PRIME_FIN_ANNEE,
+            self::ALLOCATION_RENTREE_SCOLAIRE,
+            self::ALLOCATION_ARBRE_NOEL,
+        ], true);
+    }
 }

@@ -51,6 +51,7 @@ use App\Http\Controllers\API\MotifAdministratifController;
 use App\Http\Controllers\API\NominationController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OrganismeSocialController;
+use App\Http\Controllers\API\PaieAffectationController;
 use App\Http\Controllers\API\PaieElementController;
 use App\Http\Controllers\API\PalierAncienneteCongeController;
 use App\Http\Controllers\API\ParametreApplicationController;
@@ -371,6 +372,19 @@ Route::middleware('auth:sanctum')->prefix('paie')->group(function () {
     Route::put('elements/{id}', [PaieElementController::class, 'update'])
         ->middleware('permission:gerer-salaires');
     Route::delete('elements/{id}', [PaieElementController::class, 'destroy'])
+        ->middleware('permission:gerer-salaires');
+
+    Route::get('affectations', [PaieAffectationController::class, 'index'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('affectations', [PaieAffectationController::class, 'store'])
+        ->middleware('permission:gerer-salaires');
+    Route::get('agents/{agent}/affectations', [PaieAffectationController::class, 'byAgent'])
+        ->middleware('permission:consulter-salaires');
+    Route::get('affectations/{id}', [PaieAffectationController::class, 'show'])
+        ->middleware('permission:consulter-salaires');
+    Route::put('affectations/{id}', [PaieAffectationController::class, 'update'])
+        ->middleware('permission:gerer-salaires');
+    Route::delete('affectations/{id}', [PaieAffectationController::class, 'destroy'])
         ->middleware('permission:gerer-salaires');
 });
 

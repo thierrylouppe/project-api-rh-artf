@@ -12,7 +12,7 @@
 
 **Objectif :** produire un **lot de paie mensuel** conforme CCN (base + éléments + net) **sans casser** grille, salaire indiciaire, bulletin simplifié.
 
-**État :** D.5.1 référentiel **livré**. D.5.2–D.5.5 ⬜.
+**État :** D.5.1–D.5.2 **livrés**. D.5.3–D.5.5 ⬜.
 
 ---
 
@@ -459,7 +459,7 @@ Ne **pas** modifier le bulletin indiciaire existant (contrat FE actuel).
 | Fichier | Couverture minimale | Statut |
 |---------|---------------------|--------|
 | `PaieElementTest` | CRUD, 422 delete système, seeder codes présents | ✅ |
-| `PaieAffectationTest` | Éligibilité DD vs CB (représentation), chevauchement 422, stagiaire transport |
+| `PaieAffectationTest` | Éligibilité DD vs CB (représentation), chevauchement 422, stagiaire transport | ✅ |
 | `PaieCalculAncienneteTest` | 1 an → 0 ; 2 ans → 2 % ; 5 ans → 5 % ; 50 ans → 40 % |
 | `PaieLotTest` | Unique période, circuit statuts, hors grille sans fonctionnel → bloquante, regen, 422 valider si bloquante, 422 generer si clôturé |
 | `PaieFinAnneeTest` | Décembre : présence / prorata position / licenciement |
@@ -489,7 +489,7 @@ Ne pas ouvrir D.5.4 avant qu’un lot `genere` existe en test.
 | Session | Livrable | Vague | Statut |
 |---------|----------|-------|--------|
 | 1–2 | Référentiel `/paie/elements` + seeder CCN | D.5.1 | ✅ |
-| 3 | `/paie/affectations` | D.5.2 | ⬜ |
+| 3 | `/paie/affectations` | D.5.2 | ✅ |
 | 4–7 | Lots + calculs CCN | D.5.3 | ⬜ |
 | 8 | Bulletin enrichi | D.5.4 | ⬜ |
 | 9 | Export | D.5.5 | ⬜ reportable |
@@ -560,5 +560,6 @@ D.5.1 : voir [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.
 |------|------|
 | 2026-09-16 | Découpage technique (tables, enums, API, calculs, ordre de code). Branche `feature/paie-d5`. |
 | 2026-09-16 | **D.5.1** : `/api/paie/elements` + seeder 29 codes CCN. Tests `PaieElementTest`. |
+| 2026-09-16 | **D.5.2** : `/api/paie/affectations` (éligibilité fonction / stagiaire, chevauchement). Tests `PaieAffectationTest`. |
 
 *La convention collective prime sur ce plan en cas de conflit.*

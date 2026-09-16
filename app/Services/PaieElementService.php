@@ -4,14 +4,17 @@ namespace App\Services;
 
 use App\Enums\CodePaieElement;
 use App\Enums\NaturePaieElement;
+use App\Interfaces\PaieElementAffectationInterface;
 use App\Interfaces\PaieElementInterface;
 use App\Models\PaieElement;
 
 /** @property PaieElementInterface $repository */
 class PaieElementService extends BaseService
 {
-    public function __construct(PaieElementInterface $repository)
-    {
+    public function __construct(
+        PaieElementInterface $repository,
+        private readonly PaieElementAffectationInterface $affectationRepository,
+    ) {
         parent::__construct($repository);
     }
 
@@ -87,6 +90,12 @@ class PaieElementService extends BaseService
             $element instanceof PaieElement && $element->systeme,
             422,
             'Impossible de supprimer un élément prévu par la convention collective.'
+        );
+
+        abort_if(
+            $this->affectationRepository->existsByElement($id),
+            422,
+            'Impossible de supprimer un élément déjà affecté à un agent.'
         );
 
         return $this->repository->delete($id);

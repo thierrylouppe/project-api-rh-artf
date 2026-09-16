@@ -80,7 +80,7 @@ Plan E : [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-
 |-------------|--------|--------|
 | 5.1 Grilles & barèmes | ✅ | Génération HTTP `POST /salaires/generation`. Permissions `consulter-salaires` / `gerer-salaires`. |
 | 5.2 Bulletins & historique | ✅ | `salaires_agents`, clôture, `avancerEchelon` / `avancerEchelons`, `changerClasse`, bulletin PDF |
-| 5.3 Éléments de paie + lots mensuels | 🔄 | Vague **D.5** — D.5.1 ✅ `/paie/elements` · D.5.2–D.5.5 ⬜ [`plan-module-paie.md`](./plan-module-paie.md) |
+| 5.3 Éléments de paie + lots mensuels | 🔄 | Vague **D.5** — D.5.1–D.5.2 ✅ · D.5.3–D.5.5 ⬜ [`plan-module-paie.md`](./plan-module-paie.md) |
 
 **Référence :** [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md)
 
@@ -178,7 +178,7 @@ Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vagu
 
 ## Prochaine étape recommandée
 
-**Vague E** — lots **A–E** livrés. Suite : **D.5 Paie** — plan [`plan-module-paie.md`](./plan-module-paie.md), branche `feature/paie-d5`.
+**Vague E** — lots **A–E** livrés. Suite : **D.5.3** lots de paie — plan [`plan-module-paie.md`](./plan-module-paie.md), branche `feature/paie-d5`.
 
 Puis D.3.4 Prestations → D.6 Reporting. **Pas** de cloisonnement avant Vague F.
 
