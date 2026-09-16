@@ -8,7 +8,7 @@ Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste ré
 
 | Sujet | Fichier |
 |-------|---------|
-| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; Vague E **A–E livrés** ; D.5.1–D.5.3 **livrés** ; prochain **D.5.4** ([`plan-module-paie.md`](./plan-module-paie.md)) ; cloisonnement **plus tard** |
+| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; Vague E **A–E livrés** ; D.5.1–D.5.4 **livrés** ; prochain **D.5.5** export (reportable) ([`plan-module-paie.md`](./plan-module-paie.md)) ; cloisonnement **plus tard** |
 | Conformité CCN intégration / carrière / grille | [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A–E livrés** ; D.5 : [`plan-module-paie.md`](./plan-module-paie.md) |
 | Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
@@ -49,7 +49,7 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Discipline | `/discipline` | **Livré** | Vague D.2 + CCN art. 89–91 — contrat §2e. Menus : `consulter-discipline` (RH/DG), `proposer-discipline` (N+1), `prononcer-discipline` (DG). |
 | Affaires sociales | `/affaires-sociales` | **Livré (P1)** | Vague D.3.1–D.3.3. Contrat §2f. Rôle `rh` global (pas de menu par bureau). Prestations / santé **pas** livrés. |
 | Formation | `/formations` | **Livré** | Vague D.4. Contrat §2g. Stages d’accueil restent `/integration/stages`. Conversion : `POST /integration/stages/{id}/convertir-agent`. |
-| Paie (lots / éléments) | `/paie` | **D.5.1–D.5.3 livrés** | Éléments, affectations, lots mensuels. Bulletin enrichi / export **pas** livrés. Plan : [`plan-module-paie.md`](./plan-module-paie.md). Contrat §2h. |
+| Paie (lots / éléments) | `/paie` | **D.5.1–D.5.4 livrés** | Éléments, affectations, lots mensuels, bulletin PDF enrichi. Export CSV/PDF **pas** livré. Plan : [`plan-module-paie.md`](./plan-module-paie.md). Contrat §2h. |
 | Reporting / dashboard | `/reporting` | **Pas livré** | Vague D.6. Permission `consulter-reporting` seedée, pas d’API. |
 | Inbox notifications | `/notifications` | **Livré** | Inbox utilisateur (`auth:sanctum`). Voir §2b. |
 
@@ -681,12 +681,12 @@ Stage `TERMINE` uniquement. Ouvre un dossier d’intégration **Recrutement exte
 
 ---
 
-## 2h. Paie — contrat FE (D.5.1–D.5.3)
+## 2h. Paie — contrat FE (D.5.1–D.5.4)
 
 Préfixe : **`/api/paie`**. Auth Bearer. Listes **non paginées**. Source CCN : art. **54–59**.  
 Permissions **existantes** : `consulter-salaires` (lecture) / `gerer-salaires` (écriture). Pas de `gerer-paie`. Reconnecter RH / admin.
 
-**Livré :** référentiel, affectations, lot mensuel (générer → contrôler → valider → clôturer). **Pas livré :** bulletin PDF enrichi, export CSV/PDF.
+**Livré :** référentiel, affectations, lot mensuel, bulletin PDF enrichi. **Pas livré :** export CSV/PDF.
 
 ### Éléments
 
@@ -752,6 +752,7 @@ Réponse : `active` (période en cours), `element` (ressource complète), `agent
 | `POST` | `/paie/lots/{id}/cloturer` | `gerer-salaires` |
 | `GET` | `/paie/lots/{id}/lignes` | `consulter-salaires` |
 | `GET` | `/paie/lots/{id}/lignes/{ligneId}` | `consulter-salaires` |
+| `GET` | `/paie/lots/{id}/lignes/{ligneId}/bulletin` | `consulter-salaires` |
 | `GET` | `/paie/agents/{id}/bulletins` | `consulter-salaires` |
 
 Filtres liste : `annee`, `mois`, `statut`.
@@ -771,7 +772,16 @@ Auto CCN (pas d’affectation) : `prime_anciennete` (art. 56, 2 % après 2 ans p
 
 Anomalies utiles : `hors_grille_sans_fonctionnel` / `sans_base` / `montant_element_manquant` / `interim_6_mois` (**bloquantes**) ; `mise_a_pied` / `fin_annee_depart` / `prime_sans_parametre` (**info**).
 
-Écran lot : 4 boutons selon `statut` (`generer` / `controler` / `valider` / `cloturer`). Désactiver si 403. Bulletin PDF enrichi **pas** livré (`GET /salaires-agents/{id}/bulletin` reste le bulletin indiciaire).
+Écran lot : 4 boutons selon `statut` (`generer` / `controler` / `valider` / `cloturer`). Désactiver si 403.
+
+### Bulletin enrichi
+
+`GET /paie/lots/{id}/lignes/{ligneId}/bulletin` → `application/pdf` (disponible dès que la ligne est générée).  
+Blocs : identité (`snapshot_agent`) · période du lot · gains (base, primes, indemnités, allocations) · retenues · net à payer.
+
+`GET /salaires-agents/{id}/bulletin` **inchangé** (bulletin indiciaire de carrière). DG/DC/DD : masquer l’indiciaire ; utiliser le bulletin du lot (`hors_grille: true`).
+
+Export masse (`GET /paie/lots/{id}/export`) **pas** livré.
 
 ---
 
@@ -999,7 +1009,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 - ~~Affaires sociales P1~~ → **livré** §2f (prestations D.3.4 / santé D.3.5 encore hors scope)
 - ~~Catalogue formations~~ → **livré** §2g
 - Conformité CCN 3–5 lots C–E (positions, hors grille DG) → [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A** et **B** livrés
-- Paie **bulletin enrichi / export** → D.5.4+ (lots OK, §2h)
+- Paie **export masse** → D.5.5 (reportable)
 - Dashboard reporting → D.6
 - GED **versioning / recherche** (la GED agent légère est livrée, §2d)
 - Cloisonnement menus par bureau DRHL → Vague F, **après** D.2–D.6
@@ -1584,7 +1594,8 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
-| 2026-09-16 | **Paie D.5.3** : `/api/paie/lots` (générer / contrôler / valider / clôturer) | Écran lot mensuel : 4 boutons selon `statut`. Lignes + détails. Anomalies bloquantes empêchent `valider`. Hors grille sans `salaire_fonctionnel` → bloquante. Bulletin enrichi **pas** livré. Contrat §2h. |
+| 2026-09-16 | **Paie D.5.4** : `GET /api/paie/lots/{id}/lignes/{ligneId}/bulletin` | PDF enrichi (gains / retenues / net). `GET /salaires-agents/{id}/bulletin` **inchangé**. Contrat §2h. |
+| 2026-09-16 | **Paie D.5.3** : `/api/paie/lots` (générer / contrôler / valider / clôturer) | Écran lot mensuel : 4 boutons selon `statut`. Lignes + détails. Anomalies bloquantes empêchent `valider`. Hors grille sans `salaire_fonctionnel` → bloquante. Contrat §2h. |
 | 2026-09-16 | **Paie D.5.2** : `/api/paie/affectations` | Fiche agent : liste / créer affectation (période + montant). 422 si fonction inéligible, stagiaire hors transport, chevauchement. Contrat §2h. |
 | 2026-09-16 | **Paie D.5.1** : `/api/paie/elements` (29 codes CCN) | Écran référentiel éléments. Permissions `consulter-salaires` / `gerer-salaires`. `a_parametrer` si montant comité de direction manquant. Lots **pas** livrés. Contrat §2h. |
 | 2026-09-16 | **Vague E lot E** : réembauche art. 48, essai emploi supérieur art. 50, rapprochement art. 81–82 | Archivage : `motif_code` / `prioritaire_reembauche`. `POST /integration/agents` → `meta.priorite_reembauche` (pas de blocage). Nominations : `soumis_a_essai` + `POST …/confirmer-essai` / `rompre-essai`. Affectation rapprochement : 4 pièces, pas d’accord auto. Voir §4. |

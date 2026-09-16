@@ -12,7 +12,7 @@
 
 **Objectif :** produire un **lot de paie mensuel** conforme CCN (base + éléments + net) **sans casser** grille, salaire indiciaire, bulletin simplifié.
 
-**État :** D.5.1–D.5.3 **livrés**. D.5.4–D.5.5 ⬜.
+**État :** D.5.1–D.5.4 **livrés**. D.5.5 ⬜ (reportable).
 
 ---
 
@@ -463,7 +463,7 @@ Ne **pas** modifier le bulletin indiciaire existant (contrat FE actuel).
 | `PaieCalculAncienneteTest` | 1 an → 0 ; 2 ans → 2 % ; 5 ans → 5 % ; 50 ans → 40 % | ✅ |
 | `PaieLotTest` | Unique période, circuit statuts, hors grille sans fonctionnel → bloquante, regen, 422 valider si bloquante, 422 generer si clôturé | ✅ |
 | `PaieFinAnneeTest` | Décembre : présence / prorata position / licenciement | ✅ |
-| `PaieBulletinTest` | PDF 200 sur ligne générée ; bulletin `/salaires-agents/{id}/bulletin` **inchangé** (régression) |
+| `PaieBulletinTest` | PDF 200 sur ligne générée ; bulletin `/salaires-agents/{id}/bulletin` **inchangé** (régression) | ✅ |
 
 Permission : un user `rh` (comme les autres Feature). 401 / 403 smoke léger.
 
@@ -491,7 +491,7 @@ Ne pas ouvrir D.5.4 avant qu’un lot `genere` existe en test.
 | 1–2 | Référentiel `/paie/elements` + seeder CCN | D.5.1 | ✅ |
 | 3 | `/paie/affectations` | D.5.2 | ✅ |
 | 4–7 | Lots + calculs CCN | D.5.3 | ✅ |
-| 8 | Bulletin enrichi | D.5.4 | ⬜ |
+| 8 | Bulletin enrichi | D.5.4 | ✅ |
 | 9 | Export | D.5.5 | ⬜ reportable |
 | 10 | Contrat FE + Swagger | — | ⬜ |
 

@@ -5,16 +5,20 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\PaieLot\CreateRequest;
 use App\Http\Resources\PaieLotLigneResource;
 use App\Http\Resources\PaieLotResource;
+use App\Services\PaieBulletinService;
 use App\Services\PaieLotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\Response;
 
 /** @property PaieLotService $service */
 class PaieLotController extends BaseController
 {
-    public function __construct(PaieLotService $service)
-    {
+    public function __construct(
+        PaieLotService $service,
+        private readonly PaieBulletinService $bulletinService,
+    ) {
         parent::__construct($service);
     }
 
@@ -174,6 +178,23 @@ class PaieLotController extends BaseController
         return $this->successResponse(
             new PaieLotLigneResource($this->service->getLigne($id, $ligneId))
         );
+    }
+
+    #[OA\Get(
+        path: '/api/paie/lots/{id}/lignes/{ligneId}/bulletin',
+        operationId: 'bulletinPaieLotLigne',
+        tags: ['Paie'],
+        summary: 'Bulletin de paie PDF enrichi d\'une ligne de lot',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'ligneId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [new OA\Response(response: 200, description: 'PDF')]
+    )]
+    public function bulletin(int $id, int $ligneId): Response
+    {
+        return $this->bulletinService->genererPdf($id, $ligneId);
     }
 
     #[OA\Get(

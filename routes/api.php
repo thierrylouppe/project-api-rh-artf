@@ -406,6 +406,8 @@ Route::middleware('auth:sanctum')->prefix('paie')->group(function () {
         ->middleware('permission:gerer-salaires');
     Route::get('lots/{id}/lignes', [PaieLotController::class, 'lignes'])
         ->middleware('permission:consulter-salaires');
+    Route::get('lots/{id}/lignes/{ligneId}/bulletin', [PaieLotController::class, 'bulletin'])
+        ->middleware('permission:consulter-salaires');
     Route::get('lots/{id}/lignes/{ligneId}', [PaieLotController::class, 'ligne'])
         ->middleware('permission:consulter-salaires');
     Route::get('agents/{agent}/bulletins', [PaieLotController::class, 'bulletinsAgent'])
