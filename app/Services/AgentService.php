@@ -13,6 +13,7 @@ use App\Models\Echelon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /** @property AgentInterface $repository */
 class AgentService extends BaseService
@@ -23,6 +24,17 @@ class AgentService extends BaseService
         private readonly UserInterface $userRepository,
     ) {
         parent::__construct($repository);
+    }
+
+    protected function beforeUpdate(int $id, array $data): array
+    {
+        if (isset($data['statut']) && StatutAgent::estPositionConventionnelle((string) $data['statut'])) {
+            throw ValidationException::withMessages([
+                'statut' => 'Utiliser POST /carriere/positions',
+            ]);
+        }
+
+        return $data;
     }
 
     /**

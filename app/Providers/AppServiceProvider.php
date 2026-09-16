@@ -57,6 +57,7 @@ use App\Interfaces\ParametreApplicationInterface;
 use App\Interfaces\ParametregrileInterface;
 use App\Interfaces\PermissionInterface;
 use App\Interfaces\PlanFormationInterface;
+use App\Interfaces\PositionConventionnelleInterface;
 use App\Interfaces\PriseDeServiceInterface;
 use App\Interfaces\QuestionEvaluationInterface;
 use App\Interfaces\ReclamationInterface;
@@ -134,6 +135,7 @@ use App\Repositories\ParametreApplicationRepository;
 use App\Repositories\ParametregrileRepository;
 use App\Repositories\PermissionRepository;
 use App\Repositories\PlanFormationRepository;
+use App\Repositories\PositionConventionnelleRepository;
 use App\Repositories\PriseDeServiceRepository;
 use App\Repositories\QuestionEvaluationRepository;
 use App\Repositories\ReclamationRepository;
@@ -234,6 +236,7 @@ class AppServiceProvider extends ServiceProvider
         NoteEvaluationInterface::class => NoteEvaluationRepository::class,
         ReclamationInterface::class => ReclamationRepository::class,
         ReclassementInterface::class => ReclassementRepository::class,
+        PositionConventionnelleInterface::class => PositionConventionnelleRepository::class,
         // Module dossier agent (vie courante)
         InformationsPersonnelleInterface::class => InformationsPersonnelleRepository::class,
         InformationsProfessionnelleInterface::class => InformationsProfessionnelleRepository::class,

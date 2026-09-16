@@ -7,7 +7,7 @@
 
 **Base de données :** MySQL `bd_api_rh_artf` (utf8mb4_unicode_ci) sur `127.0.0.1:3306`
 
-**État :** cœur « vie de l’agent » API **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Prochain : **Vague E** conformité CCN (modules 3–5), puis **D.5 Paie**. Modules DRHL suivants **globaux** (pas de cloison bureau).
+**État :** cœur « vie de l’agent » API **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Vague E lots **A, B, C** livrés. Prochain : **lot D** hors grille, puis **D.5 Paie**. Modules DRHL suivants **globaux** (pas de cloison bureau).
 
 Plan E : [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md).
 
@@ -178,7 +178,7 @@ Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vagu
 
 ## Prochaine étape recommandée
 
-**Vague E** — lots **A** et **B** livrés. Suite : **lot C** (positions art. 76–80), puis D hors grille. Puis **D.5 Paie**.
+**Vague E** — lots **A**, **B** et **C** livrés. Suite : **lot D** (hors grille DG/DC/DD). Puis **D.5 Paie**.
 
 Puis D.3.4 Prestations → D.6 Reporting. **Pas** de cloisonnement avant Vague F.
 

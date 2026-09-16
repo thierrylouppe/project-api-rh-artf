@@ -42,7 +42,7 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Référentiels | `/diplomes`, `/grades`, `/types-integrations`, etc. | **Livré** | Listes pour formulaires. Circuit configurable : `GET/PUT /types-integrations/{id}/circuit`. `GET /diplomes` : chaque item porte `classe_grille` (catégorie, grade, **échelon de départ**). **Pas** de `fonction_id` (nomination). Pré-remplissage UX, champs toujours modifiables. |
 | Intégration (entrée) | `/integration/…` | **Livré** | Dossier + documents + circuit + acte + compte + matériel + prise de service + stages. **Pas** affectation/nomination ici (carrière). |
 | Personnel | `/personnel/…` | **Livré** | Listes + **fiche vie courante** (infos, contacts, GED, archivage). §2d. Fiche wizard : `GET /integration/agents/{id}`. |
-| Carrière | `/carriere/…` | **Livré** | Affectations, nominations, contrats, salaires agent, synthèse, **reclassements art. 73–75**. Alias `/integration/…` encore OK **sauf** `GET /carriere/agents/{id}`. |
+| Carrière | `/carriere/…` | **Livré** | Affectations, nominations, contrats, salaires agent, synthèse, **reclassements art. 73–75**, **positions art. 76–80**. Alias `/integration/…` encore OK **sauf** `GET /carriere/agents/{id}`. |
 | Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | `consulter-salaires` / `gerer-salaires`. Historique : `type_changement` peut valoir `reclassement`, `hors_classe`, `reconversion` (art. 73–75). |
 | Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
 | Évaluations | `/avancements/…` | **Livré** | P1–P5 + lots A–C (art. 62, tableau D5, PDF). Contrat : §7b. Reclassement de **classe** : §4 (`/carriere/reclassements`), pas ici. |
@@ -363,27 +363,64 @@ Actions congé : `soumise`, `annulee`, `validee_n1`, `rejetee_n1`, `validee_rh`,
 
 ## 2c-bis. Positions conventionnelles — `statut` agent (CCN art. 76–80)
 
+**Vague E lot C.** Écran dédié **Positions** (pas un simple sélecteur de statut).
+
 Le champ `agent.statut` (renvoyé par `GET /personnel/agents/{id}` et les synthèses carrière) peut prendre les valeurs suivantes :
 
 | Valeur `statut` | Label affiché | Art. CCN | Notes FE |
 |-----------------|---------------|----------|----------|
 | `actif` | Actif | Art. 77 | État normal |
 | `stagiaire` | Stagiaire | Art. 77 | Module stage |
-| `detachement` | En détachement | Art. 78 | Rémunération maintenue, avancement maintenu |
-| `disponibilite` | En disponibilité | **Art. 79** 🆕 | Rémunération et avancement suspendus. Max 2 ans renouvelable 2 fois |
-| `position_exceptionnelle` | Position exceptionnelle | Art. 80 | Cabinets ministériels — droits maintenus |
-| `sous_le_drapeau` | Sous le drapeau | **Art. 80** 🆕 | Service national — régime des congés administratifs |
+| `detachement` | En détachement | Art. 78 | **Rémunération NON maintenue** (`salaire_agent` clôturé). Avancement d’échelon RH possible ; **exempté de notation** (art. 65). ≥ 5 ans d’ancienneté, consentement (sauf d’office), période ≤ 5 ans, préavis 3 mois. |
+| `disponibilite` | En disponibilité | Art. 79 | Rémunération **et** avancement d’échelon **suspendus**. Nomination active clôturée. Max **2 ans**, renouvelable **2 fois**. ≥ 3 ans d’ancienneté, préavis 3 mois. |
+| `position_exceptionnelle` | Position exceptionnelle | Art. 80 | Cabinets ministériels — rémunération et avancement **maintenus**. Exempté de notation. |
+| `sous_le_drapeau` | Sous le drapeau | Art. 80 | Service national — rémunération maintenue. Exempté de notation. |
 | `suspendu` | Suspendu | — | Décision disciplinaire |
 | `inactif` | Inactif | — | |
 | `retraite` | Retraité | — | |
 | `archive` | Archivé | — | Voir §2d archivage |
 
-**Modification** : `PUT /personnel/agents/{id}` — champ `statut`. Seul `rh` / `admin` peut modifier.
-Valeurs modifiables : `actif`, `inactif`, `suspendu`, `retraite`, `detachement`, `position_exceptionnelle`, `disponibilite`, `sous_le_drapeau`.
+**Ne plus** envoyer `detachement` / `disponibilite` / `position_exceptionnelle` / `sous_le_drapeau` dans `PUT /api/integration/agents/{id}` : **422** `errors.statut` = `Utiliser POST /carriere/positions`.  
+`actif` / `inactif` / `suspendu` / `retraite` restent sur ce PUT. Il n’y a **pas** de `PUT /personnel/agents/{id}` pour le statut.
 
 **Impact évaluation** : agents en `detachement`, `disponibilite`, `position_exceptionnelle`, `sous_le_drapeau`, `stagiaire` → **exclus automatiquement** des sessions d'évaluation.
 
 **Impact congés** : un agent doit avoir `date_prise_service` renseignée et ≥ 12 mois de service pour soumettre un congé annuel.
+
+### API Positions — `/api/carriere/positions`
+
+| Méthode | URL | Permission | Qui |
+|---------|-----|------------|-----|
+| `GET` | `/carriere/positions` | `consulter-salaires` | RH, admin, DG |
+| `POST` | `/carriere/positions` | `gerer-salaires` | RH — soumettre |
+| `GET` | `/carriere/positions/{id}` | `consulter-salaires` | + `prochaine_etape`, `coupe_remuneration` |
+| `POST` | `/carriere/positions/{id}/approuver` | `consulter-salaires` | **DG** ou `admin` (403 sinon) — active + effets CCN |
+| `POST` | `/carriere/positions/{id}/rejeter` | idem | DG / admin |
+| `POST` | `/carriere/positions/{id}/cloturer` | `gerer-salaires` | RH — `{ "date_fin": "…", "commentaire": "…" }` ; préavis 3 mois (détachement / dispo) |
+| `POST` | `/carriere/positions/{id}/renouveler` | `consulter-salaires` | **DG** / admin — `{ "date_debut", "date_fin" }` |
+| `GET` | `/carriere/agents/{id}/positions` | `consulter-salaires` | Historique |
+
+**Body créer (détachement) :**
+```json
+{
+  "agent_id": 12,
+  "type": "detachement",
+  "date_debut": "2026-12-16",
+  "date_fin": "2028-12-16",
+  "organisme_accueil": "Ministère des Finances",
+  "consentement_agent": true
+}
+```
+
+`type` : `detachement` \| `disponibilite` \| `position_exceptionnelle` \| `sous_le_drapeau`.  
+`detachement_office: true` dispense du consentement et du préavis 3 mois.
+
+`data.coupe_remuneration` : `true` pour détachement et disponibilité.  
+`data.peut_renouveler` : `true` si la position est active et encore renouvelable (détachement illimité ; dispo tant que `nb_renouvellements < 2`).  
+`data.prochaine_etape` : `approuver` (soumise) · `cloturer` (active).  
+Clôture d’un détachement sans affectation active : `meta.reintegration.affectation_manquante = true` (réaffecter un emploi de sa classe, art. 78 — pas d’auto-création).
+
+Notifications : `domaine: position` (`soumise`, `approuvee`, `rejetee`, `cloturee`, `renouvelee`, `echeance`). Job J-7 / J-0, jours ouvrés 08:00.
 
 ---
 
@@ -685,6 +722,7 @@ Préfixe canonique : **`/api/carriere`**. Basculer progressivement ; prévenir l
 - Statuts minuscules : `en_attente`, `approuvee`, `active`, `cloturee`, `rejetee` + `statut_label`.
 - Synthèse : `GET /carriere/agents/{id}` (identité + contrat / affectation / nomination / salaire actuel). **Pas d’alias** `/integration`.
 - Reclassements (art. 73–75) : `GET/POST /carriere/reclassements` — **pas** dans `/avancements`. Lien depuis la fiche agent.
+- Positions (art. 76–80) : `GET/POST /carriere/positions` — **pas** de PUT statut agent. Détachement = rémunération **coupée**. Voir §2c-bis.
 
 ### Contrats — essai art. 49 / délai art. 52 (Vague E lot A)
 
@@ -1426,6 +1464,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-16 | **Vague E lot C** : positions art. 76–80 | Écran **Positions** (`/carriere/positions`). DG approuve. **Ne plus** PUT `statut` détachement/dispo/exceptionnelle/drapeau. Détachement : rémunération **non** maintenue. Voir §2c-bis. |
 | 2026-09-16 | **Vague E lot B** : pièces art. 46 + CNSS art. 47 à l’intégration | `deja_salarie`, ACE au pivot embauche, checkbox déjà salarié, `numero_cnss` sur `POST …/integrer`. Reseed types. Voir §3. |
 | 2026-09-16 | **Vague E lot A** : essai art. 49 + délai contrat 30 j art. 52 | Recrutement externe : `necessite_contrat=true`. Badge essai + boutons renouveler/confirmer/rompre. File `GET /carriere/contrats/alertes/delai-30-jours`. Voir §4. |
 | 2026-09-15 | **Formation D.4** : `/api/formations` + `POST /integration/stages/{id}/convertir-agent` | Permissions `consulter-formations` / `gerer-formations`. Reconnecter RH / DG / admin. Contrat §2g. Stages d’accueil inchangés. |

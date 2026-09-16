@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\PositionConventionnelleEcheanceJob;
 use App\Jobs\AppliquerEffetsMiseAPiedJob;
 use App\Jobs\ContratDelai30JoursJob;
 use App\Jobs\ContratEssaiEnFinDateJob;
@@ -27,6 +28,11 @@ Schedule::job(new ContratEssaiEnFinDateJob)
     ->withoutOverlapping();
 
 Schedule::job(new ContratDelai30JoursJob)
+    ->weekdays()
+    ->at('08:00')
+    ->withoutOverlapping();
+
+Schedule::job(new PositionConventionnelleEcheanceJob)
     ->weekdays()
     ->at('08:00')
     ->withoutOverlapping();

@@ -7454,6 +7454,256 @@
                 ]
             }
         },
+        "/api/carriere/positions": {
+            "get": {
+                "tags": [
+                    "Carrière — Positions"
+                ],
+                "summary": "Liste des positions conventionnelles (art. 76–80)",
+                "operationId": "listPositionsConventionnelles",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    },
+                    "401": {
+                        "description": "Non authentifié",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error401"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Carrière — Positions"
+                ],
+                "summary": "Soumettre une position (détachement, disponibilité, exceptionnelle, drapeau)",
+                "operationId": "storePositionConventionnelle",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PositionConventionnelleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Soumise"
+                    },
+                    "422": {
+                        "description": "Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error422"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/positions/{id}": {
+            "get": {
+                "tags": [
+                    "Carrière — Positions"
+                ],
+                "summary": "Détail d'une position conventionnelle",
+                "operationId": "showPositionConventionnelle",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    },
+                    "404": {
+                        "description": "Introuvable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error404"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/agents/{id}/positions": {
+            "get": {
+                "tags": [
+                    "Carrière — Positions"
+                ],
+                "summary": "Historique des positions d'un agent",
+                "operationId": "listPositionsConventionnellesParAgent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/positions/{id}/approuver": {
+            "post": {
+                "tags": [
+                    "Carrière — Positions"
+                ],
+                "summary": "Approuver (DG) — active la position et applique les effets CCN",
+                "operationId": "approuverPositionConventionnelle",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Approuvée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/positions/{id}/rejeter": {
+            "post": {
+                "tags": [
+                    "Carrière — Positions"
+                ],
+                "summary": "Rejeter (DG)",
+                "operationId": "rejeterPositionConventionnelle",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rejetée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/positions/{id}/cloturer": {
+            "post": {
+                "tags": [
+                    "Carrière — Positions"
+                ],
+                "summary": "Clôturer — réintègre l'agent (préavis 3 mois détachement/dispo)",
+                "operationId": "cloturerPositionConventionnelle",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Clôturée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/carriere/positions/{id}/renouveler": {
+            "post": {
+                "tags": [
+                    "Carrière — Positions"
+                ],
+                "summary": "Renouveler (DG) — disponibilité max 2 fois",
+                "operationId": "renouvelerPositionConventionnelle",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Renouvelée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/integration/prises-de-service": {
             "post": {
                 "tags": [
@@ -9387,6 +9637,61 @@
                 },
                 "type": "object"
             },
+            "PositionConventionnelleRequest": {
+                "required": [
+                    "agent_id",
+                    "type",
+                    "date_debut",
+                    "date_fin"
+                ],
+                "properties": {
+                    "agent_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "detachement",
+                            "disponibilite",
+                            "position_exceptionnelle",
+                            "sous_le_drapeau"
+                        ]
+                    },
+                    "date_debut": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2026-10-01"
+                    },
+                    "date_fin": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2028-09-30"
+                    },
+                    "organisme_accueil": {
+                        "type": "string",
+                        "example": "Ministère des Finances",
+                        "nullable": true
+                    },
+                    "consentement_agent": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "detachement_office": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "commentaire": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "piece_path": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Error401": {
                 "properties": {
                     "success": {
@@ -10827,6 +11132,10 @@
         {
             "name": "Notifications",
             "description": "Notifications"
+        },
+        {
+            "name": "Carrière — Positions",
+            "description": "Carrière — Positions"
         }
     ]
 }

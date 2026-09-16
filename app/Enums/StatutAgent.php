@@ -53,7 +53,23 @@ enum StatutAgent: string
         ], true);
     }
 
-    /** Positions modifiables par la RH via PUT /agents/{id}. */
+    /** Positions CCN art. 76–80 : à gérer via POST /carriere/positions. */
+    public static function positionsConventionnelles(): array
+    {
+        return [
+            self::DETACHEMENT->value,
+            self::DISPONIBILITE->value,
+            self::POSITION_EXCEPTIONNELLE->value,
+            self::SOUS_LE_DRAPEAU->value,
+        ];
+    }
+
+    public static function estPositionConventionnelle(string $statut): bool
+    {
+        return in_array($statut, self::positionsConventionnelles(), true);
+    }
+
+    /** Valeurs acceptées par le FormRequest PUT agent. Les positions CCN 76–80 sont ensuite rejetées (POST /carriere/positions). */
     public static function modifiablesParRh(): array
     {
         return [

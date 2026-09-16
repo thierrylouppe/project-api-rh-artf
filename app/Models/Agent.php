@@ -135,6 +135,11 @@ class Agent extends Model
         return $this->hasOne(Nomination::class)->where('statut', StatutNomination::ACTIVE)->latest();
     }
 
+    public function positionsConventionnelles(): HasMany
+    {
+        return $this->hasMany(PositionConventionnelle::class);
+    }
+
     public function contratActif(): HasOne
     {
         return $this->hasOne(Contrat::class)->where('statut', 'actif')->latest();

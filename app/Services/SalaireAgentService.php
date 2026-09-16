@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\StatutAgent;
 use App\Enums\StatutSalaireAgent;
 use App\Enums\TypeChangementSalaireAgent;
 use App\Interfaces\AgentInterface;
@@ -19,6 +20,7 @@ use App\Models\SalaireAgent;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 /** @property SalaireAgentInterface $repository */
@@ -255,6 +257,13 @@ class SalaireAgentService extends BaseService
     public function avancerEchelons(int $agentId, int $n = 1, ?string $motif = null): SalaireAgent
     {
         return DB::transaction(function () use ($agentId, $n, $motif) {
+            $agent = $this->agentRepository->findById($agentId);
+            if ($agent->statut === StatutAgent::DISPONIBILITE->value) {
+                throw ValidationException::withMessages([
+                    'statut' => 'Un agent en disponibilité ne peut pas avancer d\'échelon (art. 79).',
+                ]);
+            }
+
             $actuel = $this->repository->getActuel($agentId);
 
             abort_if($actuel === null, 422, 'Aucun salaire actif pour cet agent.');

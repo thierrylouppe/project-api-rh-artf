@@ -57,6 +57,7 @@ use App\Http\Controllers\API\ParametregrileController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\PersonnelController;
 use App\Http\Controllers\API\PlanFormationController;
+use App\Http\Controllers\API\PositionConventionnelleController;
 use App\Http\Controllers\API\PriseDeServiceController;
 use App\Http\Controllers\API\QuestionEvaluationController;
 use App\Http\Controllers\API\ReclamationController;
@@ -158,6 +159,23 @@ Route::prefix('carriere')->middleware('auth:sanctum')->group(function () use ($r
     Route::post('reclassements/{id}/appliquer', [ReclassementController::class, 'appliquer'])
         ->middleware('permission:gerer-salaires');
     Route::get('agents/{id}/reclassements', [ReclassementController::class, 'parAgent'])
+        ->middleware('permission:consulter-salaires');
+
+    Route::get('positions', [PositionConventionnelleController::class, 'index'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('positions', [PositionConventionnelleController::class, 'store'])
+        ->middleware('permission:gerer-salaires');
+    Route::get('positions/{id}', [PositionConventionnelleController::class, 'show'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('positions/{id}/approuver', [PositionConventionnelleController::class, 'approuver'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('positions/{id}/rejeter', [PositionConventionnelleController::class, 'rejeter'])
+        ->middleware('permission:consulter-salaires');
+    Route::post('positions/{id}/cloturer', [PositionConventionnelleController::class, 'cloturer'])
+        ->middleware('permission:gerer-salaires');
+    Route::post('positions/{id}/renouveler', [PositionConventionnelleController::class, 'renouveler'])
+        ->middleware('permission:consulter-salaires');
+    Route::get('agents/{id}/positions', [PositionConventionnelleController::class, 'parAgent'])
         ->middleware('permission:consulter-salaires');
 });
 
