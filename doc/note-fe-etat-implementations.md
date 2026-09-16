@@ -39,11 +39,11 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 |---------|---------|------------|-------------|
 | Auth / users / rôles | `/login`, `/user`, `/users`, `/roles` | **Livré** | Guards via permissions. Rôle `rh` = seul métier RH (hors `admin`). |
 | Structure org. | `/localites` … `/bureaux` | **Livré** | Hiérarchie Localité → Administration → Direction → Service → Bureau. `byParent` pour les selects. |
-| Référentiels | `/diplomes`, `/grades`, `/types-integrations`, etc. | **Livré** | Listes pour formulaires. Circuit configurable : `GET/PUT /types-integrations/{id}/circuit`. `GET /diplomes` : chaque item porte `classe_grille` (catégorie, grade, **échelon de départ**). **Pas** de `fonction_id` (nomination). Pré-remplissage UX, champs toujours modifiables. |
+| Référentiels | `/diplomes`, `/grades`, `/types-integrations`, etc. | **Livré** | `GET /diplomes` : `classe_grille` + **`bonification_echelons`** (annexe 1). Classes I–II **ne sont plus** des diplômes (emplois). Maîtrise (classe VIII) ajoutée. |
 | Intégration (entrée) | `/integration/…` | **Livré** | Dossier + documents + circuit + acte + compte + matériel + prise de service + stages. **Pas** affectation/nomination ici (carrière). |
 | Personnel | `/personnel/…` | **Livré** | Listes + **fiche vie courante** (infos, contacts, GED, archivage). §2d. Fiche wizard : `GET /integration/agents/{id}`. |
 | Carrière | `/carriere/…` | **Livré** | Affectations, nominations, contrats, salaires agent, synthèse, **reclassements art. 73–75**, **positions art. 76–80**. Alias `/integration/…` encore OK **sauf** `GET /carriere/agents/{id}`. |
-| Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | `consulter-salaires` / `gerer-salaires`. Historique : `type_changement` peut valoir `reclassement`, `hors_classe`, `reconversion` (art. 73–75). |
+| Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | `consulter-salaires` / `gerer-salaires`. **DG/DC/DD hors grille** (art. 55) : `hors_grille` / `salaire_fonctionnel`. Bonif d’échelon à l’entrée : `meta.annexe1`. |
 | Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
 | Évaluations | `/avancements/…` | **Livré** | P1–P5 + lots A–C (art. 62, tableau D5, PDF). Contrat : §7b. Reclassement de **classe** : §4 (`/carriere/reclassements`), pas ici. |
 | Discipline | `/discipline` | **Livré** | Vague D.2 + CCN art. 89–91 — contrat §2e. Menus : `consulter-discipline` (RH/DG), `proposer-discipline` (N+1), `prononcer-discipline` (DG). |
@@ -749,6 +749,14 @@ Préfixe canonique : **`/api/carriere`**. Basculer progressivement ; prévenir l
 Notifications : `domaine: contrat` (`essai_renouvele`, `essai_concluant`, `essai_rompu`, `essai_echeance`) ; `domaine: integration` (`contrat_delai_depasse`).
 
 `data.mentions` reprend les mentions art. 52 (identité, essai, emploi, rémunération, **lieu de travail** si affectation active). `data.agent` est une identité légère (`id`, `matricule`, `nom`, `prenom`, `nom_complet`). Champ optionnel à la création : `lieu_recrutement`.
+
+### Hors grille DG / DC / DD — art. 55 (Vague E lot D)
+
+Fonctions `DG`, `DC`, `DD` : **pas** de ligne indiciaire. Champ agent `hors_grille` (dérivé de la nomination active, sinon de `fonction`). `GET /fonctions` : `hors_grille` sur chaque item.
+
+`POST /salaires-agents` et `GET …/salaires/actuel` : `data: null`, `meta.salaire_fonctionnel: true`. Masquer le bulletin indiciaire. `POST …/avancer-echelon` → 422 `fonction`.
+
+Bonification à l’entrée (annexe 1) si diplôme : BEP / Licence / Bachelor / Master / DESS / DSENAM / MBA **+1** ; Doctorat **+2**. Réponse `meta.annexe1`. `GET /diplomes` : `bonification_echelons`. Reseed : plus d’emplois en diplômes (classes I–II) ; **Maîtrise** classe VIII.
 
 ### Reclassements — art. 73–75 (lot D)
 
@@ -1464,6 +1472,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-16 | **Vague E lot D** : hors grille art. 55 + bonifs annexe 1 | Badge **salaire fonctionnel** si `hors_grille` (DG/DC/DD) : masquer bulletin indiciaire. `POST /salaires-agents` → `data: null` + `meta.salaire_fonctionnel`. Licence/BEP/Master/Doctorat : `meta.annexe1`. Reseed `diplomes` (plus d’emplois classe I–II ; `bonification_echelons`). |
 | 2026-09-16 | **Vague E lot C** : positions art. 76–80 | Écran **Positions** (`/carriere/positions`). DG approuve. **Ne plus** PUT `statut` détachement/dispo/exceptionnelle/drapeau. Détachement : rémunération **non** maintenue. Voir §2c-bis. |
 | 2026-09-16 | **Vague E lot B** : pièces art. 46 + CNSS art. 47 à l’intégration | `deja_salarie`, ACE au pivot embauche, checkbox déjà salarié, `numero_cnss` sur `POST …/integrer`. Reseed types. Voir §3. |
 | 2026-09-16 | **Vague E lot A** : essai art. 49 + délai contrat 30 j art. 52 | Recrutement externe : `necessite_contrat=true`. Badge essai + boutons renouveler/confirmer/rompre. File `GET /carriere/contrats/alertes/delai-30-jours`. Voir §4. |

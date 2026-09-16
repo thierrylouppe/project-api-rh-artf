@@ -24,7 +24,14 @@ class SalaireAgentController extends BaseController
 
     protected function showRelations(): array
     {
-        return ['agent', 'salaire.classe.categorie', 'salaire.classe.grade', 'classe.categorie', 'classe.grade'];
+        return [
+            'agent.fonction',
+            'agent.nominationActive',
+            'salaire.classe.categorie',
+            'salaire.classe.grade',
+            'classe.categorie',
+            'classe.grade',
+        ];
     }
 
     /**
@@ -33,15 +40,29 @@ class SalaireAgentController extends BaseController
      */
     public function store(CreateRequest $request): JsonResponse
     {
-        $salaireAgent = $this->service->creerDepuisRequest($request->validated());
+        $result = $this->service->creerDepuisRequest($request->validated());
+
+        if ($result['hors_grille']) {
+            return $this->reponseHorsGrille(201);
+        }
 
         abort_if(
-            $salaireAgent === null,
+            $result['salaire'] === null,
             422,
             'Création de salaire non applicable (réservée aux contrats CDI / CDD).'
         );
 
+        $salaireAgent = $result['salaire'];
         $salaireAgent->load($this->showRelations());
+
+        if ($result['annexe1'] !== null) {
+            return response()->json([
+                'success' => true,
+                'data'    => new SalaireAgentResource($salaireAgent),
+                'message' => 'Salaire agent créé avec succès',
+                'meta'    => ['annexe1' => $result['annexe1']],
+            ], 201);
+        }
 
         return $this->respond($salaireAgent, 'Salaire agent créé avec succès', 201);
     }
@@ -66,6 +87,10 @@ class SalaireAgentController extends BaseController
     public function actuel(int $agentId): JsonResponse
     {
         $actuel = $this->service->getActuel($agentId);
+
+        if ($actuel === null && $this->service->agentEstHorsGrille($agentId)) {
+            return $this->reponseHorsGrille();
+        }
 
         abort_if($actuel === null, 404, 'Aucun salaire actif pour cet agent.');
 
@@ -110,5 +135,20 @@ class SalaireAgentController extends BaseController
         $salaireAgent = $this->service->findById($id);
 
         return $this->service->genererBulletinPdf((int) $salaireAgent->agent_id, $id);
+    }
+
+    private function reponseHorsGrille(int $status = 200): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data'    => null,
+            'message' => $status === 201
+                ? 'Salaire fonctionnel fixé par le comité de direction (art. 55) — hors grille indiciaire.'
+                : 'Salaire fonctionnel (art. 55) — hors grille indiciaire.',
+            'meta'    => [
+                'salaire_fonctionnel' => true,
+                'hors_grille'         => true,
+            ],
+        ], $status);
     }
 }

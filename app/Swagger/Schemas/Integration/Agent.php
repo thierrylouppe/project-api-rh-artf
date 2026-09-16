@@ -25,6 +25,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'categorie_id', type: 'integer', nullable: true),
         new OA\Property(property: 'echelon_id', type: 'integer', nullable: true),
         new OA\Property(property: 'fonction_id', type: 'integer', nullable: true),
+        new OA\Property(property: 'hors_grille', type: 'boolean', example: false),
         new OA\Property(property: 'date_prise_service', type: 'string', format: 'date', nullable: true),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
         new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),

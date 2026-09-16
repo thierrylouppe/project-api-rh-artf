@@ -15,6 +15,11 @@ class Diplome extends Model
         'sigle',
         'description',
         'classegrillesalariale_id',
+        'bonification_echelons',
+    ];
+
+    protected $casts = [
+        'bonification_echelons' => 'integer',
     ];
 
     protected array $filterable = ['nom'];

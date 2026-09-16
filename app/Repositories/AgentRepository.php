@@ -14,6 +14,17 @@ class AgentRepository extends BaseRepository implements AgentInterface
         return Agent::class;
     }
 
+    public function getAll(array $filters = []): Collection
+    {
+        $query = Agent::query()->with(['fonction', 'nominationActive']);
+
+        if (method_exists(Agent::class, 'scopeFilter')) {
+            $query->filter($filters);
+        }
+
+        return $query->get();
+    }
+
     public function findByMatricule(string $matricule): ?Agent
     {
         return Agent::where('matricule', $matricule)->first();

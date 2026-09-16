@@ -14,5 +14,7 @@ interface SalaireAgentInterface extends BaseInterface
 
     public function getActuel(int $agentId): ?SalaireAgent;
 
+    public function existsPourAgent(int $agentId): bool;
+
     public function cloturerActifs(int $agentId, string $dateFin): void;
 }

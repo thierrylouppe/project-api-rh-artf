@@ -69,7 +69,7 @@ Lot A  Art. 49–52 — essai + contrat d’engagement
 | **A** | Essai 1/2/3 mois, renouvellement ×1, rupture sans préavis, contrat sous 30 j, mentions | Haute (légal embauche) | ✅ |
 | **B** | Pièces CCN + CNSS obligatoire à l’intégration CDI/CDD | Haute | ✅ |
 | **C** | Dossier de position (détachement / dispo / exceptionnelle / drapeau) + effets | Haute (carrière vivante) | ✅ |
-| **D** | Pas de grille pour DG/DC/DD ; bonifs d’échelon d’accès | Moyenne | ⬜ |
+| **D** | Pas de grille pour DG/DC/DD ; bonifs d’échelon d’accès | Moyenne | ✅ |
 | **E** | Réembauche 2 ans, essai poste supérieur, mutation rapprochement | Moyenne / plus tard | ⬜ |
 
 Coder **A → B → C** avant D.5. **D** avant D.5 si possible (sinon le lot paie recréera des salaires indiciaires pour le DG). **E** peut suivre D.5.

@@ -38,6 +38,7 @@ class AgentResource extends JsonResource
             'echelon'              => new EchelonResource($this->whenLoaded('echelon')),
             'fonction_id'          => $this->when(! $this->relationLoaded('fonction'), $this->fonction_id),
             'fonction'             => new FonctionResource($this->whenLoaded('fonction')),
+            'hors_grille'          => $this->estHorsGrille(),
             'type_integration_id'  => $this->when(! $this->relationLoaded('typeIntegration'), $this->type_integration_id),
             'type_integration'     => new TypeIntegrationResource($this->whenLoaded('typeIntegration')),
             'affectation_active'   => new AffectationResource($this->whenLoaded('affectationActive')),

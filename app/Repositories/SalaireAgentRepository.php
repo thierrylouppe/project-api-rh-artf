@@ -16,7 +16,7 @@ class SalaireAgentRepository extends BaseRepository implements SalaireAgentInter
 
     public function getAll(array $filters = []): Collection
     {
-        return SalaireAgent::with(['agent', 'salaire', 'classe.categorie', 'classe.grade'])
+        return SalaireAgent::with(['agent.fonction', 'agent.nominationActive', 'salaire', 'classe.categorie', 'classe.grade'])
             ->filter($filters)
             ->latest('date_debut')
             ->get();
@@ -46,6 +46,11 @@ class SalaireAgentRepository extends BaseRepository implements SalaireAgentInter
             ->where('statut', StatutSalaireAgent::ACTIF)
             ->latest('date_debut')
             ->first();
+    }
+
+    public function existsPourAgent(int $agentId): bool
+    {
+        return SalaireAgent::query()->where('agent_id', $agentId)->exists();
     }
 
     public function cloturerActifs(int $agentId, string $dateFin): void

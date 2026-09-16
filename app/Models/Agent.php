@@ -140,6 +140,17 @@ class Agent extends Model
         return $this->hasMany(PositionConventionnelle::class);
     }
 
+    public function estHorsGrille(): bool
+    {
+        $this->loadMissing(['nominationActive', 'fonction']);
+
+        if ($this->nominationActive !== null) {
+            return Fonction::estNomHorsGrille($this->nominationActive->poste);
+        }
+
+        return $this->fonction?->estHorsGrille() ?? false;
+    }
+
     public function contratActif(): HasOne
     {
         return $this->hasOne(Contrat::class)->where('statut', 'actif')->latest();

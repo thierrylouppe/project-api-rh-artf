@@ -16,6 +16,7 @@ class DiplomeResource extends JsonResource
             'sigle'                    => $this->sigle ?? null,
             'description'              => $this->description,
             'classegrillesalariale_id' => $this->classegrillesalariale_id,
+            'bonification_echelons'    => (int) $this->bonification_echelons,
             'classe_grille'            => $this->whenLoaded('classeGrille', function () {
                 return $this->classeGrillePayload();
             }),

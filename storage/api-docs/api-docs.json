@@ -9980,6 +9980,10 @@
                         "type": "integer",
                         "nullable": true
                     },
+                    "hors_grille": {
+                        "type": "boolean",
+                        "example": false
+                    },
                     "date_prise_service": {
                         "type": "string",
                         "format": "date",

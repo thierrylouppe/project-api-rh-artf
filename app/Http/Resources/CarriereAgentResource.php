@@ -19,6 +19,7 @@ class CarriereAgentResource extends JsonResource
             'affectation_active' => new AffectationResource($this->whenLoaded('affectationActive')),
             'nomination_active'  => new NominationResource($this->whenLoaded('nominationActive')),
             'salaire_actuel'     => new SalaireAgentResource($this->whenLoaded('salaireActuel')),
+            'hors_grille'        => $this->estHorsGrille(),
         ];
     }
 }

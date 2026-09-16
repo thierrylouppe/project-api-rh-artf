@@ -164,6 +164,7 @@ class AgentService extends BaseService
             'affectationActive.structure',
             'nominationActive.structure',
             'salaireActuel',
+            'fonction',
         ]);
 
         return $agent;

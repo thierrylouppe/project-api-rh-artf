@@ -28,6 +28,8 @@ class SalaireAgentService extends BaseService
 {
     private const SIGLES_ELIGIBLES = ['CDI', 'CDD'];
 
+    private mixed $parametreGrilleCache = null;
+
     public function __construct(
         SalaireAgentInterface $repository,
         private readonly AgentInterface $agentRepository,
@@ -44,8 +46,9 @@ class SalaireAgentService extends BaseService
      * Point d'entrée HTTP : résout agent / contrat puis délègue à creerSalaireInitial.
      *
      * @param  array{agent_id: int, contrat_id?: int, date_debut?: string, motif?: string}  $data
+     * @return array{salaire: ?SalaireAgent, hors_grille: bool, annexe1: ?array}
      */
-    public function creerDepuisRequest(array $data): ?SalaireAgent
+    public function creerDepuisRequest(array $data): array
     {
         $agent = $this->agentRepository->findById($data['agent_id']);
         $contrat = isset($data['contrat_id'])
@@ -59,10 +62,28 @@ class SalaireAgentService extends BaseService
         );
 
         if ($salaireAgent !== null && ! empty($data['date_debut'])) {
-            return $this->repository->update($salaireAgent->id, ['date_debut' => $data['date_debut']]);
+            $annexe = $salaireAgent->annexe1 ?? null;
+            $salaireAgent = $this->repository->update($salaireAgent->id, ['date_debut' => $data['date_debut']]);
+            if ($annexe !== null) {
+                $salaireAgent->setAttribute('annexe1', $annexe);
+            }
         }
 
-        return $salaireAgent;
+        return [
+            'salaire'     => $salaireAgent,
+            'hors_grille' => $salaireAgent === null && $this->estHorsGrille($agent),
+            'annexe1'     => $salaireAgent?->annexe1 ?? null,
+        ];
+    }
+
+    public function estHorsGrille(Agent $agent): bool
+    {
+        return $agent->estHorsGrille();
+    }
+
+    public function agentEstHorsGrille(int $agentId): bool
+    {
+        return $this->estHorsGrille($this->agentRepository->findById($agentId));
     }
 
     public function getByAgent(int $agentId): Collection
@@ -134,11 +155,22 @@ class SalaireAgentService extends BaseService
         }
 
         return DB::transaction(function () use ($agent, $contrat, $motif, $echelonForce) {
-            $agent = $this->agentRepository->findById($agent->id);
-            $agent->loadMissing('echelon');
+            $agent->loadMissing(['echelon', 'fonction', 'nominationActive', 'informationsProfessionnelles.diplome']);
+
+            if ($this->estHorsGrille($agent)) {
+                return null;
+            }
 
             $classe = $this->resoudreClasse($agent);
-            $echelonNumero = $echelonForce ?? $this->resoudreEchelonNumero($agent);
+            $annexe = null;
+            if ($echelonForce !== null) {
+                $echelonNumero = $echelonForce;
+            } else {
+                [$echelonNumero, $annexe] = $this->echelonEffectifEtAnnexe(
+                    $agent,
+                    $this->resoudreEchelonNumero($agent)
+                );
+            }
             $ligneGrille = $this->trouverLigneGrille($classe->id, $echelonNumero);
 
             $dateDebut = $contrat?->date_debut?->toDateString()
@@ -147,9 +179,9 @@ class SalaireAgentService extends BaseService
 
             $this->repository->cloturerActifs($agent->id, $dateDebut);
 
-            $avaitDejaUnSalaire = $this->repository->getByAgent($agent->id)->isNotEmpty();
+            $avaitDejaUnSalaire = $this->repository->existsPourAgent($agent->id);
 
-            return $this->repository->create([
+            $cree = $this->repository->create([
                 'agent_id'                 => $agent->id,
                 'salaire_id'               => $ligneGrille->id,
                 'classegrillesalariale_id' => $classe->id,
@@ -164,6 +196,13 @@ class SalaireAgentService extends BaseService
                     : TypeChangementSalaireAgent::INITIAL,
                 'motif'                    => $motif,
             ]);
+
+            if ($annexe !== null) {
+                $this->synchroniserEchelonAgent((int) $agent->id, $echelonNumero);
+                $cree->setAttribute('annexe1', $annexe);
+            }
+
+            return $cree;
         });
     }
 
@@ -205,6 +244,12 @@ class SalaireAgentService extends BaseService
      */
     public function genererBulletinPdf(int $agentId, ?int $salaireAgentId = null): Response
     {
+        $agent = $this->agentRepository->findById($agentId);
+        abort_if(
+            $this->estHorsGrille($agent),
+            422,
+            'Bulletin indiciaire non applicable : salaire fonctionnel (art. 55).'
+        );
         $salaireAgent = $salaireAgentId !== null
             ? $this->repository->findById($salaireAgentId)
             : $this->repository->getActuel($agentId);
@@ -258,6 +303,7 @@ class SalaireAgentService extends BaseService
     {
         return DB::transaction(function () use ($agentId, $n, $motif) {
             $agent = $this->agentRepository->findById($agentId);
+            $this->assertPasHorsGrille($agent, 'avancement');
             if ($agent->statut === StatutAgent::DISPONIBILITE->value) {
                 throw ValidationException::withMessages([
                     'statut' => 'Un agent en disponibilité ne peut pas avancer d\'échelon (art. 79).',
@@ -268,7 +314,7 @@ class SalaireAgentService extends BaseService
 
             abort_if($actuel === null, 422, 'Aucun salaire actif pour cet agent.');
 
-            $echelonFin    = (int) $this->parametreGrilleRepository->getCurrent()->echelon_fin;
+            $echelonFin    = $this->echelonFin();
             $nouvelEchelon = min($actuel->echelon + max(1, $n), $echelonFin); // plafonné
 
             abort_if(
@@ -281,11 +327,7 @@ class SalaireAgentService extends BaseService
             $dateDebut   = now()->toDateString();
 
             $this->repository->cloturerActifs($agentId, $dateDebut);
-
-            $echelonModel = $this->echelonRepository->findByNumero($nouvelEchelon);
-            if ($echelonModel) {
-                $this->agentRepository->update($agentId, ['echelon_id' => $echelonModel->id]);
-            }
+            $this->synchroniserEchelonAgent($agentId, $nouvelEchelon);
 
             return $this->repository->create([
                 'agent_id'                 => $agentId,
@@ -316,6 +358,9 @@ class SalaireAgentService extends BaseService
         ?string $motif = null,
     ): SalaireAgent {
         return DB::transaction(function () use ($agentId, $classeCibleId, $echelon, $type, $motif) {
+            $agent = $this->agentRepository->findById($agentId);
+            $this->assertPasHorsGrille($agent, 'reclassement');
+
             $actuel = $this->repository->getActuel($agentId);
             abort_if($actuel === null, 422, 'Aucun salaire actif pour cet agent.');
 
@@ -359,8 +404,12 @@ class SalaireAgentService extends BaseService
      */
     public function appliquerEchelonCibleApresEssai(Agent $agent, ?string $motif = null): ?SalaireAgent
     {
-        $agent->loadMissing('echelon');
-        $cible = $this->resoudreEchelonNumero($agent);
+        $agent->loadMissing(['echelon', 'fonction', 'nominationActive', 'informationsProfessionnelles.diplome']);
+        if ($this->estHorsGrille($agent)) {
+            return null;
+        }
+
+        [$cible, $annexe] = $this->echelonEffectifEtAnnexe($agent, $this->resoudreEchelonNumero($agent));
         $actuel = $this->repository->getActuel($agent->id);
 
         if ($actuel === null) {
@@ -368,16 +417,21 @@ class SalaireAgentService extends BaseService
         }
 
         if ((int) $actuel->echelon === $cible) {
+            if ($annexe !== null) {
+                $actuel->setAttribute('annexe1', $annexe);
+            }
+
             return $actuel;
         }
 
-        return DB::transaction(function () use ($agent, $actuel, $cible, $motif) {
+        return DB::transaction(function () use ($agent, $actuel, $cible, $motif, $annexe) {
             $ligneGrille = $this->trouverLigneGrille((int) $actuel->classegrillesalariale_id, $cible);
             $dateDebut   = now()->toDateString();
 
             $this->repository->cloturerActifs($agent->id, $dateDebut);
+            $this->synchroniserEchelonAgent((int) $agent->id, $cible);
 
-            return $this->repository->create([
+            $cree = $this->repository->create([
                 'agent_id'                 => $agent->id,
                 'salaire_id'               => $ligneGrille->id,
                 'classegrillesalariale_id' => $actuel->classegrillesalariale_id,
@@ -390,6 +444,12 @@ class SalaireAgentService extends BaseService
                 'type_changement'          => TypeChangementSalaireAgent::CONFIRMATION_ESSAI,
                 'motif'                    => $motif,
             ]);
+
+            if ($annexe !== null) {
+                $cree->setAttribute('annexe1', $annexe);
+            }
+
+            return $cree;
         });
     }
 
@@ -417,7 +477,7 @@ class SalaireAgentService extends BaseService
 
     private function resoudreEchelonNumero(Agent $agent): int
     {
-        $params = $this->parametreGrilleRepository->getCurrent();
+        $params = $this->parametreGrille();
         $depart = max(1, (int) $params->echelon_depart);
         $fin = max($depart, (int) $params->echelon_fin);
 
@@ -441,5 +501,62 @@ class SalaireAgentService extends BaseService
         );
 
         return $ligne;
+    }
+
+    /**
+     * @return array{0: int, 1: ?array<string, mixed>}
+     */
+    private function echelonEffectifEtAnnexe(Agent $agent, int $base): array
+    {
+        $diplome = $agent->informationsProfessionnelles?->diplome;
+        $bonif   = (int) ($diplome?->bonification_echelons ?? 0);
+        $fin     = max($base, $this->echelonFin());
+        $effectif = min($fin, $base + $bonif);
+
+        if ($bonif <= 0) {
+            return [$base, null];
+        }
+
+        return [$effectif, [
+            'diplome_id'              => $diplome?->id,
+            'diplome'                 => $diplome?->nom,
+            'bonification_echelons'   => $bonif,
+            'echelon_depart'          => $base,
+            'echelon_effectif'        => $effectif,
+            'message'                 => sprintf(
+                'Bonification de %d échelon(s) à l\'entrée (annexe 1).',
+                $bonif
+            ),
+        ]];
+    }
+
+    private function assertPasHorsGrille(Agent $agent, string $action): void
+    {
+        if ($this->estHorsGrille($agent)) {
+            throw ValidationException::withMessages([
+                'fonction' => sprintf(
+                    'Salaire fonctionnel (art. 55) : pas de %s indiciaire pour DG, DC ou DD.',
+                    $action
+                ),
+            ]);
+        }
+    }
+
+    private function parametreGrille(): \Illuminate\Database\Eloquent\Model
+    {
+        return $this->parametreGrilleCache ??= $this->parametreGrilleRepository->getCurrent();
+    }
+
+    private function echelonFin(): int
+    {
+        return max(1, (int) $this->parametreGrille()->echelon_fin);
+    }
+
+    private function synchroniserEchelonAgent(int $agentId, int $echelonNumero): void
+    {
+        $echelonModel = $this->echelonRepository->findByNumero($echelonNumero);
+        if ($echelonModel) {
+            $this->agentRepository->update($agentId, ['echelon_id' => $echelonModel->id]);
+        }
     }
 }
