@@ -8,6 +8,8 @@ use App\Interfaces\AdministrationInterface;
 use App\Interfaces\AffectationInterface;
 use App\Interfaces\AffiliationSocialeInterface;
 use App\Interfaces\AgentInterface;
+use App\Interfaces\ArretSanteInterface;
+use App\Interfaces\ArretSantePieceInterface;
 use App\Interfaces\AuditLogInterface;
 use App\Interfaces\AvancementExceptionnelInterface;
 use App\Interfaces\AvertissementInterface;
@@ -64,6 +66,8 @@ use App\Interfaces\PositionConventionnelleInterface;
 use App\Interfaces\PrestationInterface;
 use App\Interfaces\PrestationPieceInterface;
 use App\Interfaces\PriseDeServiceInterface;
+use App\Interfaces\PriseEnChargeInterface;
+use App\Interfaces\PriseEnChargePieceInterface;
 use App\Interfaces\QuestionEvaluationInterface;
 use App\Interfaces\ReclamationInterface;
 use App\Interfaces\ReclassementInterface;
@@ -78,6 +82,7 @@ use App\Interfaces\SanctionPieceInterface;
 use App\Interfaces\ServiceInterface;
 use App\Interfaces\SessionEvaluationInterface;
 use App\Interfaces\SituationFamilialeInterface;
+use App\Interfaces\StructureSanitaireInterface;
 use App\Interfaces\TypeAbsenceInterface;
 use App\Interfaces\TypeCongeInterface;
 use App\Interfaces\TypeContratInterface;
@@ -86,12 +91,15 @@ use App\Interfaces\TypeIntegrationInterface;
 use App\Interfaces\TypeSanctionInterface;
 use App\Interfaces\UserInterface;
 use App\Interfaces\ValidationWorkflowInterface;
+use App\Interfaces\VisiteMedicaleInterface;
 use App\Repositories\AbsenceRepository;
 use App\Repositories\ActeAdministratifRepository;
 use App\Repositories\AdministrationRepository;
 use App\Repositories\AffectationRepository;
 use App\Repositories\AffiliationSocialeRepository;
 use App\Repositories\AgentRepository;
+use App\Repositories\ArretSantePieceRepository;
+use App\Repositories\ArretSanteRepository;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\AvancementExceptionnelRepository;
 use App\Repositories\AvertissementRepository;
@@ -148,6 +156,8 @@ use App\Repositories\PositionConventionnelleRepository;
 use App\Repositories\PrestationPieceRepository;
 use App\Repositories\PrestationRepository;
 use App\Repositories\PriseDeServiceRepository;
+use App\Repositories\PriseEnChargePieceRepository;
+use App\Repositories\PriseEnChargeRepository;
 use App\Repositories\QuestionEvaluationRepository;
 use App\Repositories\ReclamationRepository;
 use App\Repositories\ReclassementRepository;
@@ -162,6 +172,7 @@ use App\Repositories\SanctionRepository;
 use App\Repositories\ServiceRepository;
 use App\Repositories\SessionEvaluationRepository;
 use App\Repositories\SituationFamilialeRepository;
+use App\Repositories\StructureSanitaireRepository;
 use App\Repositories\TypeAbsenceRepository;
 use App\Repositories\TypeCongeRepository;
 use App\Repositories\TypeContratRepository;
@@ -170,6 +181,7 @@ use App\Repositories\TypeIntegrationRepository;
 use App\Repositories\TypeSanctionRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\ValidationWorkflowRepository;
+use App\Repositories\VisiteMedicaleRepository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -232,6 +244,12 @@ class AppServiceProvider extends ServiceProvider
         AyantDroitPieceInterface::class => AyantDroitPieceRepository::class,
         PrestationInterface::class => PrestationRepository::class,
         PrestationPieceInterface::class => PrestationPieceRepository::class,
+        StructureSanitaireInterface::class => StructureSanitaireRepository::class,
+        VisiteMedicaleInterface::class => VisiteMedicaleRepository::class,
+        PriseEnChargeInterface::class => PriseEnChargeRepository::class,
+        PriseEnChargePieceInterface::class => PriseEnChargePieceRepository::class,
+        ArretSanteInterface::class => ArretSanteRepository::class,
+        ArretSantePieceInterface::class => ArretSantePieceRepository::class,
         // Module Formation
         CatalogueFormationInterface::class => CatalogueFormationRepository::class,
         PlanFormationInterface::class => PlanFormationRepository::class,

@@ -36,6 +36,9 @@ enum CodePaieElement: string
     case PRIME_ENFANTS_DECES = 'prime_enfants_deces';
     case FRAIS_FUNERAIRES = 'frais_funeraires';
     case ALLOCATION_DECES_RETRAITE = 'allocation_deces_retraite';
+    case REMBOURSEMENT_SANTE = 'remboursement_sante';
+    case ALLOCATION_MALADIE = 'allocation_maladie';
+    case ALLOCATION_ACCIDENT_NON_PRO = 'allocation_accident_non_pro';
 
     /**
      * @return array{
@@ -84,6 +87,9 @@ enum CodePaieElement: string
             self::PRIME_ENFANTS_DECES => $this->row('Prime enfants à charge (décès)', NaturePaieElement::PRIME, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::MONTANT_FIXE, '121'),
             self::FRAIS_FUNERAIRES => $this->row('Frais funéraires', NaturePaieElement::INDEMNITE, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::MONTANT_FIXE, '121'),
             self::ALLOCATION_DECES_RETRAITE => $this->row('Allocation décès salarié retraité', NaturePaieElement::ALLOCATION, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::MONTANT_FIXE, '120'),
+            self::REMBOURSEMENT_SANTE => $this->row('Remboursement santé', NaturePaieElement::INDEMNITE, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::MONTANT_FIXE, '123'),
+            self::ALLOCATION_MALADIE => $this->row('Allocation maladie / AT-MP', NaturePaieElement::ALLOCATION, PeriodicitePaieElement::MENSUEL, ModeCalculPaieElement::MONTANT_FIXE, '132'),
+            self::ALLOCATION_ACCIDENT_NON_PRO => $this->row('Allocation accident non professionnel', NaturePaieElement::ALLOCATION, PeriodicitePaieElement::MENSUEL, ModeCalculPaieElement::MONTANT_FIXE, '135'),
         };
     }
 
@@ -148,6 +154,15 @@ enum CodePaieElement: string
             self::PRIME_ENFANTS_DECES,
             self::FRAIS_FUNERAIRES,
             self::ALLOCATION_DECES_RETRAITE,
+        ], true);
+    }
+
+    public function estDossierSante(): bool
+    {
+        return in_array($this, [
+            self::REMBOURSEMENT_SANTE,
+            self::ALLOCATION_MALADIE,
+            self::ALLOCATION_ACCIDENT_NON_PRO,
         ], true);
     }
 }

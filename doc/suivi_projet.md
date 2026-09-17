@@ -1,13 +1,13 @@
 # Suivi de projet — Gestion RH API
 
 > Dernière mise à jour : 2026-09-17  
-> Références : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) · [`plan_complet.md`](./plan_complet.md) · [`plan-module-paie.md`](./plan-module-paie.md) · [`plan-module-reporting.md`](./plan-module-reporting.md) · [`plan-module-prestations.md`](./plan-module-prestations.md) · [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md) · [`roadmap.md`](./roadmap.md) · [`structuration_par_module.md`](./structuration_par_module.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md)
+> Références : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) · [`plan_complet.md`](./plan_complet.md) · [`plan-module-paie.md`](./plan-module-paie.md) · [`plan-module-reporting.md`](./plan-module-reporting.md) · [`plan-module-prestations.md`](./plan-module-prestations.md) · [`plan-module-sante.md`](./plan-module-sante.md) · [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md) · [`roadmap.md`](./roadmap.md) · [`structuration_par_module.md`](./structuration_par_module.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md)
 
 **Légende :** ⬜ À réaliser · 🔄 En cours · ✅ Réalisé · ⏸ Non réalisé (reporté)
 
 **Base de données :** MySQL `bd_api_rh_artf` (utf8mb4_unicode_ci) sur `127.0.0.1:3306`
 
-**État :** cœur « vie de l’agent » API **livré**. **D.2 Discipline, D.3 P1 + D.3.4 Prestations, D.4 Formation, D.5 Paie, D.6 Reporting livrés.** Vague E lots **A–E** livrés. Prochain : **D.3.5 Santé / AT-MP**. Modules DRHL suivants **globaux** (pas de cloison bureau).
+**État :** cœur « vie de l’agent » API **livré**. **D.2 Discipline, D.3 P1 + D.3.4 Prestations + D.3.5 Santé / AT-MP, D.4 Formation, D.5 Paie, D.6 Reporting livrés.** Vague E lots **A–E** livrés. Prochain : **Vague F** cloisonnement. Modules DRHL suivants **globaux** (pas de cloison bureau).
 
 Plan E : [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md).
 
@@ -170,7 +170,7 @@ Détail : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notati
 | 13.2 Affiliations | ✅ | D.3.2 — n°, dates, alerte sans affiliation |
 | 13.3 Ayants droit | ✅ | D.3.3 — nominatif + pièces ; `nb_enfants` dérivé |
 | 13.4 Prestations / allocations | ✅ | D.3.4 — circuit DG, barèmes art. 119–121, pose paie |
-| 13.5 Santé / AT-MP / retraite | ⬜ | D.3.5 — plus tard |
+| 13.5 Santé / AT-MP / retraite | ✅ | D.3.5 — visites, prises en charge, arrêts 132–135 ; dossier retraite hors V1 |
 
 Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vague F, plus tard.
 
@@ -178,7 +178,7 @@ Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vagu
 
 ## Prochaine étape recommandée
 
-**Vague E** — lots **A–E** livrés. **D.5 Paie**, **D.6 Reporting** et **D.3.4 Prestations livrés**. Suite : **D.3.5 Santé / AT-MP**. Plan [`plan-module-prestations.md`](./plan-module-prestations.md).
+**Vague E** — lots **A–E** livrés. **D.5 Paie**, **D.6 Reporting**, **D.3.4 Prestations** et **D.3.5 Santé / AT-MP livrés**. Suite : **Vague F** cloisonnement. Plan [`plan-module-sante.md`](./plan-module-sante.md).
 
 **Pas** de cloisonnement avant Vague F.
 

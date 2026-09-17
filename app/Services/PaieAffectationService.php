@@ -64,7 +64,7 @@ class PaieAffectationService extends BaseService
     }
 
     /**
-     * Pose une affectation ponctuelle issue d'une prestation D.3.4.
+     * Pose une affectation issue d'une prestation D.3.4 ou d'un dossier santé D.3.5.
      * Contourne le blocage archive / retraite / inactif (le versement va aux ayants droit).
      *
      * @param  array<string, mixed>  $meta
@@ -80,7 +80,11 @@ class PaieAffectationService extends BaseService
     ): PaieElementAffectation {
         $element = $this->elementRepository->findByCode($code->value);
         abort_unless($element instanceof PaieElement, 422, 'Élément de paie introuvable pour cette prestation.');
-        abort_unless($code->estPrestationSociale(), 422, 'Cet élément n\'est pas une prestation sociale.');
+        abort_unless(
+            $code->estPrestationSociale() || $code->estDossierSante(),
+            422,
+            'Cet élément n\'est pas une prestation ou allocation sociale.'
+        );
         abort_unless($element->actif, 422, 'Impossible d\'affecter un élément de paie inactif.');
         abort_if($montant <= 0, 422, 'Le montant de la prestation à poser en paie doit être positif.');
 

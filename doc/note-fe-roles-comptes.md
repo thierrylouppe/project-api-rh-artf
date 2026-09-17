@@ -96,7 +96,7 @@ Mot de passe : respecter la casse.
 `consulter-affaires-sociales` (**DG seulement** parmi la hiérarchie — lecture globale)  
 `consulter-formations` (**DG seulement** parmi la hiérarchie — lecture globale)  
 `prononcer-discipline` (**DG seulement** — art. 91)  
-`decider-prestations` (**DG seulement** — art. 119–121)  
+`decider-prestations` (**DG seulement** — art. 119–121 et 122–135)  
 `proposer-discipline` (`directeur`, `chef-service`, `chef-bureau` — rapport N+1)
 
 ### Agent

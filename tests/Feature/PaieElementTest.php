@@ -63,6 +63,9 @@ class PaieElementTest extends TestCase
         $this->assertNotNull($this->element(CodePaieElement::PRIME_ENFANTS_DECES));
         $this->assertNotNull($this->element(CodePaieElement::FRAIS_FUNERAIRES));
         $this->assertNotNull($this->element(CodePaieElement::ALLOCATION_DECES_RETRAITE));
+        $this->assertTrue($this->element(CodePaieElement::REMBOURSEMENT_SANTE)->actif);
+        $this->assertTrue($this->element(CodePaieElement::ALLOCATION_MALADIE)->actif);
+        $this->assertTrue($this->element(CodePaieElement::ALLOCATION_ACCIDENT_NON_PRO)->actif);
     }
 
     public function test_filtre_nature_et_actif(): void

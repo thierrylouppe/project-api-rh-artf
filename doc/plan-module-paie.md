@@ -210,6 +210,9 @@ Seeder **système**. `montant_defaut = null` pour tout montant comité de direct
 | `prime_enfants_deces` | prime | ponctuel | montant_fixe | Non | Art. 121 — 100 000 F × enfants à charge |
 | `frais_funeraires` | indemnite | ponctuel | montant_fixe | Non | Art. 121 — plafond 2 000 000 F |
 | `allocation_deces_retraite` | allocation | ponctuel | montant_fixe | Non | Art. 120 — 500 000 F |
+| `remboursement_sante` | indemnite | ponctuel | montant_fixe | Non | Art. 123–126 — posé à l’accord D.3.5 |
+| `allocation_maladie` | allocation | mensuel | montant_fixe | Non | Art. 132–133 — posé à l’accord D.3.5 |
+| `allocation_accident_non_pro` | allocation | mensuel | montant_fixe | Non | Art. 135 — deux affectations (6 mois plein + 6 mois demi) |
 
 Fonctions seedées aujourd’hui : `DG`, `DC`, `DD`, `CSR`, `CS`, `CB`, `AGT`, `STG`. D’où l’affectation **manuelle** pour risque / caisse / logement.
 

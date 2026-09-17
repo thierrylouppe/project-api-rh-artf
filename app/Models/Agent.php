@@ -219,6 +219,21 @@ class Agent extends Model
         return $this->hasMany(Prestation::class);
     }
 
+    public function visitesMedicales(): HasMany
+    {
+        return $this->hasMany(VisiteMedicale::class);
+    }
+
+    public function prisesEnCharge(): HasMany
+    {
+        return $this->hasMany(PriseEnCharge::class);
+    }
+
+    public function arretsSante(): HasMany
+    {
+        return $this->hasMany(ArretSante::class);
+    }
+
     public function archivedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'archived_by');

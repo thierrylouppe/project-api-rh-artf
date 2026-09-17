@@ -4,7 +4,7 @@
 > Références : [`suivi_projet.md`](./suivi_projet.md) · [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) · [`integration.md`](./integration.md) · [`SPEC-GRILLE-SALARIALE.md`](./SPEC-GRILLE-SALARIALE.md) · [`architecture.md`](./architecture.md) · [`structuration_par_module.md`](./structuration_par_module.md)
 
 **État au 2026-09-15 :** V1–V4 livrées (intégration, salaires, dossier agent, notifications, congés, évaluations P1–P5 + reclassements art. 73–75).  
-**Prochain :** D.3.5 Santé / AT-MP. D.3.4 Prestations, D.5 Paie et D.6 Reporting **livrés** — **sans cloisonnement** par bureau.  
+**Prochain :** Vague F cloisonnement. D.3.4 Prestations, D.3.5 Santé / AT-MP, D.5 Paie et D.6 Reporting **livrés** — **sans cloisonnement** par bureau.  
 **Objectif :** API RH opérationnelle de bout en bout, architecture inchangée (Controller → Service → Interface → Repository).
 
 **Contrainte frontend :** tout ce qui est déjà livré côté API est **déjà consommé par le frontend**. Toute évolution backend doit préserver (ou versionner) le contrat existant ; les correctifs / ajouts se font en **extension**, pas en rupture.
@@ -245,7 +245,7 @@ Modules **globaux** (pas de cloison par bureau). Suivi coché : [`plan-prochaine
 | 7.1 | Discipline | Types CCN, rapport N+1, instruire, prononcer DG, pièces, PDF, historique | D.2 | ✅ |
 | 7.2 | Affaires sociales P1 | Organismes, affiliations CNSS, ayants droit | D.3.1–D.3.3 | ✅ |
 | 7.3 | Prestations / allocations | Demandes sociales ; montants → paie | D.3.4 | ✅ |
-| 7.4 | (Plus tard) Santé / AT-MP / retraite | Visites, accidents, dossier pension | D.3.5 | ⬜ |
+| 7.4 | Santé / AT-MP | Visites, prises en charge, arrêts 132–135 ; dossier retraite hors V1 | D.3.5 | ✅ |
 | 7.5 | (Option) Représentants externes | Si toujours dans le périmètre métier | — | ⬜ |
 
 ---
@@ -357,6 +357,6 @@ Contrat FE : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.
 3. ~~**Phase 9.1 / D.4 — Formation**~~ **livré**.
 4. ~~**Phase 9.2 / D.5 — Paie**~~ **livré**.
 5. ~~**Phase 9.3 / D.6 — Reporting**~~ **livré**.
-6. ~~**D.3.4 Prestations**~~ **livré**, puis **D.3.5 Santé / AT-MP**, puis **Phase 11 / Vague F — Cloisonnement**.
+6. ~~**D.3.4 Prestations**~~ **livré**. ~~**D.3.5 Santé / AT-MP**~~ **livré**. Puis **Phase 11 / Vague F — Cloisonnement**.
 
 **Reporté / hors chemin critique :** Phase 1.B PDF actes, 1.C permissions fines `/integration/*` (coordonner FE), Phase 8 recrutement amont, logistique, GED versionnée, mail / SMS, PDF acte de reclassement.

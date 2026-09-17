@@ -8,7 +8,7 @@ Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste ré
 
 | Sujet | Fichier |
 |-------|---------|
-| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; Vague E **A–E livrés** ; **D.5 Paie livré** ; **D.6 Reporting livré** ; **D.3.4 Prestations livré** ([`plan-module-prestations.md`](./plan-module-prestations.md)) ; prochain **D.3.5** / Vague F ; cloisonnement **plus tard** |
+| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; Vague E **A–E livrés** ; **D.5 Paie livré** ; **D.6 Reporting livré** ; **D.3.4 Prestations livré** ; **D.3.5 Santé / AT-MP livré** ([`plan-module-sante.md`](./plan-module-sante.md)) ; prochain Vague F ; cloisonnement **plus tard** |
 | Conformité CCN intégration / carrière / grille | [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A–E livrés** ; D.5 : [`plan-module-paie.md`](./plan-module-paie.md) |
 | Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
@@ -47,7 +47,7 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
 | Évaluations | `/avancements/…` | **Livré** | P1–P5 + lots A–C (art. 62, tableau D5, PDF). Contrat : §7b. Reclassement de **classe** : §4 (`/carriere/reclassements`), pas ici. |
 | Discipline | `/discipline` | **Livré** | Vague D.2 + CCN art. 89–91 — contrat §2e. Menus : `consulter-discipline` (RH/DG), `proposer-discipline` (N+1), `prononcer-discipline` (DG). |
-| Affaires sociales | `/affaires-sociales` | **Livré (P1 + D.3.4)** | Vague D.3.1–D.3.4. Contrats §2f / §2f-bis. Rôle `rh` global. Santé / AT-MP **pas** livrés. |
+| Affaires sociales | `/affaires-sociales` | **Livré (P1 + D.3.4 + D.3.5)** | Vague D.3.1–D.3.5. Contrats §2f / §2f-bis / §2f-ter. Rôle `rh` global. Dossier retraite CNSS hors V1. |
 | Formation | `/formations` | **Livré** | Vague D.4. Contrat §2g. Stages d’accueil restent `/integration/stages`. Conversion : `POST /integration/stages/{id}/convertir-agent`. |
 | Paie (lots / éléments) | `/paie` | **Livré (D.5)** | Éléments, affectations, lots, bulletin enrichi, export CSV/PDF. Plan : [`plan-module-paie.md`](./plan-module-paie.md). Contrat §2h. |
 | Reporting / dashboard | `/reporting` | **Livré (D.6)** | Dashboard, stats, alertes, export CSV/PDF. Plan : [`plan-module-reporting.md`](./plan-module-reporting.md). Contrat §2i. |
@@ -529,7 +529,7 @@ Notifications : `domaine: discipline`, actions `creee` \| `instruite` \| `valide
 ## 2f. Affaires sociales — contrat FE (P1)
 
 Préfixe : **`/api/affaires-sociales`**. Auth Bearer obligatoire. Listes **non paginées**. Source CCN : art. **58–59** (enfants à charge).  
-P1 = organismes + affiliations + ayants droit. **Prestations D.3.4 livrées** (§2f-bis). Santé / AT-MP (D.3.5) hors scope.
+P1 = organismes + affiliations + ayants droit. **Prestations D.3.4 livrées** (§2f-bis). **Santé / AT-MP D.3.5 livré** (§2f-ter).
 
 Reconnecter les comptes RH / DG / admin après seed (`consulter-affaires-sociales`, `gerer-affaires-sociales`).
 
@@ -618,7 +618,7 @@ Pièce : multipart `fichier` (pdf/jpg/png/doc/docx, max 10 Mo) + `type_piece` : 
 
 `nb_enfants_arbre_noel` plafonné à **3**. `prime_arbre_noel_forfaitaire=true` si aucun enfant 0–16 ans (part forfaitaire art. 58) — **pas de versement** en P1.
 
-**Hors P1 / hors D.3.4 :** frais médicaux, AT-MP, allocations maladie art. 132–135, assurances.
+**Hors P1 :** assurances art. 138–139, dossier retraite / pension CNSS. Santé / AT-MP : §2f-ter.
 
 ---
 
@@ -676,7 +676,77 @@ Décès : `ayant_droit_id` **ou** `beneficiaire_libelle` obligatoire. `agent_id`
 
 Champs utiles FE : `montant_calcule`, `montant_accorde`, `calcul_snapshot` (`annees_anciennete`, `nb_mois_bareme`, `traitement_brut`, `nb_enfants_a_charge`…), `paie_element_affectation_id`.
 
-**Hors V1 :** art. 122–135 (santé / AT-MP), self-service agent.
+**Hors V1 :** art. 122–135 (santé / AT-MP → §2f-ter), self-service agent.
+
+---
+
+## 2f-ter. Santé / AT-MP — contrat FE (D.3.5)
+
+Préfixe : **`/api/affaires-sociales`**. Auth Bearer. Listes **non paginées**.  
+Plan : [`plan-module-sante.md`](./plan-module-sante.md). CCN art. **122–135**. Dossier retraite / pension CNSS **hors V1**.
+
+Même circuit et même permission DG que les prestations : `brouillon` → `soumise` → `instruite` → `accordee` \| `refusee` (ou `classee`). Saut d’étape → **422**. `prochaine_etape` : `soumettre` / `instruire` / `accorder` / `null`.
+
+Reconnecter RH / DG / admin (`decider-prestations` pour le DG — **pas** de nouvelle permission).
+
+### Permissions
+
+| Permission | Usage | Seeder |
+|------------|--------|--------|
+| `consulter-affaires-sociales` | Listes, détail, simulation, pièces, PDF, alerte visites | `rh`, `admin`, `directeur-general` |
+| `gerer-affaires-sociales` | CRUD structures / visites ; créer / instruire / classer prises en charge et arrêts | `rh`, `admin` |
+| `decider-prestations` | Accorder / refuser une prise en charge **ou** un arrêt | `directeur-general`, `admin` |
+
+### Structures sanitaires
+
+`data.type` : `medecin` \| `formation_sanitaire` \| `opticien` \| `pharmacie`.  
+Liste : actifs par défaut ; `?actif=all` pour tout voir. Nom **unique**. Structure déjà utilisée : suppression **422**. Structure inactive : nouvelle visite / prise en charge **422**.
+
+### Visites (art. 122)
+
+`data.type` : `embauche` \| `annuelle` \| `consultation`.  
+Visite d’embauche : **alerte seulement** (pas de 422 à l’intégration).  
+Alerte annuelle : **`GET /affaires-sociales/alertes/visites-annuelles-manquantes?annee=`** — effectif présent (actif + stagiaire + suspendu) sans visite `annuelle` de l’année.
+
+### Prises en charge (`data.type`)
+
+| Code | Article | Calcul |
+|------|---------|--------|
+| `honoraires_soins` | 123 | 100 % de `montant_facture` (médecin / formation) |
+| `pharmaceutique` | 124 | **80 %** de `montant_facture` (pharmacie) |
+| `verres_correcteurs` | 124 | 100 % — **salarié uniquement** (`ayant_droit_id` → 422) ; opticien |
+| `hospitalisation` | 125 | 100 % (médecin / formation) |
+| `evacuation_sanitaire` | 126–127 | `date_debut` + `date_fin` + `lieu` obligatoires. Durée **> 6 mois** → 422 sauf `at_mp=true`. Montant 0 si pas de facture (pas de pose paie) |
+
+Le type de structure **doit** matcher le type de prise en charge.
+
+### Arrêts (`data.nature`)
+
+Un dossier porte la déclaration **et** l’allocation. Certificat (pièce) **obligatoire** avant d’instruire (art. 131). Notification > 72 h : `alerte_72h=true` (**pas** de 422). Agent hors effectif présent → 422.
+
+| Code | Article | Calcul |
+|------|---------|--------|
+| `maladie` / `accident_travail` / `maladie_professionnelle` | 132–133 | ≥ 1 an sinon 422. Mois : 6 / 7 / 8 / 9 / 10 + majoration si ≥ 2 enfants (3 / 4 / 5). Mensuel = base + ancienneté (+ AF si paramétrées) |
+| `accident_non_professionnel` | 135 | 12 mois : **6 plein** puis **6 demi** (base/2 + ancienneté + AF). **Deux** affectations paie non chevauchantes |
+
+### APIs
+
+| Méthode | URI | Permission |
+|---------|-----|------------|
+| CRUD | `/affaires-sociales/structures-sanitaires` | lecture / `gerer-…` |
+| CRUD | `/affaires-sociales/visites-medicales` | lecture / `gerer-…` |
+| `GET` | `/affaires-sociales/alertes/visites-annuelles-manquantes` | lecture |
+| CRUD + circuit | `/affaires-sociales/prises-en-charge` (+ `/soumettre` `/instruire` `/accorder` `/refuser` `/classer` `/simulation` `/pdf-decision` `/pieces`) | comme prestations |
+| CRUD + circuit | `/affaires-sociales/arrets` (idem) | comme prestations |
+| `GET` | `/affaires-sociales/agents/{id}/visites-medicales` \| `prises-en-charge` \| `arrets` | lecture |
+
+`type_piece` : `facture` \| `ordonnance` \| `certificat` \| `rapport_medical` \| `autre` (pdf/jpg/png/doc/docx, 10 Mo).
+
+À l’**accord** : pose paie auto — `remboursement_sante` (ponctuel, mois `paie_annee`/`paie_mois`), `allocation_maladie` (mensuel, durée art. 132), `allocation_accident_non_pro` (deux périodes art. 135). Codes **actifs**.
+
+Champs utiles FE : `montant_calcule` / `montant_accorde`, `calcul_snapshot`, `alerte_72h`, `nb_mois`, `montant_mensuel` / `montant_mensuel_demi`, `paie_element_affectation_id`.
+
+**Hors V1 :** dossier retraite / pension CNSS, police mission, self-service agent.
 
 ---
 
@@ -1114,7 +1184,7 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | Congés | `consulter-conges`, `creer-conges`, `valider-conges` — les boutons N+1/RH/DG se jouent **en plus** sur le rôle / le supérieur (§2c) |
 | Absences | `consulter-absences`, `creer-absences`, `valider-absences` — signer = N+1 |
 | Discipline | `consulter-discipline`, `gerer-discipline`, `proposer-discipline`, `prononcer-discipline` — circuit N+1 → RH → DG. Contrat §2e |
-| Affaires sociales | `consulter-affaires-sociales`, `gerer-affaires-sociales`, `decider-prestations` — P1 + prestations D.3.4. Contrats §2f / §2f-bis |
+| Affaires sociales | `consulter-affaires-sociales`, `gerer-affaires-sociales`, `decider-prestations` — P1 + D.3.4 + D.3.5. Contrats §2f / §2f-bis / §2f-ter |
 | Formations | `consulter-formations`, `gerer-formations` — catalogue, plan, inscriptions, certifications. Contrat §2g |
 | Reporting | `consulter-reporting` — RH + **DG**. Contrat §2i |
 | Users | `consulter-utilisateurs`, `creer-utilisateurs`, `modifier-utilisateurs` |
@@ -1130,7 +1200,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 - ~~Reclassement / hors classe / reconversion (art. 73–75)~~ → **livré** §4
 - Concours, PDF **acte** de reclassement → hors D.4
 - ~~Discipline~~ → **livré** §2e
-- ~~Affaires sociales P1~~ → **livré** §2f ; ~~prestations D.3.4~~ → **livré** §2f-bis (santé D.3.5 encore hors scope)
+- ~~Affaires sociales P1~~ → **livré** §2f ; ~~prestations D.3.4~~ → **livré** §2f-bis ; ~~santé D.3.5~~ → **livré** §2f-ter
 - ~~Catalogue formations~~ → **livré** §2g
 - Conformité CCN 3–5 lots C–E (positions, hors grille DG) → [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A** et **B** livrés
 - ~~Dashboard reporting~~ → **livré** §2i
@@ -1717,6 +1787,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-17 | **Santé / AT-MP D.3.5** : structures, visites, prises en charge, arrêts (art. 122–135), pose paie, PDF | Même permission **`decider-prestations`**. Contrat §2f-ter. Alerte visites annuelles. Codes `remboursement_sante`, `allocation_maladie`, `allocation_accident_non_pro`. |
 | 2026-09-17 | **Prestations D.3.4** : `/api/affaires-sociales/prestations` (circuit DG, barèmes art. 119–121, pose paie, PDF) | Permission **`decider-prestations`** (DG). Reconnecter. Contrat §2f-bis. Codes paie retraite/décès **actifs**. |
 | 2026-09-17 | **Reporting D.6** : `/api/reporting` (dashboard, effectifs, répartitions, stats, alertes, exports CSV/PDF) | Permission `consulter-reporting` (RH + **DG**). Contrat §2i. Stats session `/avancements/sessions/{id}/stats` **inchangées**. |
 | 2026-09-16 | **Paie D.5 compléments** : autos paramétrés art. 58–59/CNSS, `PUT` lot, `actions`, filtres lignes, snapshot classe/échelon | Boutons via `data.actions`. Filtrer les lignes. Paramétrer `montant_defaut` / `taux_defaut` pour vestimentaire, transport, AF, SFT, CNSS. Contrat §2h. |

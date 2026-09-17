@@ -1,19 +1,20 @@
 # Prochaines fonctionnalités — suivi d’implémentation
 
 > Document **vivant** : cocher au fur et à mesure.  
-> Dernière mise à jour : **2026-09-17** (D.3.4 Prestations livré)  
+> Dernière mise à jour : **2026-09-17** (D.3.5 Santé / AT-MP livré)  
 > Architecture obligatoire : [`architecture.md`](./architecture.md)  
 > Plan long : [`plan_complet.md`](./plan_complet.md)  
 > Contrat FE actuel : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md)  
 > Cible métier : [`organigramme-drhl.md`](./organigramme-drhl.md)  
 > Droit ARTF (barèmes, délais, éligibilité) : [`convention-collective-artf.md`](./convention-collective-artf.md)  
 > Reporting D.6 : [`plan-module-reporting.md`](./plan-module-reporting.md)  
-> Prestations D.3.4 : [`plan-module-prestations.md`](./plan-module-prestations.md)
+> Prestations D.3.4 : [`plan-module-prestations.md`](./plan-module-prestations.md)  
+> Santé D.3.5 : [`plan-module-sante.md`](./plan-module-sante.md)
 
 **Objectif :** livrer les modules métier manquants (vie de l’agent + DRHL), **sans cloisonner** par service / bureau. Le cloisonnement vient **après**.
 
-**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 + D.3.4 Prestations, D.4 Formation, D.5 Paie, D.6 Reporting livrés.** Vague E lots **A–E** livrés.  
-Prochain : **D.3.5 Santé / AT-MP** ou **Vague F** cloisonnement — cloisonnement **plus tard**.
+**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 + D.3.4 Prestations + D.3.5 Santé / AT-MP, D.4 Formation, D.5 Paie, D.6 Reporting livrés.** Vague E lots **A–E** livrés.  
+Prochain : **Vague F** cloisonnement — cloisonnement **plus tard**.
 
 ---
 
@@ -117,7 +118,7 @@ Préfixe : `/api/conges/…` et `/api/absences`.
 |-------|--------|---------|--------------------|--------|
 | D.1 | Évaluations & avancements | P1–P5 + lots A–D | Personnel | ✅ |
 | D.2 | Discipline | Types CCN, N+1→RH→DG, pièces, PDF, historique | Personnel + conformité | ✅ |
-| D.3 | Affaires sociales | Organismes, affiliations, ayants droit ; prestations ensuite | Affaires sociales | ✅ **P1** |
+| D.3 | Affaires sociales | Organismes, affiliations, ayants droit, prestations, santé / AT-MP | Affaires sociales | ✅ **P1 + D.3.4 + D.3.5** |
 | D.4 | Formation | Catalogue, plan annuel, inscriptions, certifications + `convertir-agent` | Formation | ✅ |
 | **E** | Conformité CCN 3–5 | Essai, contrat 30 j, pièces/CNSS, positions 76–80, hors grille DG | Personnel + Solde | ⬜ |
 | D.5 | Paie (éléments + lots) | Primes / retenues, lot mensuel, bulletin enrichi, export | Solde | ✅ |
@@ -148,7 +149,7 @@ Préfixe : `/api/discipline`. Permissions : `consulter-discipline` / `gerer-disc
 
 ---
 
-### D.3 — Affaires sociales ✅ P1
+### D.3 — Affaires sociales ✅ P1 + D.3.4 + D.3.5
 
 Préfixe : `/api/affaires-sociales`. Permissions : `consulter-affaires-sociales` / `gerer-affaires-sociales` / **`decider-prestations`** (DG).  
 Réutilise `situation-familiale` (`nb_enfants` recalculé dès qu’il existe des enfants nominatifs) et le n° CNSS de l’agent (versé dans l’affiliation CNSS).
@@ -159,9 +160,9 @@ Réutilise `situation-familiale` (`nb_enfants` recalculé dès qu’il existe de
 | D.3.2 | Affiliations | N° , dates, statut ; alerte agent sans affiliation | ✅ |
 | D.3.3 | Ayants droit | Conjoint / enfants nominatifs + pièces (remplace le seul `nb_enfants`) | ✅ |
 | D.3.4 | Prestations | Demandes (décès, retraite) → instruire → décider DG → pose paie | ✅ |
-| D.3.5 | Santé / AT-MP / dossier retraite | Visites, accidents, pension | ⬜ plus tard |
+| D.3.5 | Santé / AT-MP / dossier retraite | Visites, prises en charge, arrêts 132–135 ; dossier retraite hors V1 | ✅ |
 
-D.3.1–D.3.3 = **P1 livré**. D.3.4 **livré** ([`plan-module-prestations.md`](./plan-module-prestations.md)).
+D.3.1–D.3.3 = **P1 livré**. D.3.4 **livré** ([`plan-module-prestations.md`](./plan-module-prestations.md)). D.3.5 **livré** ([`plan-module-sante.md`](./plan-module-sante.md)).
 
 ---
 
@@ -283,7 +284,7 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 4. ~~**Vague E** conformité CCN~~ **livré**.  
 5. ~~**D.5** Paie~~ **livré**.  
 6. ~~**D.6** Reporting~~ **livré**.  
-7. ~~**D.3.4** Prestations~~ **livré**. **D.3.5** Santé / AT-MP, puis **Vague F** cloisonnement — seulement une fois le FE branché.
+7. ~~**D.3.4** Prestations~~ **livré**. ~~**D.3.5** Santé / AT-MP~~ **livré**. **Vague F** cloisonnement — seulement une fois le FE branché.
 
 ---
 
@@ -316,3 +317,4 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 | 2026-09-16 | E.B | Lot B livré : pièces art. 46 (ACE, mariage, déjà salarié), CNSS art. 47 à `integrer`. |
 | 2026-09-17 | D.6 | Reporting `/api/reporting` : dashboard, stats congés/évaluations, alertes, exports PDF/CSV. DG : `consulter-reporting`. |
 | 2026-09-17 | D.3.4 | Prestations `/api/affaires-sociales/prestations` : circuit DG, barèmes CCN art. 119–121, pose paie, PDF. Permission `decider-prestations`. |
+| 2026-09-17 | D.3.5 | Santé / AT-MP : structures, visites, prises en charge, arrêts art. 122–135, pose paie, PDF. Même `decider-prestations`. |
