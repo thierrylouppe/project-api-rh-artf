@@ -21,11 +21,13 @@ class ReclamationRepository extends BaseRepository implements ReclamationInterfa
             ->get();
     }
 
+    /** Réclamation **courante** de la fiche : la plus récente. */
     public function trouverParEvaluation(int $evaluationId): ?Reclamation
     {
         return Reclamation::query()
             ->where('evaluation_id', $evaluationId)
             ->with(['agent'])
+            ->latest('id')
             ->first();
     }
 }

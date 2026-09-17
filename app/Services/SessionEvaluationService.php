@@ -32,6 +32,7 @@ class SessionEvaluationService extends BaseService
         private readonly NominationInterface       $nominationRepository,
         private readonly EvaluationInterface       $evaluationRepository,
         private readonly SuperieurHierarchiqueService $superieurService,
+        private readonly EvaluationNotificationService $notifications,
     ) {
         parent::__construct($repository);
     }
@@ -161,6 +162,10 @@ class SessionEvaluationService extends BaseService
             ]);
 
             $creees->push($evaluation);
+
+            // Le notateur est prévenu dès l'attribution : sans cela, il faut
+            // qu'il pense à venir voir s'il a des fiches (CCN art. 62).
+            $this->notifications->ficheANoterPourSuperieur($evaluation);
         }
 
         return $creees;

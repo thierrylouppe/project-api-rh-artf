@@ -27,6 +27,7 @@ class EvaluationStatutService
         private readonly ReclamationInterface          $reclamationRepository,
         private readonly AvisHierarchiqueService       $avisService,
         private readonly CommissionAvancementInterface $commissionAvancementRepository,
+        private readonly EvaluationNotificationService $notifications,
     ) {}
 
     // ----------------------------------------------------------------
@@ -44,10 +45,14 @@ class EvaluationStatutService
         $evaluation = $this->findEvaluation($evaluationId);
         $this->assertPeutTransitionner($evaluation, StatutEvaluation::SIGNEE_EVALUATEUR);
 
-        return $this->evaluationRepository->update($evaluationId, [
+        $signee = $this->evaluationRepository->update($evaluationId, [
             'statut'                  => StatutEvaluation::SIGNEE_EVALUATEUR->value,
             'signe_par_evaluateur_at' => now(),
         ]);
+
+        $this->notifications->ficheASignerPourAgent($signee);
+
+        return $signee;
     }
 
     // ----------------------------------------------------------------
@@ -78,11 +83,15 @@ class EvaluationStatutService
             ]);
         }
 
-        return $this->evaluationRepository->update($evaluationId, [
+        $signee = $this->evaluationRepository->update($evaluationId, [
             'statut'                  => StatutEvaluation::SIGNEE_EVALUATEUR->value,
             'avis_superieur'          => $avisSuperieur,
             'signe_par_evaluateur_at' => now(),
         ]);
+
+        $this->notifications->ficheASignerPourAgent($signee);
+
+        return $signee;
     }
 
     /**
@@ -155,6 +164,15 @@ class EvaluationStatutService
 
         $this->assertPeutTransitionner($evaluation, StatutEvaluation::EN_VALIDATION_RH);
 
+        // Une réclamation en cours appartient à la RH : c'est son traitement
+        // (art. 65) qui envoie la fiche en validation, pas l'agent.
+        $reclamation = $this->reclamationRepository->trouverParEvaluation($evaluationId);
+        if ($reclamation && ! $reclamation->statut->estTraitee()) {
+            throw ValidationException::withMessages([
+                'reclamation' => 'Une réclamation est en cours : la RH doit la traiter avant la transmission.',
+            ]);
+        }
+
         // Phase 3 : vérifier que tous les avis requis sont signés
         if (! $this->avisService->tousAvisSignes($evaluationId)) {
             throw ValidationException::withMessages([
@@ -162,9 +180,13 @@ class EvaluationStatutService
             ]);
         }
 
-        return $this->evaluationRepository->update($evaluationId, [
+        $transmise = $this->evaluationRepository->update($evaluationId, [
             'statut' => StatutEvaluation::EN_VALIDATION_RH->value,
         ]);
+
+        $this->notifications->ficheEnValidationRhPourRh($transmise);
+
+        return $transmise;
     }
 
     /**
@@ -177,7 +199,7 @@ class EvaluationStatutService
         $evaluation = $this->findEvaluation($evaluationId);
         $this->assertPeutTransitionner($evaluation, StatutEvaluation::FINALISEE);
 
-        return $this->evaluationRepository->update($evaluationId, [
+        $finalisee = $this->evaluationRepository->update($evaluationId, [
             'statut'             => StatutEvaluation::FINALISEE->value,
             'conforme_rh'        => true,
             'inscrit_tableau'    => true,
@@ -185,6 +207,10 @@ class EvaluationStatutService
             'commentaire_rh'     => $commentaire,
             'date_validation_rh' => now(),
         ]);
+
+        $this->notifications->ficheFinaliseePourAgent($finalisee);
+
+        return $finalisee;
     }
 
     /**
@@ -197,13 +223,17 @@ class EvaluationStatutService
         $evaluation = $this->findEvaluation($evaluationId);
         $this->assertPeutTransitionner($evaluation, StatutEvaluation::REJETEE);
 
-        return $this->evaluationRepository->update($evaluationId, [
+        $rejetee = $this->evaluationRepository->update($evaluationId, [
             'statut'             => StatutEvaluation::REJETEE->value,
             'conforme_rh'        => false,
             'validateur_rh_id'   => $rh->id,
             'commentaire_rh'     => $commentaire,
             'date_validation_rh' => now(),
         ]);
+
+        $this->notifications->ficheRejeteePourSuperieur($rejetee);
+
+        return $rejetee;
     }
 
     /**

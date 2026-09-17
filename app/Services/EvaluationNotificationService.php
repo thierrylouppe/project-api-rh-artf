@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Interfaces\UserInterface;
 use App\Models\Evaluation;
 use App\Models\SessionEvaluation;
 use App\Models\User;
@@ -26,7 +27,117 @@ class EvaluationNotificationService
 {
     private const DOMAINE = 'evaluation';
 
-    public function __construct(private readonly NotificationService $notificationService) {}
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly UserInterface $userRepository,
+    ) {}
+
+    // ----------------------------------------------------------------
+    // Raccourcis « par agent » : les services métier manipulent des fiches
+    // et des identifiants d'agent, pas des comptes utilisateurs. Un agent
+    // sans compte ne reçoit simplement rien — ce n'est pas une erreur.
+    // ----------------------------------------------------------------
+
+    /** Compte utilisateur rattaché à un agent, s'il en a un. */
+    private function compte(?int $agentId): ?User
+    {
+        return $agentId ? $this->userRepository->findByAgentId($agentId) : null;
+    }
+
+    /** Fiche attribuée : prévient le notateur. */
+    public function ficheANoterPourSuperieur(Evaluation $fiche): void
+    {
+        $compte = $this->compte($fiche->superieur_id);
+        if ($compte) {
+            $this->ficheANoter($fiche, $compte);
+        }
+    }
+
+    /** Notateur signataire : l'agent doit prendre connaissance et signer. */
+    public function ficheASignerPourAgent(Evaluation $fiche): void
+    {
+        $compte = $this->compte($fiche->agent_id);
+        if ($compte) {
+            $this->ficheASignerEvalue($fiche, $compte);
+        }
+    }
+
+    /** Fiche transmise : prévient l'équipe RH. */
+    public function ficheEnValidationRhPourRh(Evaluation $fiche): void
+    {
+        $this->notificationService->notifierRole(
+            'rh',
+            self::DOMAINE,
+            'fiche_en_validation_rh',
+            "Une fiche d'évaluation est en attente de validation RH.",
+            ['evaluation_id' => $fiche->id],
+        );
+    }
+
+    /** Fiche finalisée : l'agent connaît son résultat. */
+    public function ficheFinaliseePourAgent(Evaluation $fiche): void
+    {
+        $compte = $this->compte($fiche->agent_id);
+        if ($compte) {
+            $this->ficheFinalisee($fiche, $compte);
+        }
+    }
+
+    /** Fiche rejetée : le notateur doit corriger. */
+    public function ficheRejeteePourSuperieur(Evaluation $fiche): void
+    {
+        $compte = $this->compte($fiche->superieur_id);
+        if ($compte) {
+            $this->ficheRejetee($fiche, $compte);
+        }
+    }
+
+    /** Commission ouverte : prévient la RH et la direction générale. */
+    public function commissionOuvertePourResponsables(string $type, int $sessionId): void
+    {
+        foreach (['rh', 'directeur-general'] as $role) {
+            $this->notificationService->notifierRole(
+                $role,
+                self::DOMAINE,
+                "commission_{$type}_ouverte",
+                "La commission {$type} de la session #{$sessionId} est ouverte.",
+                ['session_id' => $sessionId, 'type_commission' => $type],
+            );
+        }
+    }
+
+    /** Échelon appliqué : l'agent est informé de son avancement. */
+    public function avancementAccordePourAgent(Evaluation $fiche): void
+    {
+        $compte = $this->compte($fiche->agent_id);
+        if ($compte) {
+            $this->avancementAccorde($fiche, $compte);
+        }
+    }
+
+    /** Demande de bonification de stage (art. 71) déposée : à traiter par la RH. */
+    public function bonificationStagePourRh(int $agentId, int $bonificationId): void
+    {
+        $this->notificationService->notifierRole(
+            'rh',
+            self::DOMAINE,
+            'bonification_stage',
+            'Une demande de bonification stage (art. 71) est en attente de validation.',
+            ['bonification_id' => $bonificationId, 'agent_id' => $agentId],
+        );
+    }
+
+    /** Avancement exceptionnel (art. 72) proposé : à traiter par la RH. */
+    public function avancementExceptionnelPourRh(int $agentId, int $avancementId): void
+    {
+        $this->notificationService->notifierRole(
+            'rh',
+            self::DOMAINE,
+            'avancement_exceptionnel',
+            'Un avancement exceptionnel (art. 72) est proposé pour traitement.',
+            ['avancement_id' => $avancementId, 'agent_id' => $agentId],
+        );
+    }
 
     /** Session créée — notifier tous les N+1 concernés. */
     public function sessionOuverte(SessionEvaluation $session, iterable $superieurs): void

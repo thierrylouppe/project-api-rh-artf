@@ -30,6 +30,7 @@ class CommissionPreparatoireService extends BaseService
     public function __construct(
         CommissionPreparatoireInterface      $repository,
         private readonly EvaluationInterface $evaluationRepository,
+        private readonly EvaluationNotificationService $notifications,
     ) {
         parent::__construct($repository);
     }
@@ -49,13 +50,17 @@ class CommissionPreparatoireService extends BaseService
             ]);
         }
 
-        return $this->repository->create([
+        $commission = $this->repository->create([
             'session_id'     => $sessionId,
             'statut'         => StatutCommission::EN_COURS->value,
             'date_ouverture' => $data['date_ouverture'] ?? now()->toDateString(),
             'created_by'     => $user->id,
             'observations'   => $data['observations'] ?? null,
         ]);
+
+        $this->notifications->commissionOuvertePourResponsables('preparatoire', $sessionId);
+
+        return $commission;
     }
 
     /**
