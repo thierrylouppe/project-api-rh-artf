@@ -63,6 +63,12 @@ class DatabaseSeeder extends Seeder
             // ── 7. Utilisateurs & paramètres applicatifs ────────────────
             UserSeeder::class,                  // depends: Role
             ParametreApplicationSeeder::class,
+
+            // ── 8. Agents & stagiaires intégrés ─────────────────────────
+            // DG + par direction : Directeur · CS · CB · 2 Agents · 1 Stagiaire
+            // depends: Direction, Service, Bureau, Grade, Categorie, Echelon,
+            //          Fonction, TypeIntegration, TypeContrat
+            AgentIntegrationSeeder::class,
         ]);
     }
 }
