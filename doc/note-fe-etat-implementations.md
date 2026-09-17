@@ -2,13 +2,13 @@
 
 > Document **vivant** : à mettre à jour à chaque livraison API qui impacte le front.  
 > Objectif : un seul point d’entrée pour les échanges FE (quoi appeler, quoi ne plus attendre, où lire le détail).  
-> Dernière mise à jour : **2026-09-16**
+> Dernière mise à jour : **2026-09-17**
 
 Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste résumé.**
 
 | Sujet | Fichier |
 |-------|---------|
-| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; Vague E **A–E livrés** ; **D.5 Paie livré** ; prochain **D.6** ([`plan-module-paie.md`](./plan-module-paie.md)) ; cloisonnement **plus tard** |
+| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; Vague E **A–E livrés** ; **D.5 Paie livré** ; **D.6 Reporting livré** ([`plan-module-reporting.md`](./plan-module-reporting.md)) ; prochain **D.3.4** ; cloisonnement **plus tard** |
 | Conformité CCN intégration / carrière / grille | [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A–E livrés** ; D.5 : [`plan-module-paie.md`](./plan-module-paie.md) |
 | Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
@@ -50,7 +50,7 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Affaires sociales | `/affaires-sociales` | **Livré (P1)** | Vague D.3.1–D.3.3. Contrat §2f. Rôle `rh` global (pas de menu par bureau). Prestations / santé **pas** livrés. |
 | Formation | `/formations` | **Livré** | Vague D.4. Contrat §2g. Stages d’accueil restent `/integration/stages`. Conversion : `POST /integration/stages/{id}/convertir-agent`. |
 | Paie (lots / éléments) | `/paie` | **Livré (D.5)** | Éléments, affectations, lots, bulletin enrichi, export CSV/PDF. Plan : [`plan-module-paie.md`](./plan-module-paie.md). Contrat §2h. |
-| Reporting / dashboard | `/reporting` | **Pas livré** | Vague D.6. Permission `consulter-reporting` seedée, pas d’API. |
+| Reporting / dashboard | `/reporting` | **Livré (D.6)** | Dashboard, stats, alertes, export CSV/PDF. Plan : [`plan-module-reporting.md`](./plan-module-reporting.md). Contrat §2i. |
 | Inbox notifications | `/notifications` | **Livré** | Inbox utilisateur (`auth:sanctum`). Voir §2b. |
 
 ---
@@ -800,6 +800,55 @@ Bouton export sur l’écran lot : activer seulement si `statut` ∈ `{valide, c
 
 ---
 
+## 2i. Reporting — contrat FE (D.6)
+
+Préfixe : **`/api/reporting`**. Auth Bearer. Permission **`consulter-reporting`** (`rh`, `admin`, **`directeur-general`**). Lecture seule.  
+Plan : [`plan-module-reporting.md`](./plan-module-reporting.md).
+
+| Méthode | URI | Usage FE |
+|---------|-----|----------|
+| `GET` | `/reporting/dashboard` | Cartes d’accueil : effectif présent, stagiaires, suspendus, statuts, entrées/sorties de l’année, masse salariale (dernier lot **clôturé**), répartitions |
+| `GET` | `/reporting/effectifs` | Liste paginée derrière les cartes. `meta` : `current_page`, `last_page`, `per_page`, `total` |
+| `GET` | `/reporting/repartitions?axe=` | Un graphique. `axe` : `direction`, `grade`, `genre`, `age`, `statut`, `type_integration`, `fonction`. **422** si axe manquant / inconnu |
+| `GET` | `/reporting/stats/conges` | Demandes / absences de l’année, jours posés vs accordés, en congé aujourd’hui |
+| `GET` | `/reporting/stats/evaluations` | Bloc `annee` + bloc `session_courante` (ouverte, sinon dernière clôturée). **Ne pas** remplacer `GET /avancements/sessions/{id}/stats` |
+| `GET` | `/reporting/alertes` | Tableau d’alertes (compteur + 50 premières lignes) |
+| `GET` | `/reporting/exports/{type}` | Fichier CSV/PDF. `type` = `effectifs` \| `conges` \| `evaluations`. Query **`format=csv` ou `pdf` obligatoire** |
+
+Filtres communs (query) : `direction_id`, `service_id`, `bureau_id`, `annee` (défaut : année civile). Effectifs : aussi `statut`, `per_page`, `page`.  
+Export évaluations : `portee=annee` (défaut) ou `portee=session` (+ `session_id` optionnel). **422** si `portee=session` sans session.
+
+**Effectif présent** = `actif` + `stagiaire` + `suspendu`.
+
+Forme dashboard (extrait) :
+
+```json
+{
+  "data": {
+    "annee": 2026,
+    "effectif": { "total": 120, "stagiaires": 8, "suspendus": 2, "actifs": 110 },
+    "repartition_statuts": [{ "cle": "actif", "libelle": "Actif", "total": 110 }],
+    "mouvements": { "entrees": 12, "sorties": 3 },
+    "masse_salariale": {
+      "lot_id": 4, "annee": 2026, "mois": 8, "periode": "août 2026",
+      "total_net": 85000000, "total_gains": 90000000, "total_retenues": 5000000, "nb_lignes": 110
+    },
+    "repartitions": { "genre": [], "age": [], "direction": [], "grade": [], "fonction": [], "type_integration": [] }
+  }
+}
+```
+
+`masse_salariale` vaut `null` s’il n’y a pas encore de lot clôturé. L’export de masse reste `GET /paie/lots/{id}/export`.
+
+Alertes `data[]` : `{ code, libelle, total, items[] }`. Codes : `sans_n1`, `dossier_incomplet`, `sans_affiliation_cnss`, `contrat_echeance_30`, `contrat_echeance_60` (inclut les 30 j), `poste_vacant`.  
+Dossier incomplet = infos perso **ou** pro **ou** contact d’urgence manquant. Le détail CNSS / postes vacants reste sur les routes métier existantes.
+
+CSV : `text/csv; charset=UTF-8`, séparateur `;`, BOM UTF-8 (comme la paie). PDF : paysage.
+
+Menus : afficher le reporting si `consulter-reporting` (RH **et DG**). Pas les autres rôles hiérarchiques.
+
+---
+
 ## 3. Intégration — à retenir pour le wizard
 
 Deux chemins API ; le FE actuel utilise **B**.
@@ -1008,10 +1057,11 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | Discipline | `consulter-discipline`, `gerer-discipline`, `proposer-discipline`, `prononcer-discipline` — circuit N+1 → RH → DG. Contrat §2e |
 | Affaires sociales | `consulter-affaires-sociales`, `gerer-affaires-sociales` — P1 organismes / affiliations / ayants droit. Contrat §2f |
 | Formations | `consulter-formations`, `gerer-formations` — catalogue, plan, inscriptions, certifications. Contrat §2g |
+| Reporting | `consulter-reporting` — RH + **DG**. Contrat §2i |
 | Users | `consulter-utilisateurs`, `creer-utilisateurs`, `modifier-utilisateurs` |
 | Rôles | `consulter-roles`, `creer-roles`, `modifier-roles` |
 
-Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / contrats / recrutement / reporting, **sauf le DG** qui voit la file de reclassements (lecture + approuver 74/75). Périmètre « ma structure seulement » : **pas encore** filtré côté API.
+Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / contrats / recrutement / reporting, **sauf le DG** qui a `consulter-reporting` et la file de reclassements (lecture + approuver 74/75). Périmètre « ma structure seulement » : **pas encore** filtré côté API.
 
 ---
 
@@ -1024,8 +1074,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 - ~~Affaires sociales P1~~ → **livré** §2f (prestations D.3.4 / santé D.3.5 encore hors scope)
 - ~~Catalogue formations~~ → **livré** §2g
 - Conformité CCN 3–5 lots C–E (positions, hors grille DG) → [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A** et **B** livrés
-- Dashboard reporting → D.6
-- Dashboard reporting → D.6
+- ~~Dashboard reporting~~ → **livré** §2i
 - GED **versioning / recherche** (la GED agent légère est livrée, §2d)
 - Cloisonnement menus par bureau DRHL → Vague F, **après** D.2–D.6
 - Mail / SMS (canal `database` uniquement pour l’instant)
@@ -1609,6 +1658,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-17 | **Reporting D.6** : `/api/reporting` (dashboard, effectifs, répartitions, stats, alertes, exports CSV/PDF) | Permission `consulter-reporting` (RH + **DG**). Contrat §2i. Stats session `/avancements/sessions/{id}/stats` **inchangées**. |
 | 2026-09-16 | **Paie D.5 compléments** : autos paramétrés art. 58–59/CNSS, `PUT` lot, `actions`, filtres lignes, snapshot classe/échelon | Boutons via `data.actions`. Filtrer les lignes. Paramétrer `montant_defaut` / `taux_defaut` pour vestimentaire, transport, AF, SFT, CNSS. Contrat §2h. |
 | 2026-09-16 | **Paie D.5.5** : `GET /api/paie/lots/{id}/export?format=csv\|pdf` | Bouton export sur lot `valide` / `cloture`. CSV `;` + BOM. **422** avant validation. Contrat §2h. |
 | 2026-09-16 | **Paie D.5.4** : `GET /api/paie/lots/{id}/lignes/{ligneId}/bulletin` | PDF enrichi (gains / retenues / net). `GET /salaires-agents/{id}/bulletin` **inchangé**. Contrat §2h. |

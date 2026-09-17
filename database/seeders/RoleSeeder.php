@@ -42,6 +42,7 @@ class RoleSeeder extends Seeder
                 'consulter-affaires-sociales',
                 'consulter-formations',
                 'consulter-evaluations', 'valider-evaluations',
+                'consulter-reporting',
             ],
             'directeur' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',

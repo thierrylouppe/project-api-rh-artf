@@ -67,6 +67,7 @@ use App\Interfaces\ReclamationInterface;
 use App\Interfaces\ReclassementInterface;
 use App\Interfaces\RegleAcquisitionCongeInterface;
 use App\Interfaces\RemiseMaterielInterface;
+use App\Interfaces\ReportingInterface;
 use App\Interfaces\RoleInterface;
 use App\Interfaces\SalaireAgentInterface;
 use App\Interfaces\SalaireInterface;
@@ -148,6 +149,7 @@ use App\Repositories\ReclamationRepository;
 use App\Repositories\ReclassementRepository;
 use App\Repositories\RegleAcquisitionCongeRepository;
 use App\Repositories\RemiseMaterielRepository;
+use App\Repositories\ReportingRepository;
 use App\Repositories\RoleRepository;
 use App\Repositories\SalaireAgentRepository;
 use App\Repositories\SalaireRepository;
@@ -258,6 +260,7 @@ class AppServiceProvider extends ServiceProvider
         PaieElementInterface::class => PaieElementRepository::class,
         PaieElementAffectationInterface::class => PaieElementAffectationRepository::class,
         PaieLotInterface::class => PaieLotRepository::class,
+        ReportingInterface::class => ReportingRepository::class,
         // Module 1.3 — Administration système
         NotificationInterface::class => NotificationRepository::class,
         UserInterface::class => UserRepository::class,

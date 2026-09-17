@@ -9,7 +9,7 @@
 **Nom :** Gestion RH API  
 **Type :** API REST pour la gestion des ressources humaines d'une administration publique  
 **Objectif :** Couvrir le cycle de vie complet d'un agent : recrutement → contrat → affectation/nomination → évaluation → avancement → congés → salaires → sanctions → affaires sociales → formation → paie  
-**Statut actuel :** cœur « vie de l’agent » API livré, **discipline (D.2)**, **affaires sociales P1 (D.3)** et **formation (D.4)** livrées. Prochain : paie (D.5) — [`plan-module-paie.md`](./plan-module-paie.md), puis reporting — **modules globaux, pas de cloisonnement par bureau**. Voir [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).
+**Statut actuel :** cœur « vie de l’agent » API livré, **discipline (D.2)**, **affaires sociales P1 (D.3)**, **formation (D.4)**, **paie (D.5)** et **reporting (D.6)** livrés. Prochain : prestations D.3.4 — **modules globaux, pas de cloisonnement par bureau**. Voir [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).
 
 **Droit applicable :** Convention collective de l’ARTF du **10 janvier 2019** — transcription de référence : [`convention-collective-artf.md`](./convention-collective-artf.md). Toute règle métier (délais, barèmes, éligibilité, positions, sanctions, primes, congés) se lit **d’abord** dans ce fichier. En cas de conflit avec un plan ou un référentiel logiciel, **la convention prime**.
 
@@ -867,8 +867,8 @@ Les notifications congés / évaluations et les PDF congés / fiches d’évalua
 | Discipline | ✅ | Vague D.2 |
 | Affaires sociales | ✅ P1 | Vague D.3.1–D.3.3 (`/affaires-sociales`) ; prestations D.3.4 après paie |
 | Formation | ✅ | Vague D.4 (`/formations` + `convertir-agent`) |
-| Paie (éléments + lots) | ⬜ | Vague D.5 |
-| Reporting | ⬜ | Vague D.6 |
+| Paie (éléments + lots) | ✅ | Vague D.5 |
+| Reporting | ✅ | Vague D.6 — [`plan-module-reporting.md`](./plan-module-reporting.md) |
 | Cloisonnement par bureau | ⬜ plus tard | Vague F — ne pas ouvrir maintenant |
 | PDF actes d’intégration | ⏸ | `plan_complet.md` Phase 1.B |
 | Recrutement amont (concours) | ⏸ | Phase 8 |

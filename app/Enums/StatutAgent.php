@@ -10,30 +10,30 @@ namespace App\Enums;
  */
 enum StatutAgent: string
 {
-    case ACTIF                   = 'actif';
-    case INACTIF                 = 'inactif';
-    case SUSPENDU                = 'suspendu';
-    case RETRAITE                = 'retraite';
-    case STAGIAIRE               = 'stagiaire';
-    case ARCHIVE                 = 'archive';
-    case DETACHEMENT             = 'detachement';
+    case ACTIF = 'actif';
+    case INACTIF = 'inactif';
+    case SUSPENDU = 'suspendu';
+    case RETRAITE = 'retraite';
+    case STAGIAIRE = 'stagiaire';
+    case ARCHIVE = 'archive';
+    case DETACHEMENT = 'detachement';
     case POSITION_EXCEPTIONNELLE = 'position_exceptionnelle';
-    case DISPONIBILITE           = 'disponibilite';   // CCN art. 79
-    case SOUS_LE_DRAPEAU         = 'sous_le_drapeau'; // CCN art. 80
+    case DISPONIBILITE = 'disponibilite';   // CCN art. 79
+    case SOUS_LE_DRAPEAU = 'sous_le_drapeau'; // CCN art. 80
 
     public function label(): string
     {
         return match ($this) {
-            self::ACTIF                   => 'Actif',
-            self::INACTIF                 => 'Inactif',
-            self::SUSPENDU                => 'Suspendu',
-            self::RETRAITE                => 'Retraité',
-            self::STAGIAIRE               => 'Stagiaire',
-            self::ARCHIVE                 => 'Archivé',
-            self::DETACHEMENT             => 'En détachement',
+            self::ACTIF => 'Actif',
+            self::INACTIF => 'Inactif',
+            self::SUSPENDU => 'Suspendu',
+            self::RETRAITE => 'Retraité',
+            self::STAGIAIRE => 'Stagiaire',
+            self::ARCHIVE => 'Archivé',
+            self::DETACHEMENT => 'En détachement',
             self::POSITION_EXCEPTIONNELLE => 'Position exceptionnelle',
-            self::DISPONIBILITE           => 'En disponibilité',
-            self::SOUS_LE_DRAPEAU         => 'Sous le drapeau',
+            self::DISPONIBILITE => 'En disponibilité',
+            self::SOUS_LE_DRAPEAU => 'Sous le drapeau',
         };
     }
 
@@ -67,6 +67,21 @@ enum StatutAgent: string
     public static function estPositionConventionnelle(string $statut): bool
     {
         return in_array($statut, self::positionsConventionnelles(), true);
+    }
+
+    /** Population « effectif présent » du reporting D.6. */
+    public static function effectifPresent(): array
+    {
+        return [
+            self::ACTIF->value,
+            self::STAGIAIRE->value,
+            self::SUSPENDU->value,
+        ];
+    }
+
+    public function estDansEffectifPresent(): bool
+    {
+        return in_array($this->value, self::effectifPresent(), true);
     }
 
     /** Valeurs acceptées par le FormRequest PUT agent. Les positions CCN 76–80 sont ensuite rejetées (POST /carriere/positions). */

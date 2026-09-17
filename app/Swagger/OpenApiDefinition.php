@@ -56,4 +56,5 @@ MD
 #[OA\Tag(name: 'Affaires sociales', description: 'Organismes, affiliations CNSS, ayants droit (CCN art. 58–59)')]
 #[OA\Tag(name: 'Formations', description: 'Formation continue des agents (CCN art. 92–104)')]
 #[OA\Tag(name: 'Paie', description: 'Éléments de paie, lots mensuels, bulletin enrichi, export (CCN art. 54–59)')]
+#[OA\Tag(name: 'Reporting', description: 'Tableau de bord RH, statistiques, alertes de conformité, exports PDF/CSV')]
 class OpenApiDefinition {}

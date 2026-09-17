@@ -67,6 +67,7 @@ use App\Http\Controllers\API\ReclamationController;
 use App\Http\Controllers\API\ReclassementController;
 use App\Http\Controllers\API\RegleAcquisitionCongeController;
 use App\Http\Controllers\API\RemiseMaterielController;
+use App\Http\Controllers\API\ReportingController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SalaireAgentController;
 use App\Http\Controllers\API\SalaireController;
@@ -416,6 +417,19 @@ Route::middleware('auth:sanctum')->prefix('paie')->group(function () {
         ->middleware('permission:consulter-salaires');
     Route::get('agents/{agent}/bulletins', [PaieLotController::class, 'bulletinsAgent'])
         ->middleware('permission:consulter-salaires');
+});
+
+// ============================================================
+// MODULE REPORTING D.6 — dashboard, stats, alertes, exports
+// ============================================================
+Route::middleware(['auth:sanctum', 'permission:consulter-reporting'])->prefix('reporting')->group(function () {
+    Route::get('dashboard', [ReportingController::class, 'dashboard']);
+    Route::get('effectifs', [ReportingController::class, 'effectifs']);
+    Route::get('repartitions', [ReportingController::class, 'repartitions']);
+    Route::get('stats/conges', [ReportingController::class, 'statsConges']);
+    Route::get('stats/evaluations', [ReportingController::class, 'statsEvaluations']);
+    Route::get('alertes', [ReportingController::class, 'alertes']);
+    Route::get('exports/{type}', [ReportingController::class, 'export']);
 });
 
 // ============================================================

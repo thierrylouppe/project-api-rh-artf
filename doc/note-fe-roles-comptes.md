@@ -13,7 +13,7 @@ Les rôles sont **globaux** (pas liés à une direction / un service / un bureau
 |---|---|---|
 | Système | `admin` | Accès complet (toutes les permissions) |
 | Métier RH (DRHL) | `rh` | **Seul** rôle métier RH : utilisateurs, référentiels (écriture), recrutement, contrats, salaires, reporting |
-| Hiérarchie | `directeur-general`, `directeur`, `chef-service`, `chef-bureau` | Structure + agents en lecture + validations d’équipe (congés / absences / évaluations). **Pas** de menus RH |
+| Hiérarchie | `directeur-general`, `directeur`, `chef-service`, `chef-bureau` | Structure + agents en lecture + validations d’équipe. **Pas** de menus RH, **sauf le DG** (`consulter-reporting`, file reclassements) |
 | Self-service | `agent` | Ses demandes de congés / absences |
 
 `directeur`, `chef-service`, `chef-bureau` s’appliquent à **toutes** les directions / services / bureaux, pas seulement la DRHL.  
@@ -88,6 +88,7 @@ Mot de passe : respecter la casse.
 
 `consulter-structure`, `consulter-referentiels`, `consulter-agents`, `consulter-nominations`  
 `consulter-salaires` (**DG seulement** parmi la hiérarchie — file reclassements art. 74–75)  
+`consulter-reporting` (**DG seulement** parmi la hiérarchie — dashboard RH)  
 `consulter-conges`, `valider-conges`  
 `consulter-absences`, `valider-absences`  
 `consulter-evaluations` (`valider-evaluations` : DG / directeur / admin uniquement)  
@@ -107,7 +108,7 @@ Self-service discipline **sans** `consulter-discipline` : `GET /discipline/moi/h
 
 ## 6. À faire côté FE
 
-1. Ne plus afficher salaires / contrats / recrutement / reporting / gestion utilisateurs aux rôles hiérarchiques.
+1. Ne plus afficher salaires / contrats / recrutement / gestion utilisateurs aux rôles hiérarchiques. **Reporting : RH + DG** (`consulter-reporting`).
 2. Après `POST /login`, utiliser `data.user.roles[].permissions[].name` pour menus et guards (`GET /user` seulement pour rafraîchir).
 3. Tester les 7 comptes ci-dessus (un par profil).
 4. Un compte créé à l’intégration (email agent) n’a **pas** automatiquement un rôle Spatie tant que RH / admin ne l’assigne pas.

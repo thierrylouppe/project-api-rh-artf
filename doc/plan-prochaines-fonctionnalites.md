@@ -1,18 +1,18 @@
 # Prochaines fonctionnalités — suivi d’implémentation
 
 > Document **vivant** : cocher au fur et à mesure.  
-> Dernière mise à jour : **2026-09-16** (D.5 Paie livré)  
+> Dernière mise à jour : **2026-09-17** (D.6 Reporting livré)  
 > Architecture obligatoire : [`architecture.md`](./architecture.md)  
 > Plan long : [`plan_complet.md`](./plan_complet.md)  
 > Contrat FE actuel : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md)  
 > Cible métier : [`organigramme-drhl.md`](./organigramme-drhl.md)  
 > Droit ARTF (barèmes, délais, éligibilité) : [`convention-collective-artf.md`](./convention-collective-artf.md)  
-> Paie D.5 : [`plan-module-paie.md`](./plan-module-paie.md)
+> Reporting D.6 : [`plan-module-reporting.md`](./plan-module-reporting.md)
 
 **Objectif :** livrer les modules métier manquants (vie de l’agent + DRHL), **sans cloisonner** par service / bureau. Le cloisonnement vient **après**.
 
-**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation livrés.** Vague E lots **A–E** livrés.  
-Prochain : **D.6 Reporting** (dashboard) — cloisonnement **plus tard**. D.5 Paie **livré**.
+**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation, D.5 Paie, D.6 Reporting livrés.** Vague E lots **A–E** livrés.  
+Prochain : **D.3.4 Prestations** — cloisonnement **plus tard**.
 
 ---
 
@@ -32,6 +32,8 @@ Prochain : **D.6 Reporting** (dashboard) — cloisonnement **plus tard**. D.5 Pa
 | Dossier agent | `/personnel/agents/{id}` | Infos, contacts, GED légère, archivage |
 | Évaluations & avancements | `/avancements/…` | P1–P5 + lots A–C (art. 62, tableau, PDF) |
 | Discipline | `/discipline/…` | Types CCN, rapport N+1, instruire RH, prononcer DG, pièces, PDF, avertissements, historique |
+| Paie | `/paie` | Éléments, affectations, lots, bulletin enrichi, export |
+| Reporting | `/reporting` | Dashboard, stats, alertes, exports PDF/CSV |
 
 **Hors scope immédiat :** PDF actes d’intégration (Phase 1.B), recrutement amont (concours), GED versionnée, mail / SMS, **Service Logistique**, cloisonnement par bureau.
 
@@ -118,7 +120,7 @@ Préfixe : `/api/conges/…` et `/api/absences`.
 | D.4 | Formation | Catalogue, plan annuel, inscriptions, certifications + `convertir-agent` | Formation | ✅ |
 | **E** | Conformité CCN 3–5 | Essai, contrat 30 j, pièces/CNSS, positions 76–80, hors grille DG | Personnel + Solde | ⬜ |
 | D.5 | Paie (éléments + lots) | Primes / retenues, lot mensuel, bulletin enrichi, export | Solde | ✅ |
-| D.6 | Reporting | Dashboard effectifs, répartitions, exports | Étude et planification | ⬜ |
+| D.6 | Reporting | Dashboard effectifs, répartitions, exports | Étude et planification | ✅ |
 
 Détail D.1 : [`plan-module-evaluation-notation.md`](./plan-module-evaluation-notation.md) + [`plan-evaluation-complements.md`](./plan-evaluation-complements.md).
 
@@ -211,18 +213,18 @@ Préfixe nouveau : `/api/paie`. Permissions existantes `consulter-salaires` / `g
 
 ---
 
-### D.6 — Reporting ⬜
+### D.6 — Reporting ✅
 
-Préfixe : `/api/reporting` — permission **déjà** seedée : `consulter-reporting`.
+Préfixe : `/api/reporting` — permission `consulter-reporting` (`rh`, `admin`, **`directeur-general`**). Plan : [`plan-module-reporting.md`](./plan-module-reporting.md).
 
 | # | Tâche | Contenu | Statut |
 |---|--------|---------|--------|
-| D.6.1 | Dashboard | Effectifs, pyramide, répartitions direction / grade / sexe | ⬜ |
-| D.6.2 | Stats congés / évaluations | Agrégats (les stats **session** existent déjà) | ⬜ |
-| D.6.3 | Exports | PDF / Excel effectifs, congés, notation | ⬜ |
-| D.6.4 | Alertes conformité | Agents sans N+1, dossiers incomplets, sans affiliation (D.3) | ⬜ |
+| D.6.1 | Dashboard | Effectifs présent, pyramide, répartitions, entrées/sorties, masse salariale | ✅ |
+| D.6.2 | Stats congés / évaluations | Agrégats année + session courante (stats session inchangées) | ✅ |
+| D.6.3 | Exports | PDF / CSV effectifs, congés, notation | ✅ |
+| D.6.4 | Alertes conformité | Sans N+1, dossier incomplet, CNSS, contrats 30/60 j, postes vacants | ✅ |
 
-GPEEC avancé (prévision retraite, vacances de postes au-delà de `nominations/postes-vacants`) : après D.6.1.
+GPEEC avancé (prévision retraite, vacances de postes au-delà de `nominations/postes-vacants`) : **hors V1**.
 
 ---
 
@@ -277,10 +279,10 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 1. ~~**D.2 Discipline**~~ **livré**.  
 2. ~~**D.3.1–D.3.3** Affaires sociales (P1)~~ **livré**.  
 3. ~~**D.4** Formation (+ `convertir-agent`)~~ **livré**.  
-4. **Vague E** conformité CCN (essai, pièces, positions, hors grille) — [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md).  
-5. **D.5** Paie, puis **D.3.4** prestations / allocations.  
-6. **D.6** Reporting.  
-7. **Vague F** cloisonnement — seulement une fois le FE branché sur ces modules.
+4. ~~**Vague E** conformité CCN~~ **livré**.  
+5. ~~**D.5** Paie~~ **livré**.  
+6. ~~**D.6** Reporting~~ **livré**.  
+7. **D.3.4** Prestations / allocations, puis **Vague F** cloisonnement — seulement une fois le FE branché.
 
 ---
 
@@ -311,3 +313,4 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 | 2026-09-16 | D.5 | Compléments : génération bulk, autos paramétrés (AF, SFT, vestimentaire, transport, CNSS), `PUT` commentaire, `actions` / filtres. |
 | 2026-09-16 | E.A | Lot A livré : essai art. 49, délai 30 j art. 52, `necessite_contrat` recrutement externe, jobs d’alerte. |
 | 2026-09-16 | E.B | Lot B livré : pièces art. 46 (ACE, mariage, déjà salarié), CNSS art. 47 à `integrer`. |
+| 2026-09-17 | D.6 | Reporting `/api/reporting` : dashboard, stats congés/évaluations, alertes, exports PDF/CSV. DG : `consulter-reporting`. |
