@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StatutSanction;
+use App\Traits\HasBureauScope;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,8 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Sanction extends Model
 {
-    use HasFilterScope;
-    use SoftDeletes;
+    use HasBureauScope, HasFilterScope, SoftDeletes;
 
     protected $fillable = [
         'agent_id',

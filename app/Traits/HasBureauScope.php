@@ -34,6 +34,40 @@ trait HasBureauScope
      * @param  User|null $user   Utilisateur authentifié (null = pas de filtre)
      * @param  string    $niveau 'bureau' | 'service' | 'direction' (défaut : 'service')
      */
+    /**
+     * Scope `parMaStructure`.
+     *
+     * À utiliser sur les modèles qui ont une relation `agent()` (BelongsTo).
+     * Filtre les lignes dont l'agent appartient à la structure de l'utilisateur.
+     *
+     * Usage : DemandeConge, Absence, Sanction, Evaluation, etc.
+     *
+     * @param  Builder   $query
+     * @param  User|null $user   Utilisateur authentifié
+     * @param  string    $niveau 'bureau' | 'service' | 'direction' (défaut : 'service')
+     */
+    public function scopeParMaStructure(
+        Builder $query,
+        ?User $user,
+        string $niveau = 'service'
+    ): Builder {
+        if ($user === null || ! $user->estCloisonne()) {
+            return $query;
+        }
+
+        return $query->whereHas(
+            'agent',
+            fn (Builder $agentQuery) => $agentQuery->maStructure($user, $niveau)
+        );
+    }
+
+    /**
+     * Scope `maStructure`.
+     *
+     * @param  Builder   $query
+     * @param  User|null $user   Utilisateur authentifié (null = pas de filtre)
+     * @param  string    $niveau 'bureau' | 'service' | 'direction' (défaut : 'service')
+     */
     public function scopeMaStructure(
         Builder $query,
         ?User $user,

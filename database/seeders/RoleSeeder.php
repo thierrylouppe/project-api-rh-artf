@@ -14,6 +14,62 @@ class RoleSeeder extends Seeder
 
         $roles = [
             'admin' => $all,
+
+            // ── Vague F — rôles DRHL cloisonnés par bureau ──────────────────────────
+            // Chaque rôle cumule les permissions de son bureau + la lecture globale de la structure.
+            // Un utilisateur DRHL reçoit CE rôle en plus de (ou à la place de) 'rh'.
+
+            // Bureau Personnel — gestion dossiers, carrière, discipline, congés
+            'rh-personnel' => [
+                'acces-bureau-personnel',
+                'consulter-structure', 'consulter-referentiels',
+                'consulter-agents', 'creer-agents', 'modifier-agents',
+                'consulter-recrutement', 'creer-recrutement', 'valider-recrutement',
+                'consulter-contrats', 'creer-contrats', 'modifier-contrats',
+                'consulter-nominations', 'gerer-nominations',
+                'consulter-conges', 'valider-conges',
+                'consulter-absences', 'valider-absences',
+                'consulter-discipline', 'gerer-discipline', 'proposer-discipline',
+                'consulter-evaluations',
+                'consulter-utilisateurs', 'creer-utilisateurs', 'modifier-utilisateurs',
+            ],
+
+            // Bureau Solde — paie, salaires, éléments
+            'rh-solde' => [
+                'acces-bureau-solde',
+                'consulter-structure', 'consulter-referentiels',
+                'consulter-agents',
+                'consulter-salaires', 'gerer-salaires',
+                'consulter-reporting',
+            ],
+
+            // Bureau Formation — catalogue, plans, inscriptions
+            'rh-formation' => [
+                'acces-bureau-formation',
+                'consulter-structure', 'consulter-referentiels',
+                'consulter-agents',
+                'consulter-formations', 'gerer-formations',
+                'consulter-evaluations',
+            ],
+
+            // Bureau des Affaires Sociales — protection sociale, prestations
+            'rh-affaires-sociales' => [
+                'acces-bureau-affaires-sociales',
+                'consulter-structure', 'consulter-referentiels',
+                'consulter-agents',
+                'consulter-affaires-sociales', 'gerer-affaires-sociales', 'decider-prestations',
+            ],
+
+            // Bureau Étude et Planification — reporting, conformité, GPEEC
+            'rh-etude' => [
+                'acces-bureau-etude',
+                'consulter-structure', 'consulter-referentiels',
+                'consulter-agents',
+                'consulter-evaluations',
+                'consulter-reporting',
+            ],
+            // ────────────────────────────────────────────────────────────────────────
+
             // Métier RH (DRHL) : utilisateurs, référentiels, agents, recrutement, contrats, salaires, reporting
             'rh' => [
                 'consulter-utilisateurs', 'creer-utilisateurs', 'modifier-utilisateurs',

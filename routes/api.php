@@ -265,8 +265,9 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () use 
 // MODULE PERSONNEL — AGENTS INTÉGRÉS & STAGIAIRES
 // ============================================================
 Route::prefix('personnel')->middleware('auth:sanctum')->group(function () {
-    Route::get('agents', [PersonnelController::class, 'agents']);
-    Route::get('stagiaires', [PersonnelController::class, 'stagiaires']);
+    // Vague F : scope.bureau filtre les listes selon le bureau de rattachement de l'utilisateur
+    Route::get('agents', [PersonnelController::class, 'agents'])->middleware('scope.bureau');
+    Route::get('stagiaires', [PersonnelController::class, 'stagiaires'])->middleware('scope.bureau');
     Route::get('agents/{agent}', [PersonnelController::class, 'afficher']);
     Route::post('agents/{agent}/archiver', [PersonnelController::class, 'archiver']);
     Route::post('agents/{agent}/desarchiver', [PersonnelController::class, 'desarchiver']);
@@ -462,7 +463,8 @@ Route::middleware('auth:sanctum')->prefix('conges')->group(function () {
     Route::get('statistiques', [DemandeCongeController::class, 'statistiques'])->middleware('permission:consulter-conges');
     Route::get('agents/{agent}/demandes', [DemandeCongeController::class, 'byAgent'])->middleware('permission:consulter-conges');
     Route::get('demandes/a-valider', [DemandeCongeController::class, 'aValider'])->middleware('permission:valider-conges');
-    Route::get('demandes', [DemandeCongeController::class, 'index'])->middleware('permission:consulter-conges');
+    // Vague F — liste globale des demandes filtrée par structure de l'utilisateur
+    Route::get('demandes', [DemandeCongeController::class, 'index'])->middleware(['permission:consulter-conges', 'scope.bureau']);
     Route::post('demandes', [DemandeCongeController::class, 'store'])->middleware('permission:creer-conges');
     Route::get('demandes/{id}', [DemandeCongeController::class, 'show'])->middleware('permission:consulter-conges');
     Route::post('demandes/{id}/valider-n1', [DemandeCongeController::class, 'validerN1'])->middleware('permission:valider-conges');
@@ -478,7 +480,8 @@ Route::middleware('auth:sanctum')->prefix('conges')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->prefix('absences')->group(function () {
-    Route::get('/', [AbsenceController::class, 'index'])->middleware('permission:consulter-absences');
+    // Vague F — liste globale des absences filtrée par structure
+    Route::get('/', [AbsenceController::class, 'index'])->middleware(['permission:consulter-absences', 'scope.bureau']);
     Route::post('/', [AbsenceController::class, 'store'])->middleware('permission:creer-absences');
     Route::get('a-valider', [AbsenceController::class, 'aValider'])->middleware('permission:valider-absences');
     Route::get('agents/{agent}', [AbsenceController::class, 'byAgent'])->middleware('permission:consulter-absences');
@@ -504,7 +507,8 @@ Route::middleware('auth:sanctum')->prefix('discipline')->group(function () {
     Route::put('types-sanctions/{id}', [TypeSanctionController::class, 'update'])->middleware('permission:gerer-discipline');
     Route::delete('types-sanctions/{id}', [TypeSanctionController::class, 'destroy'])->middleware('permission:gerer-discipline');
 
-    Route::get('sanctions', [SanctionController::class, 'index'])->middleware('permission:consulter-discipline');
+    // Vague F — liste globale des sanctions filtrée par structure
+    Route::get('sanctions', [SanctionController::class, 'index'])->middleware(['permission:consulter-discipline', 'scope.bureau']);
     Route::post('sanctions', [SanctionController::class, 'store'])->middleware('permission:proposer-discipline');
     Route::get('sanctions/a-instruire', [SanctionController::class, 'aInstruire'])->middleware('permission:gerer-discipline');
     Route::get('sanctions/a-prononcer', [SanctionController::class, 'aPrononcer'])->middleware('permission:prononcer-discipline');

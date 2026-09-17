@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Enums\StatutDossier;
 use App\Interfaces\AgentInterface;
 use App\Models\Agent;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 class AgentRepository extends BaseRepository implements AgentInterface
@@ -45,7 +46,7 @@ class AgentRepository extends BaseRepository implements AgentInterface
             ->get();
     }
 
-    public function getIntegres(array $filters = []): Collection
+    public function getIntegres(array $filters = [], ?User $user = null): Collection
     {
         $query = Agent::query()
             ->whereHas('dossierIntegration', function ($query) {
@@ -58,6 +59,9 @@ class AgentRepository extends BaseRepository implements AgentInterface
             $query->whereNotIn('statut', ['stagiaire', 'archive'])->filter($filters);
         }
 
+        // Vague F — cloisonnement : limiter au périmètre bureau de l'utilisateur
+        $query->maStructure($user);
+
         return $query
             ->with($this->relationsListePersonnel())
             ->orderBy('nom')
@@ -65,11 +69,12 @@ class AgentRepository extends BaseRepository implements AgentInterface
             ->get();
     }
 
-    public function getStagiaires(array $filters = []): Collection
+    public function getStagiaires(array $filters = [], ?User $user = null): Collection
     {
         return Agent::query()
             ->where('statut', 'stagiaire')
             ->filter($filters)
+            ->maStructure($user)           // Vague F
             ->with($this->relationsListePersonnel())
             ->orderBy('nom')
             ->orderBy('prenom')

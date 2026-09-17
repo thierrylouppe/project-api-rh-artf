@@ -11,6 +11,7 @@ use App\Models\Agent;
 use App\Models\Diplome;
 use App\Models\DossierIntegration;
 use App\Models\Echelon;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -185,14 +186,16 @@ class AgentService extends BaseService
         return $this->repository->getByStatut($statut);
     }
 
-    public function listerIntegres(array $filters = [])
+    /** Vague F : $user = null → pas de cloisonnement (admin / DG). */
+    public function listerIntegres(array $filters = [], ?User $user = null)
     {
-        return $this->repository->getIntegres($filters);
+        return $this->repository->getIntegres($filters, $user);
     }
 
-    public function listerStagiaires(array $filters = [])
+    /** Vague F : $user = null → pas de cloisonnement. */
+    public function listerStagiaires(array $filters = [], ?User $user = null)
     {
-        return $this->repository->getStagiaires($filters);
+        return $this->repository->getStagiaires($filters, $user);
     }
 
     public function findByMatricule(string $matricule): ?Agent

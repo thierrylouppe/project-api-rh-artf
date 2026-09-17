@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Enums\StatutAbsence;
+use App\Traits\HasBureauScope;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Absence extends Model
 {
-    use HasFilterScope;
+    use HasBureauScope, HasFilterScope;
 
     protected $fillable = [
         'agent_id',

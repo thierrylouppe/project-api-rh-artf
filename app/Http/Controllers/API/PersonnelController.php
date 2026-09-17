@@ -43,7 +43,9 @@ class PersonnelController extends BaseController
     )]
     public function agents(Request $request): JsonResponse
     {
-        $items = $this->service->listerIntegres($request->query());
+        // Vague F — le middleware ScopeByBureau injecte l'utilisateur si la route le porte.
+        $scopeUser = $request->get('bureau_scope_user');
+        $items = $this->service->listerIntegres($request->query(), $scopeUser);
 
         return $this->collectionResponse(AgentResource::collection($items));
     }
@@ -91,7 +93,8 @@ class PersonnelController extends BaseController
     )]
     public function stagiaires(Request $request): JsonResponse
     {
-        $items = $this->service->listerStagiaires($request->query());
+        $scopeUser = $request->get('bureau_scope_user');
+        $items = $this->service->listerStagiaires($request->query(), $scopeUser);
 
         return $this->collectionResponse(AgentResource::collection($items));
     }

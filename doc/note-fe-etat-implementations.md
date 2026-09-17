@@ -2,13 +2,13 @@
 
 > Document **vivant** : à mettre à jour à chaque livraison API qui impacte le front.  
 > Objectif : un seul point d’entrée pour les échanges FE (quoi appeler, quoi ne plus attendre, où lire le détail).  
-> Dernière mise à jour : **2026-09-17**
+> Dernière mise à jour : **2026-09-17** (Vague F cloisonnement — §2j)
 
 Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste résumé.**
 
 | Sujet | Fichier |
 |-------|---------|
-| Suivi implémentation (vagues A–D + F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.4 livré ; Vague E **A–E livrés** ; **D.5 Paie livré** ; **D.6 Reporting livré** ; **D.3.4 Prestations livré** ; **D.3.5 Santé / AT-MP livré** ([`plan-module-sante.md`](./plan-module-sante.md)) ; prochain Vague F ; cloisonnement **plus tard** |
+| Suivi implémentation (vagues A–F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.2–D.6 + Vague E **livrés** ; **Vague F cloisonnement livré** — `bureau_id` / `scope.bureau` / rôles DRHL fins. Contrat §2j. |
 | Conformité CCN intégration / carrière / grille | [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A–E livrés** ; D.5 : [`plan-module-paie.md`](./plan-module-paie.md) |
 | Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
 | Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
@@ -48,6 +48,7 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Évaluations | `/avancements/…` | **Livré** | P1–P5 + lots A–C (art. 62, tableau D5, PDF). Contrat : §7b. Reclassement de **classe** : §4 (`/carriere/reclassements`), pas ici. |
 | Discipline | `/discipline` | **Livré** | Vague D.2 + CCN art. 89–91 — contrat §2e. Menus : `consulter-discipline` (RH/DG), `proposer-discipline` (N+1), `prononcer-discipline` (DG). |
 | Affaires sociales | `/affaires-sociales` | **Livré (P1 + D.3.4 + D.3.5)** | Vague D.3.1–D.3.5. Contrats §2f / §2f-bis / §2f-ter. Rôle `rh` global. Dossier retraite CNSS hors V1. |
+| **Cloisonnement bureau** | `POST/DELETE /users/{id}/bureau` | **Vague F livré** | Rattacher un utilisateur à son bureau DRHL. Scope « ma structure » sur les listes agents/congés/absences/sanctions. Rôles fins `rh-personnel / rh-solde / rh-formation / rh-affaires-sociales / rh-etude`. Contrat **§2j**. |
 | Formation | `/formations` | **Livré** | Vague D.4. Contrat §2g. Stages d’accueil restent `/integration/stages`. Conversion : `POST /integration/stages/{id}/convertir-agent`. |
 | Paie (lots / éléments) | `/paie` | **Livré (D.5)** | Éléments, affectations, lots, bulletin enrichi, export CSV/PDF. Plan : [`plan-module-paie.md`](./plan-module-paie.md). Contrat §2h. |
 | Reporting / dashboard | `/reporting` | **Livré (D.6)** | Dashboard, stats, alertes, export CSV/PDF. Plan : [`plan-module-reporting.md`](./plan-module-reporting.md). Contrat §2i. |
@@ -978,6 +979,127 @@ Menus : afficher le reporting si `consulter-reporting` (RH **et DG**). Pas les a
 
 ---
 
+## 2j. Cloisonnement bureau DRHL — contrat FE (Vague F)
+
+> **Branche livrée :** `feature/vague-f-cloisonnement` — 2026-09-17  
+> **Périmètre :** rattachement d'un utilisateur à son bureau DRHL + filtrage automatique des listes selon sa structure.  
+> **Pas de breaking change** sur les routes existantes. Les listes retournent simplement moins de résultats pour les utilisateurs cloisonnés.
+
+---
+
+### Ce qui change côté API
+
+#### 1. Champ `bureau_id` et objet `bureau` sur l'utilisateur
+
+`GET /api/users/{id}` retourne maintenant :
+
+```json
+{
+  "data": {
+    "id": 12,
+    "name": "Marie Nkounkou",
+    "email": "m.nkounkou@artf.cg",
+    "bureau_id": 5,
+    "bureau": {
+      "id": 5,
+      "nom": "BUREAU PERSONNEL",
+      "sigle": "B.P"
+    },
+    "roles": [...]
+  }
+}
+```
+
+`bureau_id = null` → utilisateur **non cloisonné** (admin, directeur-général) : voit tout.  
+`bureau_id ≠ null` → utilisateur **cloisonné** : les listes sont filtrées par sa structure.
+
+---
+
+#### 2. Rattacher / détacher un bureau (admin uniquement)
+
+| Méthode | URL | Body | Résultat |
+|---------|-----|------|----------|
+| `POST` | `/api/users/{id}/bureau` | `{ "bureau_id": 5 }` | Rattache le bureau ; retourne `UserResource` |
+| `POST` | `/api/users/{id}/bureau` | `{ "bureau_id": null }` | Retire le bureau (accès global) |
+| `DELETE` | `/api/users/{id}/bureau` | — | Retire le bureau (accès global) |
+
+Permission requise : **`modifier-utilisateurs`**.  
+`bureau_id` inexistant → `422`.
+
+**Où afficher** : dans la fiche utilisateur (admin), ajouter un select **Bureau de rattachement** alimenté par `GET /api/bureaux` (filtrable par service : `GET /api/services/{id}/bureaux`).
+
+> **Nouveauté seeder** : le bureau **Affaires Sociales (`B.A.S.`)** est maintenant créé. L'inclure dans le select.
+
+---
+
+#### 3. Listes filtrées automatiquement (`scope.bureau`)
+
+Les routes suivantes filtrent automatiquement selon le bureau de l'utilisateur authentifié :
+
+| Route | Filtrage actif |
+|-------|---------------|
+| `GET /api/personnel/agents` | Agents dont l'affectation active est dans la structure de l'utilisateur |
+| `GET /api/personnel/stagiaires` | Idem |
+| `GET /api/conges/demandes` | Demandes de congé des agents dans la structure |
+| `GET /api/absences` | Absences des agents dans la structure |
+| `GET /api/discipline/sanctions` | Sanctions des agents dans la structure |
+
+**Comportement** :
+- Utilisateur **sans bureau** (`bureau_id = null`) → **aucun filtre**, voit tout (comportement actuel inchangé).
+- Utilisateur **avec bureau** → voit uniquement les agents/demandes dont l'affectation active est dans **son service** (niveau par défaut).
+
+> Le FE **n'a rien à changer** pour ces routes : la pagination, les filtres query string et les structures de réponse sont identiques. La liste est simplement plus courte pour les utilisateurs cloisonnés.
+
+---
+
+#### 4. Nouveaux rôles DRHL fins
+
+5 rôles prêts à assigner dans la gestion des utilisateurs :
+
+| Rôle | Permission discriminante | Menus à afficher |
+|------|--------------------------|-----------------|
+| `rh-personnel` | `acces-bureau-personnel` | Agents, carrière, contrats, nominations, congés, discipline |
+| `rh-solde` | `acces-bureau-solde` | Salaires, paie, éléments |
+| `rh-formation` | `acces-bureau-formation` | Formations, catalogue, inscriptions |
+| `rh-affaires-sociales` | `acces-bureau-affaires-sociales` | Affaires sociales, prestations |
+| `rh-etude` | `acces-bureau-etude` | Reporting, conformité |
+
+**Règle menus** : tester `acces-bureau-X` pour afficher ou masquer les sections de menu du bureau.  
+Un utilisateur peut avoir **plusieurs rôles** (ex. `rh-personnel` + `rh-solde`).
+
+---
+
+### Écrans recommandés
+
+#### A — Fiche utilisateur (admin)
+
+```
+Onglet "Rattachement bureau"
+  Select "Bureau"  ← GET /bureaux (ou filtré GET /services/{id}/bureaux)
+  [Enregistrer]    ← POST /users/{id}/bureau { bureau_id }
+  [Retirer]        ← DELETE /users/{id}/bureau
+```
+
+Afficher **`bureau.nom` + `bureau.sigle`** en lecture seule sur la fiche si `bureau` est présent.
+
+#### B — Badge de cloisonnement dans l'UI
+
+Afficher un badge **« Vue : Bureau Personnel »** (ou le nom du bureau) dans la barre de navigation quand `bureau_id ≠ null`. L'utilisateur comprend ainsi pourquoi il ne voit qu'une partie des agents.
+
+#### C — Liste des agents / congés / etc.
+
+Aucun changement côté requête. Si la liste est vide alors qu'elle ne devrait pas l'être, vérifier que l'utilisateur a bien un bureau ou un accès global.
+
+---
+
+### Ce qu'il ne faut PAS faire
+
+- **Ne pas** ajouter de filtre `?bureau_id=` côté FE pour cloisonner : le filtrage est automatique côté API.
+- **Ne pas** modifier la logique des routes congés/absences/discipline : les réponses ont le même schéma.
+- **Ne pas** utiliser le rôle `rh` pour les nouveaux agents DRHL cloisonnés : préférer les rôles fins (`rh-personnel`, etc.) combinés au `bureau_id`.
+
+---
+
 ## 3. Intégration — à retenir pour le wizard
 
 Deux chemins API ; le FE actuel utilise **B**.
@@ -1189,8 +1311,10 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | Reporting | `consulter-reporting` — RH + **DG**. Contrat §2i |
 | Users | `consulter-utilisateurs`, `creer-utilisateurs`, `modifier-utilisateurs` |
 | Rôles | `consulter-roles`, `creer-roles`, `modifier-roles` |
+| **Vague F — accès bureau** | `acces-bureau-personnel` / `acces-bureau-solde` / `acces-bureau-formation` / `acces-bureau-affaires-sociales` / `acces-bureau-etude` — vérifier **avant** d'afficher les menus bureau |
+| **Vague F — rattacher bureau** | `modifier-utilisateurs` — seul l'admin peut appeler `POST /users/{id}/bureau` |
 
-Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / contrats / recrutement / reporting, **sauf le DG** qui a `consulter-reporting` et la file de reclassements (lecture + approuver 74/75). Périmètre « ma structure seulement » : **pas encore** filtré côté API.
+Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / contrats / recrutement / reporting, **sauf le DG** qui a `consulter-reporting` et la file de reclassements (lecture + approuver 74/75). Périmètre « ma structure » : **filtré côté API** via `scope.bureau` (Vague F, §2j).
 
 ---
 
@@ -1205,7 +1329,7 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 - Conformité CCN 3–5 lots C–E (positions, hors grille DG) → [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A** et **B** livrés
 - ~~Dashboard reporting~~ → **livré** §2i
 - GED **versioning / recherche** (la GED agent légère est livrée, §2d)
-- Cloisonnement menus par bureau DRHL → Vague F, **après** D.2–D.6
+- ~~Cloisonnement menus par bureau DRHL~~ → **Vague F livré** §2j — `bureau_id` sur `users`, scope `maStructure`, rôles fins DRHL
 - Mail / SMS (canal `database` uniquement pour l’instant)
 
 ---
@@ -1787,6 +1911,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-09-17 | **Vague F — Cloisonnement bureau DRHL** : `bureau_id` sur `users`, `POST/DELETE /users/{id}/bureau`, scope `maStructure` (niveaux bureau/service/direction), 5 rôles DRHL fins, middleware `scope.bureau` sur agents/congés/absences/sanctions | Contrat **§2j**. Pas de changement sur les écrans existants. Brancher le rattachement bureau dans la gestion des utilisateurs (`modifier-utilisateurs`). Ajouter `Bureau des Affaires Sociales (B.A.S.)` au select bureau. |
 | 2026-09-17 | **Santé / AT-MP D.3.5** : structures, visites, prises en charge, arrêts (art. 122–135), pose paie, PDF | Même permission **`decider-prestations`**. Contrat §2f-ter. Alerte visites annuelles. Codes `remboursement_sante`, `allocation_maladie`, `allocation_accident_non_pro`. |
 | 2026-09-17 | **Prestations D.3.4** : `/api/affaires-sociales/prestations` (circuit DG, barèmes art. 119–121, pose paie, PDF) | Permission **`decider-prestations`** (DG). Reconnecter. Contrat §2f-bis. Codes paie retraite/décès **actifs**. |
 | 2026-09-17 | **Reporting D.6** : `/api/reporting` (dashboard, effectifs, répartitions, stats, alertes, exports CSV/PDF) | Permission `consulter-reporting` (RH + **DG**). Contrat §2i. Stats session `/avancements/sessions/{id}/stats` **inchangées**. |

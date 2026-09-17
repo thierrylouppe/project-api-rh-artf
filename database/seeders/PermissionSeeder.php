@@ -39,6 +39,18 @@ class PermissionSeeder extends Seeder
             'consulter-evaluations', 'creer-evaluations', 'valider-evaluations',
             // Reporting
             'consulter-reporting',
+
+            // Vague F — permissions fines par bureau DRHL
+            // B.P  — Bureau Personnel
+            'acces-bureau-personnel',
+            // B.S. — Bureau Solde
+            'acces-bureau-solde',
+            // B.F  — Bureau Formation
+            'acces-bureau-formation',
+            // B.A.S. — Bureau des Affaires Sociales
+            'acces-bureau-affaires-sociales',
+            // B.PL — Bureau Étude et Planification
+            'acces-bureau-etude',
         ];
 
         foreach ($permissions as $name) {

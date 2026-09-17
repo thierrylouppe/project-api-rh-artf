@@ -243,11 +243,11 @@ Branche `feature/vague-f-cloisonnement` — démarrée 2026-09-17.
 | F.5 | Trait `HasBureauScope` (scope `maStructure` 3 niveaux) branché sur `Agent` | ✅ |
 | F.6 | Middleware `ScopeByBureau` (`scope.bureau`) enregistré | ✅ |
 | F.7 | Routes `POST/DELETE /users/{user}/bureau` | ✅ |
-| F.8 | Brancher `scope.bureau` sur les listes (agents, congés…) quand FE prêt | ⬜ |
-| F.9 | Permissions fines par bureau (option `rh-personnel`, `rh-solde`…) | ⬜ |
-| F.10 | Tests Feature smoke Vague F | ⬜ |
+| F.8 | `scope.bureau` branché sur : agents intégrés, stagiaires, congés demandes, absences, sanctions | ✅ |
+| F.9 | Permissions fines par bureau : `acces-bureau-*` + rôles `rh-personnel / rh-solde / rh-formation / rh-affaires-sociales / rh-etude` | ✅ |
+| F.10 | Tests Feature smoke Vague F — 9/9 passent, suite globale 271/271 ✅ | ✅ |
 
-**Règle** : `scope.bureau` n'est activé sur une route que lorsque le FE est branché sur cette route. Aucun scope actif sur les routes existantes pour l'instant.
+**Vague F entièrement livrée côté API.** Brancher `scope.bureau` sur les autres routes au fur et à mesure que le FE les consomme.
 ---
 
 ## Compléments reportés (hors D.2–D.6)

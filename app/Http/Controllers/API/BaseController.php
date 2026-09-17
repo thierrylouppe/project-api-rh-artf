@@ -24,7 +24,16 @@ abstract class BaseController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $items = $this->service->getAll($request->query());
+        $filters = $request->query();
+
+        // Vague F — si le middleware ScopeByBureau a injecté un utilisateur, le propager
+        // au repository via les clés internes _scope_user / _scope_niveau.
+        if ($scopeUser = $request->get('bureau_scope_user')) {
+            $filters['_scope_user']  = $scopeUser;
+            $filters['_scope_niveau'] = $request->get('bureau_scope_niveau', 'service');
+        }
+
+        $items = $this->service->getAll($filters);
 
         return $this->collectionResponse($this->listResource()::collection($items));
     }

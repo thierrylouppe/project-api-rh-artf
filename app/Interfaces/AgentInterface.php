@@ -3,6 +3,7 @@
 namespace App\Interfaces;
 
 use App\Models\Agent;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 interface AgentInterface extends BaseInterface
@@ -14,11 +15,17 @@ interface AgentInterface extends BaseInterface
     /** @param  list<string>  $statuts */
     public function getByStatuts(array $statuts): Collection;
 
-    /** Agents dont le dossier est INTEGRE, hors stagiaires. */
-    public function getIntegres(array $filters = []): Collection;
+    /**
+     * Agents dont le dossier est INTEGRE, hors stagiaires.
+     * Vague F : si $user est cloisonné, filtre par sa structure (niveau service par défaut).
+     */
+    public function getIntegres(array $filters = [], ?User $user = null): Collection;
 
-    /** Agents au statut stagiaire. */
-    public function getStagiaires(array $filters = []): Collection;
+    /**
+     * Agents au statut stagiaire.
+     * Vague F : si $user est cloisonné, filtre par sa structure.
+     */
+    public function getStagiaires(array $filters = [], ?User $user = null): Collection;
 
     public function assignerMatricule(int $agentId, string $matricule): Agent;
 
