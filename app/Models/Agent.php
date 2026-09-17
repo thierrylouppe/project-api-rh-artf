@@ -214,6 +214,11 @@ class Agent extends Model
         return $this->hasMany(AyantDroit::class);
     }
 
+    public function prestations(): HasMany
+    {
+        return $this->hasMany(Prestation::class);
+    }
+
     public function archivedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'archived_by');

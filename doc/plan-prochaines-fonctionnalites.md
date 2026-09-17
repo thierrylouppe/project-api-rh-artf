@@ -1,18 +1,19 @@
 # Prochaines fonctionnalités — suivi d’implémentation
 
 > Document **vivant** : cocher au fur et à mesure.  
-> Dernière mise à jour : **2026-09-17** (D.6 Reporting livré)  
+> Dernière mise à jour : **2026-09-17** (D.3.4 Prestations livré)  
 > Architecture obligatoire : [`architecture.md`](./architecture.md)  
 > Plan long : [`plan_complet.md`](./plan_complet.md)  
 > Contrat FE actuel : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md)  
 > Cible métier : [`organigramme-drhl.md`](./organigramme-drhl.md)  
 > Droit ARTF (barèmes, délais, éligibilité) : [`convention-collective-artf.md`](./convention-collective-artf.md)  
-> Reporting D.6 : [`plan-module-reporting.md`](./plan-module-reporting.md)
+> Reporting D.6 : [`plan-module-reporting.md`](./plan-module-reporting.md)  
+> Prestations D.3.4 : [`plan-module-prestations.md`](./plan-module-prestations.md)
 
 **Objectif :** livrer les modules métier manquants (vie de l’agent + DRHL), **sans cloisonner** par service / bureau. Le cloisonnement vient **après**.
 
-**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 Affaires sociales, D.4 Formation, D.5 Paie, D.6 Reporting livrés.** Vague E lots **A–E** livrés.  
-Prochain : **D.3.4 Prestations** — cloisonnement **plus tard**.
+**État :** le cœur API (entrée → carrière → paie → congés → notation → avancement → reclassement) est **livré**. **D.2 Discipline, D.3 P1 + D.3.4 Prestations, D.4 Formation, D.5 Paie, D.6 Reporting livrés.** Vague E lots **A–E** livrés.  
+Prochain : **D.3.5 Santé / AT-MP** ou **Vague F** cloisonnement — cloisonnement **plus tard**.
 
 ---
 
@@ -149,7 +150,7 @@ Préfixe : `/api/discipline`. Permissions : `consulter-discipline` / `gerer-disc
 
 ### D.3 — Affaires sociales ✅ P1
 
-Préfixe : `/api/affaires-sociales`. Permissions : `consulter-affaires-sociales` / `gerer-affaires-sociales`.  
+Préfixe : `/api/affaires-sociales`. Permissions : `consulter-affaires-sociales` / `gerer-affaires-sociales` / **`decider-prestations`** (DG).  
 Réutilise `situation-familiale` (`nb_enfants` recalculé dès qu’il existe des enfants nominatifs) et le n° CNSS de l’agent (versé dans l’affiliation CNSS).
 
 | # | Tâche | Contenu | Statut |
@@ -157,10 +158,10 @@ Réutilise `situation-familiale` (`nb_enfants` recalculé dès qu’il existe de
 | D.3.1 | Organismes | CRUD CNSS / mutuelle / complémentaire | ✅ |
 | D.3.2 | Affiliations | N° , dates, statut ; alerte agent sans affiliation | ✅ |
 | D.3.3 | Ayants droit | Conjoint / enfants nominatifs + pièces (remplace le seul `nb_enfants`) | ✅ |
-| D.3.4 | Prestations | Demandes (décès, aides, allocations) → instruire → décider | ⬜ après D.5 |
+| D.3.4 | Prestations | Demandes (décès, retraite) → instruire → décider DG → pose paie | ✅ |
 | D.3.5 | Santé / AT-MP / dossier retraite | Visites, accidents, pension | ⬜ plus tard |
 
-D.3.1–D.3.3 = **P1 livré**. D.3.4 calcule des montants : dépend des **éléments de paie** (D.5) pour atterrir sur le bulletin.
+D.3.1–D.3.3 = **P1 livré**. D.3.4 **livré** ([`plan-module-prestations.md`](./plan-module-prestations.md)).
 
 ---
 
@@ -282,7 +283,7 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 4. ~~**Vague E** conformité CCN~~ **livré**.  
 5. ~~**D.5** Paie~~ **livré**.  
 6. ~~**D.6** Reporting~~ **livré**.  
-7. **D.3.4** Prestations / allocations, puis **Vague F** cloisonnement — seulement une fois le FE branché.
+7. ~~**D.3.4** Prestations~~ **livré**. **D.3.5** Santé / AT-MP, puis **Vague F** cloisonnement — seulement une fois le FE branché.
 
 ---
 
@@ -314,3 +315,4 @@ A Notifications  →  B Dossier agent  →  C Congés  →  D.1 Évaluations
 | 2026-09-16 | E.A | Lot A livré : essai art. 49, délai 30 j art. 52, `necessite_contrat` recrutement externe, jobs d’alerte. |
 | 2026-09-16 | E.B | Lot B livré : pièces art. 46 (ACE, mariage, déjà salarié), CNSS art. 47 à `integrer`. |
 | 2026-09-17 | D.6 | Reporting `/api/reporting` : dashboard, stats congés/évaluations, alertes, exports PDF/CSV. DG : `consulter-reporting`. |
+| 2026-09-17 | D.3.4 | Prestations `/api/affaires-sociales/prestations` : circuit DG, barèmes CCN art. 119–121, pose paie, PDF. Permission `decider-prestations`. |

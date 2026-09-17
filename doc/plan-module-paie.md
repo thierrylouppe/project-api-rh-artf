@@ -59,7 +59,7 @@ Chaîne : Route → FormRequest → Controller → **Service** → **Interface**
 5. **Génération automatique** seulement pour les codes `formule_ccn` / `bareme_ccn` éligibles. Tout montant « comité de direction » exige une **affectation** (sauf mention contraire ci-dessous pour art. 58 en mois calendaire).
 6. **Missions art. 57** : barèmes CCN en **constantes métier** dans `PaieCalculService` (pas en seeder). Saisie = affectation ponctuelle (nb de jours × taux). Durée locale > 15 j → 422 sauf flag `prolongation_dg`.
 7. **Retenues légales (CNSS, IRPP, etc.) :** pas de barème inventé. Codes `retenue_*` paramétrables, montant / taux saisi par le RH. D.5 n’est pas un moteur fiscal.
-8. **Art. 119 (indemnité retraite) et art. 121 (capital décès) :** hors V1 (carrière / D.3.4). Prévoir le **code** d’élément inactif dans le seeder, pas le calcul.
+8. **Art. 119 (indemnité retraite) et art. 121 (capital décès) :** hors V1 paie — **livrés en D.3.4** (codes actifs, montant figé à l’accord).
 9. **D.5.5 export** masse salariale : après D.5.4 ; peut glisser en D.6 si le calendrier serre.
 
 ---
@@ -205,8 +205,11 @@ Seeder **système**. `montant_defaut = null` pour tout montant comité de direct
 | `supplement_familial` | allocation | mensuel | montant_fixe | **Oui** si `montant_defaut` et ≥ 1 enfant à charge | Idem |
 | `retenue_cnss` | retenue | mensuel | pourcentage_base | **Oui** si `taux_defaut` % base (affectation gagne si présente) | Paramétrable — **ne pas inventer** le taux |
 | `retenue_autre` | retenue | ponctuel | montant_fixe | Non | Acompte, prêt… |
-| `indemnite_retraite` | indemnite | ponctuel | formule_ccn | **Inactif** V1 | Art. 119 |
-| `capital_deces` | indemnite | ponctuel | formule_ccn | **Inactif** V1 | Art. 121 → D.3.4 |
+| `indemnite_retraite` | indemnite | ponctuel | montant_fixe | Non | Art. 119 — posé à l’accord D.3.4 |
+| `capital_deces` | indemnite | ponctuel | montant_fixe | Non | Art. 121 — posé à l’accord D.3.4 |
+| `prime_enfants_deces` | prime | ponctuel | montant_fixe | Non | Art. 121 — 100 000 F × enfants à charge |
+| `frais_funeraires` | indemnite | ponctuel | montant_fixe | Non | Art. 121 — plafond 2 000 000 F |
+| `allocation_deces_retraite` | allocation | ponctuel | montant_fixe | Non | Art. 120 — 500 000 F |
 
 Fonctions seedées aujourd’hui : `DG`, `DC`, `DD`, `CSR`, `CS`, `CB`, `AGT`, `STG`. D’où l’affectation **manuelle** pour risque / caisse / logement.
 
@@ -521,9 +524,9 @@ Checklist d’un domaine à chaque session : voir [`architecture.md`](./architec
 
 ## 13. Hors scope (ne pas glisser)
 
-- Prestations / circuit demandes (D.3.4)
+- ~~Prestations / circuit demandes~~ → **livré D.3.4**
 - Indemnité licenciement art. 111–114
-- Indemnité retraite art. 119 (code inactif seulement)
+- ~~Indemnité retraite art. 119~~ → **livré D.3.4**
 - Capital décès art. 121
 - Heures supplémentaires (élément absent ; astreinte non cumulable **quand** HS existera)
 - Prorata mise à pied automatique (V1 = anomalie info)

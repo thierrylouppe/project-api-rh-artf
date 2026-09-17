@@ -63,6 +63,45 @@ class PaieAffectationService extends BaseService
         ]);
     }
 
+    /**
+     * Pose une affectation ponctuelle issue d'une prestation D.3.4.
+     * Contourne le blocage archive / retraite / inactif (le versement va aux ayants droit).
+     *
+     * @param  array<string, mixed>  $meta
+     */
+    public function creerDepuisPrestation(
+        Agent $agent,
+        CodePaieElement $code,
+        int $montant,
+        string $dateDebut,
+        string $dateFin,
+        string $motif,
+        array $meta = [],
+    ): PaieElementAffectation {
+        $element = $this->elementRepository->findByCode($code->value);
+        abort_unless($element instanceof PaieElement, 422, 'Élément de paie introuvable pour cette prestation.');
+        abort_unless($code->estPrestationSociale(), 422, 'Cet élément n\'est pas une prestation sociale.');
+        abort_unless($element->actif, 422, 'Impossible d\'affecter un élément de paie inactif.');
+        abort_if($montant <= 0, 422, 'Le montant de la prestation à poser en paie doit être positif.');
+
+        $data = [
+            'agent_id' => (int) $agent->id,
+            'paie_element_id' => (int) $element->id,
+            'montant' => $montant,
+            'date_debut' => $dateDebut,
+            'date_fin' => $dateFin,
+            'motif' => $motif,
+            'created_by' => Auth::id(),
+            'prolongation_dg' => false,
+            'meta' => $meta === [] ? null : $meta,
+        ];
+
+        $this->assertMontant($element, $data, $code);
+        $this->assertChevauchement($agent, $element, $data, null);
+
+        return $this->afterCreate($this->repository->create($data));
+    }
+
     public function delete(int $id): bool
     {
         $affectation = $this->repository->findById($id);

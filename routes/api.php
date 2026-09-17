@@ -61,6 +61,7 @@ use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\PersonnelController;
 use App\Http\Controllers\API\PlanFormationController;
 use App\Http\Controllers\API\PositionConventionnelleController;
+use App\Http\Controllers\API\PrestationController;
 use App\Http\Controllers\API\PriseDeServiceController;
 use App\Http\Controllers\API\QuestionEvaluationController;
 use App\Http\Controllers\API\ReclamationController;
@@ -557,6 +558,24 @@ Route::middleware('auth:sanctum')->prefix('affaires-sociales')->group(function (
     Route::get('ayants-droit/{id}', [AyantDroitController::class, 'show'])->middleware('permission:consulter-affaires-sociales');
     Route::put('ayants-droit/{id}', [AyantDroitController::class, 'update'])->middleware('permission:gerer-affaires-sociales');
     Route::delete('ayants-droit/{id}', [AyantDroitController::class, 'destroy'])->middleware('permission:gerer-affaires-sociales');
+
+    Route::get('prestations', [PrestationController::class, 'index'])->middleware('permission:consulter-affaires-sociales|decider-prestations');
+    Route::post('prestations', [PrestationController::class, 'store'])->middleware('permission:gerer-affaires-sociales');
+    Route::get('agents/{agent}/prestations', [PrestationController::class, 'byAgent'])->middleware('permission:consulter-affaires-sociales|decider-prestations');
+    Route::get('prestations/{id}/simulation', [PrestationController::class, 'simulation'])->middleware('permission:consulter-affaires-sociales|decider-prestations');
+    Route::get('prestations/{id}/pdf-decision', [PrestationController::class, 'decisionPdf'])->middleware('permission:consulter-affaires-sociales|decider-prestations');
+    Route::get('prestations/{id}/pieces', [PrestationController::class, 'pieces'])->middleware('permission:consulter-affaires-sociales|decider-prestations');
+    Route::post('prestations/{id}/pieces', [PrestationController::class, 'storePiece'])->middleware('permission:gerer-affaires-sociales');
+    Route::get('prestations/{id}/pieces/{pieceId}', [PrestationController::class, 'downloadPiece'])->middleware('permission:consulter-affaires-sociales|decider-prestations');
+    Route::delete('prestations/{id}/pieces/{pieceId}', [PrestationController::class, 'destroyPiece'])->middleware('permission:gerer-affaires-sociales');
+    Route::post('prestations/{id}/soumettre', [PrestationController::class, 'soumettre'])->middleware('permission:gerer-affaires-sociales');
+    Route::post('prestations/{id}/instruire', [PrestationController::class, 'instruire'])->middleware('permission:gerer-affaires-sociales');
+    Route::post('prestations/{id}/accorder', [PrestationController::class, 'accorder'])->middleware('permission:decider-prestations');
+    Route::post('prestations/{id}/refuser', [PrestationController::class, 'refuser'])->middleware('permission:decider-prestations');
+    Route::post('prestations/{id}/classer', [PrestationController::class, 'classer'])->middleware('permission:gerer-affaires-sociales');
+    Route::get('prestations/{id}', [PrestationController::class, 'show'])->middleware('permission:consulter-affaires-sociales|decider-prestations');
+    Route::put('prestations/{id}', [PrestationController::class, 'update'])->middleware('permission:gerer-affaires-sociales');
+    Route::delete('prestations/{id}', [PrestationController::class, 'destroy'])->middleware('permission:gerer-affaires-sociales');
 });
 
 // ============================================================

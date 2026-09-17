@@ -61,6 +61,8 @@ use App\Interfaces\ParametregrileInterface;
 use App\Interfaces\PermissionInterface;
 use App\Interfaces\PlanFormationInterface;
 use App\Interfaces\PositionConventionnelleInterface;
+use App\Interfaces\PrestationInterface;
+use App\Interfaces\PrestationPieceInterface;
 use App\Interfaces\PriseDeServiceInterface;
 use App\Interfaces\QuestionEvaluationInterface;
 use App\Interfaces\ReclamationInterface;
@@ -143,6 +145,8 @@ use App\Repositories\ParametregrileRepository;
 use App\Repositories\PermissionRepository;
 use App\Repositories\PlanFormationRepository;
 use App\Repositories\PositionConventionnelleRepository;
+use App\Repositories\PrestationPieceRepository;
+use App\Repositories\PrestationRepository;
 use App\Repositories\PriseDeServiceRepository;
 use App\Repositories\QuestionEvaluationRepository;
 use App\Repositories\ReclamationRepository;
@@ -226,6 +230,8 @@ class AppServiceProvider extends ServiceProvider
         AffiliationSocialeInterface::class => AffiliationSocialeRepository::class,
         AyantDroitInterface::class => AyantDroitRepository::class,
         AyantDroitPieceInterface::class => AyantDroitPieceRepository::class,
+        PrestationInterface::class => PrestationRepository::class,
+        PrestationPieceInterface::class => PrestationPieceRepository::class,
         // Module Formation
         CatalogueFormationInterface::class => CatalogueFormationRepository::class,
         PlanFormationInterface::class => PlanFormationRepository::class,

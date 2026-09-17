@@ -32,7 +32,7 @@ class PermissionSeeder extends Seeder
             // Discipline
             'consulter-discipline', 'gerer-discipline', 'proposer-discipline', 'prononcer-discipline',
             // Affaires sociales
-            'consulter-affaires-sociales', 'gerer-affaires-sociales',
+            'consulter-affaires-sociales', 'gerer-affaires-sociales', 'decider-prestations',
             // Formations
             'consulter-formations', 'gerer-formations',
             // Évaluations

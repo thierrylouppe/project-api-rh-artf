@@ -52,12 +52,17 @@ class PaieElementTest extends TestCase
         $this->assertSame(['CB', 'CS', 'CSR', 'DD', 'DC', 'DG'], $responsabilite->fonction_sigles);
 
         $retraite = $this->element(CodePaieElement::INDEMNITE_RETRAITE);
-        $this->assertFalse($retraite->actif);
+        $this->assertTrue($retraite->actif);
         $this->assertSame('119', $retraite->article_ccn);
+        $this->assertSame(ModeCalculPaieElement::MONTANT_FIXE, $retraite->mode_calcul);
 
         $deces = $this->element(CodePaieElement::CAPITAL_DECES);
-        $this->assertFalse($deces->actif);
+        $this->assertTrue($deces->actif);
         $this->assertSame('121', $deces->article_ccn);
+
+        $this->assertNotNull($this->element(CodePaieElement::PRIME_ENFANTS_DECES));
+        $this->assertNotNull($this->element(CodePaieElement::FRAIS_FUNERAIRES));
+        $this->assertNotNull($this->element(CodePaieElement::ALLOCATION_DECES_RETRAITE));
     }
 
     public function test_filtre_nature_et_actif(): void
@@ -76,8 +81,8 @@ class PaieElementTest extends TestCase
             ->json('data');
 
         $codes = collect($inactifs)->pluck('code')->all();
-        $this->assertContains(CodePaieElement::INDEMNITE_RETRAITE->value, $codes);
-        $this->assertContains(CodePaieElement::CAPITAL_DECES->value, $codes);
+        $this->assertNotContains(CodePaieElement::INDEMNITE_RETRAITE->value, $codes);
+        $this->assertNotContains(CodePaieElement::CAPITAL_DECES->value, $codes);
     }
 
     public function test_crud_element_non_systeme(): void

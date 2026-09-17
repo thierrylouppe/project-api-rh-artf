@@ -33,6 +33,9 @@ enum CodePaieElement: string
     case RETENUE_AUTRE = 'retenue_autre';
     case INDEMNITE_RETRAITE = 'indemnite_retraite';
     case CAPITAL_DECES = 'capital_deces';
+    case PRIME_ENFANTS_DECES = 'prime_enfants_deces';
+    case FRAIS_FUNERAIRES = 'frais_funeraires';
+    case ALLOCATION_DECES_RETRAITE = 'allocation_deces_retraite';
 
     /**
      * @return array{
@@ -76,8 +79,11 @@ enum CodePaieElement: string
             self::SUPPLEMENT_FAMILIAL => $this->row('Supplément familial de traitement', NaturePaieElement::ALLOCATION, PeriodicitePaieElement::MENSUEL, ModeCalculPaieElement::MONTANT_FIXE, '59'),
             self::RETENUE_CNSS => $this->row('Retenue CNSS', NaturePaieElement::RETENUE, PeriodicitePaieElement::MENSUEL, ModeCalculPaieElement::POURCENTAGE_BASE, null),
             self::RETENUE_AUTRE => $this->row('Retenue (acompte, prêt…)', NaturePaieElement::RETENUE, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::MONTANT_FIXE, null),
-            self::INDEMNITE_RETRAITE => $this->row('Indemnité d\'admission à la retraite', NaturePaieElement::INDEMNITE, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::FORMULE_CCN, '119', null, null, false),
-            self::CAPITAL_DECES => $this->row('Capital décès', NaturePaieElement::INDEMNITE, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::FORMULE_CCN, '121', null, null, false),
+            self::INDEMNITE_RETRAITE => $this->row('Indemnité d\'admission à la retraite', NaturePaieElement::INDEMNITE, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::MONTANT_FIXE, '119'),
+            self::CAPITAL_DECES => $this->row('Capital décès', NaturePaieElement::INDEMNITE, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::MONTANT_FIXE, '121'),
+            self::PRIME_ENFANTS_DECES => $this->row('Prime enfants à charge (décès)', NaturePaieElement::PRIME, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::MONTANT_FIXE, '121'),
+            self::FRAIS_FUNERAIRES => $this->row('Frais funéraires', NaturePaieElement::INDEMNITE, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::MONTANT_FIXE, '121'),
+            self::ALLOCATION_DECES_RETRAITE => $this->row('Allocation décès salarié retraité', NaturePaieElement::ALLOCATION, PeriodicitePaieElement::PONCTUEL, ModeCalculPaieElement::MONTANT_FIXE, '120'),
         };
     }
 
@@ -130,6 +136,18 @@ enum CodePaieElement: string
             self::PRIME_FIN_ANNEE,
             self::ALLOCATION_RENTREE_SCOLAIRE,
             self::ALLOCATION_ARBRE_NOEL,
+        ], true);
+    }
+
+    /** Posé par le circuit D.3.4, y compris pour un agent archivé ou retraité. */
+    public function estPrestationSociale(): bool
+    {
+        return in_array($this, [
+            self::INDEMNITE_RETRAITE,
+            self::CAPITAL_DECES,
+            self::PRIME_ENFANTS_DECES,
+            self::FRAIS_FUNERAIRES,
+            self::ALLOCATION_DECES_RETRAITE,
         ], true);
     }
 }

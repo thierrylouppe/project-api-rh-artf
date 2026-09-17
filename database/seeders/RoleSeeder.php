@@ -39,7 +39,7 @@ class RoleSeeder extends Seeder
                 'consulter-conges', 'valider-conges',
                 'consulter-absences', 'valider-absences',
                 'consulter-discipline', 'prononcer-discipline',
-                'consulter-affaires-sociales',
+                'consulter-affaires-sociales', 'decider-prestations',
                 'consulter-formations',
                 'consulter-evaluations', 'valider-evaluations',
                 'consulter-reporting',

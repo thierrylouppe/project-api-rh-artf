@@ -13,7 +13,7 @@ Les rôles sont **globaux** (pas liés à une direction / un service / un bureau
 |---|---|---|
 | Système | `admin` | Accès complet (toutes les permissions) |
 | Métier RH (DRHL) | `rh` | **Seul** rôle métier RH : utilisateurs, référentiels (écriture), recrutement, contrats, salaires, reporting |
-| Hiérarchie | `directeur-general`, `directeur`, `chef-service`, `chef-bureau` | Structure + agents en lecture + validations d’équipe. **Pas** de menus RH, **sauf le DG** (`consulter-reporting`, file reclassements) |
+| Hiérarchie | `directeur-general`, `directeur`, `chef-service`, `chef-bureau` | Structure + agents en lecture + validations d’équipe. **Pas** de menus RH, **sauf le DG** (`consulter-reporting`, `decider-prestations`, file reclassements) |
 | Self-service | `agent` | Ses demandes de congés / absences |
 
 `directeur`, `chef-service`, `chef-bureau` s’appliquent à **toutes** les directions / services / bureaux, pas seulement la DRHL.  
@@ -80,7 +80,7 @@ Mot de passe : respecter la casse.
 `consulter-nominations`, `gerer-nominations` (menus ; pas encore de `permission:` sur les routes)  
 `consulter-salaires`, `gerer-salaires`  
 `consulter-discipline`, `gerer-discipline`, `proposer-discipline`  
-`consulter-affaires-sociales`, `gerer-affaires-sociales`  
+`consulter-affaires-sociales`, `gerer-affaires-sociales`, `decider-prestations`  
 `consulter-formations`, `gerer-formations`  
 `consulter-reporting`
 
@@ -96,6 +96,7 @@ Mot de passe : respecter la casse.
 `consulter-affaires-sociales` (**DG seulement** parmi la hiérarchie — lecture globale)  
 `consulter-formations` (**DG seulement** parmi la hiérarchie — lecture globale)  
 `prononcer-discipline` (**DG seulement** — art. 91)  
+`decider-prestations` (**DG seulement** — art. 119–121)  
 `proposer-discipline` (`directeur`, `chef-service`, `chef-bureau` — rapport N+1)
 
 ### Agent
