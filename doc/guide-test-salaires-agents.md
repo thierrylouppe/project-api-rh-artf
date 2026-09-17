@@ -25,7 +25,7 @@ POST /login
 ```
 ```json
 {
-  "email": "admin@arft.cg",
+  "email": "admin@artf.cg",
   "password": "Admin@2026"
 }
 ```

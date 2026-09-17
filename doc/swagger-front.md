@@ -8,8 +8,8 @@ Spec JSON : **`/docs?api-docs.json`** (ou fichier généré `storage/api-docs/ap
 1. Ouvrir `http://localhost:8000/api/documentation` (ou l’URL staging).
 2. Déplier **Auth → POST /api/login**.
 3. Try it out avec :
-   - `admin@arft.cg` / `Admin@2026`
-   - ou `rh@arft.cg` / `Rh@2026`
+   - `admin@artf.cg` / `Admin@2026`
+   - ou `rh@artf.cg` / `Rh@2026`
 4. Copier `data.token` (l’utilisateur et ses rôles/permissions sont dans `data.user`).
 5. Cliquer **Authorize** → coller le token (format `Bearer xxx` ou token seul selon l’UI).
 6. Appeler les endpoints protégés (**Intégration — Dossiers**, etc.).

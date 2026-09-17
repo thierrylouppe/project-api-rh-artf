@@ -69,6 +69,17 @@ class DatabaseSeeder extends Seeder
             // depends: Direction, Service, Bureau, Grade, Categorie, Echelon,
             //          Fonction, TypeIntegration, TypeContrat
             AgentIntegrationSeeder::class,
+
+            // ── 9. Salaires agents ───────────────────────────────────────
+            // Initialise le salaire grille pour chaque agent CDI/CDD.
+            // Les Directeurs (DG, DC, DD) sont ignorés (hors grille, art. 55).
+            // Génère la grille salariale si elle n'existe pas encore.
+            SalaireAgentSeeder::class,
+
+            // ── 10. Absences, Permissions d'absence & Congés ────────────
+            // Par direction : permission validée, absence maladie, congé annuel
+            // workflow complet N1 → RH → DG + demandes en attente.
+            AbsenceCongeSeeder::class,
         ]);
     }
 }

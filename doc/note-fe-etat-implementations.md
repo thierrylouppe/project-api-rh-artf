@@ -117,7 +117,7 @@ Préfixes : **`/api/conges`**, **`/api/absences`**. Auth Bearer obligatoire. Lis
 | `valider-conges` | Accès **routes** de workflow. **Insuffisant** pour signer : l’API vérifie N+1 / rôle `rh` / rôle `directeur-general` (sinon **403**) |
 | `consulter-absences` / `creer-absences` / `valider-absences` | Absences. `valider-absences` : chefs + RH + DG. **Signer** = N+1 (ou `admin`), sinon **403** |
 
-Rôles : [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md). Comptes démo : `agent@arft.cg`, `rh@arft.cg`, `dg@arft.cg`, `chef-service@arft.cg`.
+Rôles : [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md). Comptes démo : `agent@artf.cg`, `rh@artf.cg`, `dg@artf.cg`, `chef-service@artf.cg`.
 
 ### Types de congé (pilote le formulaire et le workflow)
 

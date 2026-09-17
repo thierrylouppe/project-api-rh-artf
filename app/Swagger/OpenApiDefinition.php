@@ -18,8 +18,8 @@ API REST de gestion RH (intégration administrative des agents).
 4. Saisir : `Bearer {token}` (ou uniquement le token selon le client)
 
 Comptes de test (seeders) :
-- `admin@arft.cg` / `Admin@2026`
-- `rh@arft.cg` / `Rh@2026`
+- `admin@artf.cg` / `Admin@2026`
+- `rh@artf.cg` / `Rh@2026`
 
 ## Convention de réponse
 

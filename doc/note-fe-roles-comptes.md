@@ -40,13 +40,13 @@ Mot de passe : respecter la casse.
 
 | Email | Mot de passe | Rôle |
 |---|---|---|
-| `admin@arft.cg` | `Admin@2026` | `admin` |
-| `rh@arft.cg` | `Rh@2026` | `rh` |
-| `dg@arft.cg` | `Dg@2026` | `directeur-general` |
-| `directeur@arft.cg` | `Directeur@2026` | `directeur` |
-| `chef-service@arft.cg` | `ChefService@2026` | `chef-service` |
-| `chef-bureau@arft.cg` | `ChefBureau@2026` | `chef-bureau` |
-| `agent@arft.cg` | `Agent@2026` | `agent` |
+| `admin@artf.cg` | `Admin@2026` | `admin` |
+| `rh@artf.cg` | `Rh@2026` | `rh` |
+| `dg@artf.cg` | `Dg@2026` | `directeur-general` |
+| `directeur@artf.cg` | `Directeur@2026` | `directeur` |
+| `chef-service@artf.cg` | `ChefService@2026` | `chef-service` |
+| `chef-bureau@artf.cg` | `ChefBureau@2026` | `chef-bureau` |
+| `agent@artf.cg` | `Agent@2026` | `agent` |
 
 ## 4. Menus recommandés
 

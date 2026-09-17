@@ -66,7 +66,7 @@ A (smoke) → B (grille) → D (contractuel+salaires) → C (permanent) → E (s
 | P0 | Base propre : `php artisan migrate:fresh --seed` | Seeders sans erreur | ☐ |
 | P1 | Si env déjà seedé : `php artisan db:seed --class=PermissionSeeder` puis `RoleSeeder` | Permissions `consulter-salaires` / `gerer-salaires` sur admin & rh | ☐ |
 | P2 | Serveur API démarré | `GET /health` → `{ "status": "ok" }` | ☐ |
-| P3 | Compte | `admin@arft.cg` / `Admin@2026` | ☐ |
+| P3 | Compte | `admin@artf.cg` / `Admin@2026` | ☐ |
 
 ---
 
@@ -79,12 +79,12 @@ POST /login
 ```
 ```json
 {
-  "email": "admin@arft.cg",
+  "email": "admin@artf.cg",
   "password": "Admin@2026"
 }
 ```
 
-> Comptes seed : `admin@arft.cg` / `Admin@2026` · `rh@arft.cg` / `Rh@2026`  
+> Comptes seed : `admin@artf.cg` / `Admin@2026` · `rh@artf.cg` / `Rh@2026`  
 > (ne pas utiliser `admin@artf.cg` / `password` — absents du seeder).
 
 | Critère | ☐ |
@@ -700,7 +700,7 @@ GET /integration/stages/{convention_id}/attestation
 
 | # | Bloc / ID | Sévérité (Bloquant / Majeur / Mineur) | Description | Contournement |
 |---|---|---|---|---|
-| 1 | Guides A1 | Mineur | Identifiants docs `admin@artf.cg` / `password` incorrects | Utiliser `admin@arft.cg` / `Admin@2026` (corrigé dans guides) |
+| 1 | Guides A1 | Mineur | Identifiants docs `admin@artf.cg` / `password` incorrects | Utiliser `admin@artf.cg` / `Admin@2026` (corrigé dans guides) |
 | 2 | D2 | Bloquant → **corrigé** | `ContratController::store` appelait `marquerContratSigne` dès la création (BROUILLON → CONTRAT_SIGNE invalide) → HTTP 422 malgré contrat créé | Retiré l’auto-appel ; signature via `POST .../marquer-contrat-signe` uniquement |
 | 3 | C4 | Bloquant → **corrigé** | `assignerMatricule` forçait transition vers `MATRICULE_CREE` même si dossier déjà `INTEGRE` (mode post-intégration) | Si statut `INTEGRE` / `MATRICULE_CREE` : assigne le matricule sans transition |
 | 4 | E2 | Mineur | Après `integrer` stage, `agent.statut` parfois encore `actif` dans la réponse (attendu `stagiaire`) | Vérifier en base / recharger agent ; clôture stage passe bien à `inactif` |
