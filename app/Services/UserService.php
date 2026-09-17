@@ -61,6 +61,18 @@ class UserService extends BaseService
         return $this->update($id, ['is_active' => false]);
     }
 
+    // ─── Vague F — cloisonnement ──────────────────────────────────────────────
+
+    /**
+     * Rattache (ou détache) un utilisateur à un bureau DRHL.
+     * Passer bureau_id = null retire le rattachement (accès global).
+     */
+    public function rattacherBureau(int $userId, ?int $bureauId): User
+    {
+        return $this->update($userId, ['bureau_id' => $bureauId])
+                    ->load(['roles', 'bureau']);
+    }
+
     protected function beforeCreate(array $data): array
     {
         return $data;

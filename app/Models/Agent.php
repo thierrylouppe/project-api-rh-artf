@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StatutNomination;
+use App\Traits\HasBureauScope;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Agent extends Model
 {
-    use HasFilterScope;
+    use HasBureauScope, HasFilterScope;
 
     protected $table = 'agents';
 

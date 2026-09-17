@@ -881,3 +881,20 @@ Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
     Route::delete('connaissances/{id}', [ConnaissanceComplementaireController::class, 'destroy'])
         ->middleware('permission:consulter-evaluations');
 });
+
+// ============================================================
+// VAGUE F — CLOISONNEMENT PAR BUREAU DRHL
+// ============================================================
+// Rattachement utilisateur → bureau DRHL.
+// Le scope 'scope.bureau' est appliqué sur les listes d'agents
+// via le middleware ScopeByBureau (injecte bureau_scope_user dans la Request).
+// Seul un admin peut affecter / retirer le bureau d'un utilisateur.
+Route::middleware(['auth:sanctum', 'permission:modifier-utilisateurs'])->group(function () {
+    // POST   /users/{user}/bureau  → rattache (ou change) le bureau
+    Route::post('users/{user}/bureau', [UserController::class, 'rattacherBureau'])
+        ->name('users.bureau.rattacher');
+
+    // DELETE /users/{user}/bureau  → retire le bureau (accès global)
+    Route::delete('users/{user}/bureau', [UserController::class, 'retirerBureau'])
+        ->name('users.bureau.retirer');
+});

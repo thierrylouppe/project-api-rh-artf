@@ -230,17 +230,24 @@ GPEEC avancé (prévision retraite, vacances de postes au-delà de `nominations/
 
 ---
 
-## Vague F — Cloisonnement (plus tard, ne pas ouvrir maintenant)
+## Vague F — Cloisonnement ⬜ en cours
 
-Quand les modules D.2–D.6 sont consommés par le FE :
+Branche `feature/vague-f-cloisonnement` — démarrée 2026-09-17.
 
-1. Menus par permission **métier** déjà en place ; ajouter éventuellement un rattachement utilisateur → bureau.
-2. Filtrer les listes « uniquement ma structure » (Direction / Service / Bureau).
-3. Option : un agent DRHL n’a que les permissions de **son** bureau (Personnel vs Solde vs Formation vs Affaires sociales).
-4. Seeder `B.A.S.` + champ `description` des missions si le métier le valide.
+| # | Tâche | Statut |
+|---|--------|--------|
+| F.1 | Migration `bureau_id` nullable sur `users` | ✅ |
+| F.2 | Seeder `B.A.S.` + descriptions missions bureaux DRHL | ✅ |
+| F.3 | `User::bureau()` + `estCloisonne()` + `UserResource` | ✅ |
+| F.4 | `UserService::rattacherBureau()` + FormRequest + Controller | ✅ |
+| F.5 | Trait `HasBureauScope` (scope `maStructure` 3 niveaux) branché sur `Agent` | ✅ |
+| F.6 | Middleware `ScopeByBureau` (`scope.bureau`) enregistré | ✅ |
+| F.7 | Routes `POST/DELETE /users/{user}/bureau` | ✅ |
+| F.8 | Brancher `scope.bureau` sur les listes (agents, congés…) quand FE prêt | ⬜ |
+| F.9 | Permissions fines par bureau (option `rh-personnel`, `rh-solde`…) | ⬜ |
+| F.10 | Tests Feature smoke Vague F | ⬜ |
 
-Jusque-là : **pas** de middleware ni de scope Eloquent par bureau.
-
+**Règle** : `scope.bureau` n'est activé sur une route que lorsque le FE est branché sur cette route. Aucun scope actif sur les routes existantes pour l'instant.
 ---
 
 ## Compléments reportés (hors D.2–D.6)

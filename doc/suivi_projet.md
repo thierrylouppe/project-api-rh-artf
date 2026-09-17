@@ -178,8 +178,16 @@ Modules 8, 9, 10, 13 : **globaux** (rôle `rh`). Cloisonnement par bureau = Vagu
 
 ## Prochaine étape recommandée
 
-**Vague E** — lots **A–E** livrés. **D.5 Paie**, **D.6 Reporting**, **D.3.4 Prestations** et **D.3.5 Santé / AT-MP livrés**. Suite : **Vague F** cloisonnement. Plan [`plan-module-sante.md`](./plan-module-sante.md).
+**Vague E** — lots **A–E** livrés. **D.5 Paie**, **D.6 Reporting**, **D.3.4 Prestations** et **D.3.5 Santé / AT-MP livrés**.
 
-**Pas** de cloisonnement avant Vague F.
+**Vague F** — cloisonnement **en cours** (branche `feature/vague-f-cloisonnement`, 2026-09-17) :
+- ✅ F.1 Migration `bureau_id` sur `users`
+- ✅ F.2 Seeder `B.A.S.` + descriptions bureaux DRHL
+- ✅ F.3 `User::bureau()` / `estCloisonne()` / `UserResource`
+- ✅ F.4 `UserService::rattacherBureau()` + routes `POST/DELETE /users/{user}/bureau`
+- ✅ F.5 Trait `HasBureauScope` + scope `maStructure` sur `Agent`
+- ✅ F.6 Middleware `ScopeByBureau` enregistré (`scope.bureau`)
+- ⬜ F.8 Brancher `scope.bureau` sur les listes quand FE prêt
+- ⬜ F.9–F.10 Permissions fines + tests
 
 Suivi opérationnel : [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md).

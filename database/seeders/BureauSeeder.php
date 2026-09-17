@@ -20,9 +20,31 @@ class BureauSeeder extends Seeder
             ['nom' => 'BUREAU MAINTENANCE',                                 'sigle' => 'B.MAINT',  'service' => 'S.S.I'],
 
             // S.R.H — Service des Ressources Humaines
-            ['nom' => 'BUREAU FORMATION',                                   'sigle' => 'B.F',      'service' => 'S.R.H'],
-            ['nom' => 'BUREAU PERSONNEL',                                   'sigle' => 'B.P',      'service' => 'S.R.H'],
-            ['nom' => 'BUREAU SOLDE',                                       'sigle' => 'B.S.',     'service' => 'S.R.H'],
+            [
+                'nom'         => 'BUREAU FORMATION',
+                'sigle'       => 'B.F',
+                'service'     => 'S.R.H',
+                'description' => 'Plans de formation, stages d\'accueil, suivi des compétences et des certifications.',
+            ],
+            [
+                'nom'         => 'BUREAU PERSONNEL',
+                'sigle'       => 'B.P',
+                'service'     => 'S.R.H',
+                'description' => 'Dossiers administratifs, affectations, carrière, absences, discipline et archivage des agents.',
+            ],
+            [
+                'nom'         => 'BUREAU SOLDE',
+                'sigle'       => 'B.S.',
+                'service'     => 'S.R.H',
+                'description' => 'Gestion de la paie, éléments de salaire, suivi des soldes et clôtures mensuelles.',
+            ],
+            // Vague F — ajout B.A.S. (Bureau des Affaires Sociales)
+            [
+                'nom'         => 'BUREAU DES AFFAIRES SOCIALES',
+                'sigle'       => 'B.A.S.',
+                'service'     => 'S.R.H',
+                'description' => 'Affiliation aux organismes sociaux (CNSS, mutuelle), suivi des ayants droit, instruction des prestations sociales et interface avec la paie pour les éléments sociaux.',
+            ],
 
             // S.B — Service Budget
             ['nom' => 'BUREAU DE LA RECETTE',                               'sigle' => 'B.RCT',    'service' => 'S.B'],
@@ -85,7 +107,12 @@ class BureauSeeder extends Seeder
 
             Bureau::firstOrCreate(
                 ['nom' => $data['nom'], 'service_id' => $serviceId],
-                ['nom' => $data['nom'], 'sigle' => $data['sigle'], 'service_id' => $serviceId]
+                [
+                    'nom'         => $data['nom'],
+                    'sigle'       => $data['sigle'],
+                    'service_id'  => $serviceId,
+                    'description' => $data['description'] ?? null,
+                ]
             );
         }
     }
