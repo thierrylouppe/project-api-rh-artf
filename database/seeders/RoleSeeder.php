@@ -23,7 +23,7 @@ class RoleSeeder extends Seeder
             'rh-personnel' => [
                 'acces-bureau-personnel',
                 'consulter-structure', 'consulter-referentiels',
-                'consulter-agents', 'creer-agents', 'modifier-agents',
+                'consulter-agents', 'consulter-agents-global', 'creer-agents', 'modifier-agents',
                 'consulter-recrutement', 'creer-recrutement', 'valider-recrutement',
                 'consulter-contrats', 'creer-contrats', 'modifier-contrats',
                 'consulter-nominations', 'gerer-nominations',
@@ -38,7 +38,7 @@ class RoleSeeder extends Seeder
             'rh-solde' => [
                 'acces-bureau-solde',
                 'consulter-structure', 'consulter-referentiels',
-                'consulter-agents',
+                'consulter-agents', 'consulter-agents-global',
                 'consulter-salaires', 'gerer-salaires',
                 'consulter-reporting',
             ],
@@ -47,7 +47,7 @@ class RoleSeeder extends Seeder
             'rh-formation' => [
                 'acces-bureau-formation',
                 'consulter-structure', 'consulter-referentiels',
-                'consulter-agents',
+                'consulter-agents', 'consulter-agents-global',
                 'consulter-formations', 'gerer-formations',
                 'consulter-evaluations',
             ],
@@ -56,7 +56,7 @@ class RoleSeeder extends Seeder
             'rh-affaires-sociales' => [
                 'acces-bureau-affaires-sociales',
                 'consulter-structure', 'consulter-referentiels',
-                'consulter-agents',
+                'consulter-agents', 'consulter-agents-global',
                 'consulter-affaires-sociales', 'gerer-affaires-sociales', 'decider-prestations',
             ],
 
@@ -64,7 +64,7 @@ class RoleSeeder extends Seeder
             'rh-etude' => [
                 'acces-bureau-etude',
                 'consulter-structure', 'consulter-referentiels',
-                'consulter-agents',
+                'consulter-agents', 'consulter-agents-global',
                 'consulter-evaluations',
                 'consulter-reporting',
             ],
@@ -75,7 +75,7 @@ class RoleSeeder extends Seeder
                 'consulter-utilisateurs', 'creer-utilisateurs', 'modifier-utilisateurs',
                 'consulter-roles',
                 'consulter-structure', 'consulter-referentiels', 'creer-referentiels', 'modifier-referentiels',
-                'consulter-agents', 'creer-agents', 'modifier-agents',
+                'consulter-agents', 'consulter-agents-global', 'creer-agents', 'modifier-agents',
                 'consulter-recrutement', 'creer-recrutement', 'valider-recrutement',
                 'consulter-contrats', 'creer-contrats', 'modifier-contrats',
                 'consulter-nominations', 'gerer-nominations',
@@ -90,7 +90,7 @@ class RoleSeeder extends Seeder
             ],
             // Hiérarchie : lecture structure / agents + validations d'équipe (pas le métier RH)
             'directeur-general' => [
-                'consulter-structure', 'consulter-referentiels', 'consulter-agents',
+                'consulter-structure', 'consulter-referentiels', 'consulter-agents', 'consulter-agents-global',
                 'consulter-nominations',
                 'consulter-salaires',
                 'consulter-conges', 'creer-conges', 'valider-conges',

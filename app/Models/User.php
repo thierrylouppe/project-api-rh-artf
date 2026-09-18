@@ -61,6 +61,34 @@ class User extends Authenticatable
     }
 
     /**
+     * Vue globale du personnel : métier RH transverse, DG, admin,
+     * ou compte sans bureau de rattachement.
+     *
+     * Les chefs (directeur / CS / CB) sans cette permission restent
+     * limités à leur direction / service / bureau.
+     */
+    public function voitPersonnelGlobal(): bool
+    {
+        if (! $this->estCloisonne()) {
+            return true;
+        }
+
+        if ($this->hasRole('admin', 'api')) {
+            return true;
+        }
+
+        return $this->getAllPermissions()->contains('name', 'consulter-agents-global');
+    }
+
+    /**
+     * Périmètre exposé au FE : globale | direction | service | bureau
+     */
+    public function vuePersonnel(): string
+    {
+        return $this->voitPersonnelGlobal() ? 'globale' : $this->niveauCloisonnement();
+    }
+
+    /**
      * Niveau de cloisonnement dérivé du rôle de fonction.
      * agent / chef-bureau → bureau · chef-service → service · directeur → direction
      */

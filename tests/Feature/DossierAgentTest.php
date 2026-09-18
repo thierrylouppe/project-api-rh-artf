@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class DossierAgentTest extends TestCase
@@ -26,6 +27,8 @@ class DossierAgentTest extends TestCase
         parent::setUp();
 
         $this->user  = User::factory()->create();
+        Permission::findOrCreate('consulter-agents', 'api');
+        $this->user->givePermissionTo('consulter-agents');
         $this->agent = Agent::create([
             'nom'            => 'Mabiala',
             'prenom'         => 'Jean',

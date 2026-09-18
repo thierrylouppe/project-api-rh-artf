@@ -207,6 +207,69 @@ class VagueFCloisonnementTest extends TestCase
         $this->assertTrue($tousLesAgents->contains('id', $agentBS->id));
     }
 
+    /**
+     * Métier RH transverse (`consulter-agents-global`) : voit tout le personnel
+     * même s'il a un bureau_id (exception DRHL).
+     */
+    public function test_permission_globale_ignore_le_cloisonnement_bureau(): void
+    {
+        Permission::findOrCreate('consulter-agents-global', 'api');
+
+        $rhMetier = User::factory()->create(['bureau_id' => $this->bureauPersonnel->id]);
+        $rhMetier->givePermissionTo(['consulter-agents', 'consulter-agents-global']);
+
+        $agentBP = $this->creerAgent('Jean', 'Mabiala');
+        $this->creerAffectation($agentBP, Bureau::class, $this->bureauPersonnel->id);
+
+        $agentBS = $this->creerAgent('Pierre', 'Ngoma');
+        $this->creerAffectation($agentBS, Bureau::class, $this->bureauSolde->id);
+
+        $visibles = Agent::query()->maStructure($rhMetier, 'bureau')->get();
+
+        $this->assertTrue($visibles->contains('id', $agentBP->id));
+        $this->assertTrue($visibles->contains('id', $agentBS->id));
+        $this->assertSame('globale', $rhMetier->vuePersonnel());
+    }
+
+    /**
+     * Un directeur sans `consulter-agents-global` ne voit que sa direction.
+     */
+    public function test_directeur_sans_permission_globale_reste_sur_sa_direction(): void
+    {
+        $autreDirection = Direction::create([
+            'nom'               => 'Direction Financière',
+            'sigle'             => 'D.F',
+            'administration_id' => $this->direction->administration_id,
+        ]);
+        $autreService = Service::create([
+            'nom'          => 'Service Budget',
+            'sigle'        => 'S.B',
+            'direction_id' => $autreDirection->id,
+        ]);
+        $autreBureau = Bureau::create([
+            'nom'        => 'Bureau Recette',
+            'sigle'      => 'B.RCT',
+            'service_id' => $autreService->id,
+        ]);
+
+        $roleDirecteur = Role::findOrCreate('directeur', 'api');
+        $directeur = User::factory()->create(['bureau_id' => $autreBureau->id]);
+        $directeur->assignRole($roleDirecteur);
+        $directeur->givePermissionTo('consulter-agents');
+
+        $agentDF = $this->creerAgent('Nadège', 'Mouamba');
+        $this->creerAffectation($agentDF, Bureau::class, $autreBureau->id);
+
+        $agentDRHL = $this->creerAgent('Yves', 'Loubaki');
+        $this->creerAffectation($agentDRHL, Bureau::class, $this->bureauPersonnel->id);
+
+        $visibles = Agent::query()->maStructure($directeur, 'direction')->get();
+
+        $this->assertTrue($visibles->contains('id', $agentDF->id));
+        $this->assertFalse($visibles->contains('id', $agentDRHL->id));
+        $this->assertSame('direction', $directeur->vuePersonnel());
+    }
+
     // ─── Smoke HTTP — routes protégées ───────────────────────────────────────
 
     /** GET /personnel/agents avec scope.bureau doit retourner 200. */

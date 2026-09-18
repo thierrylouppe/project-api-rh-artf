@@ -18,7 +18,7 @@ class PermissionSeeder extends Seeder
             // Référentiels RH
             'consulter-referentiels', 'creer-referentiels', 'modifier-referentiels', 'supprimer-referentiels',
             // Agents
-            'consulter-agents', 'creer-agents', 'modifier-agents', 'supprimer-agents',
+            'consulter-agents', 'consulter-agents-global', 'creer-agents', 'modifier-agents', 'supprimer-agents',
             // Recrutement
             'consulter-recrutement', 'creer-recrutement', 'valider-recrutement',
             // Contrats & carrière

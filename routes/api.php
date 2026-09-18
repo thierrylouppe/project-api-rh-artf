@@ -266,8 +266,10 @@ Route::prefix('integration')->middleware('auth:sanctum')->group(function () use 
 // ============================================================
 Route::prefix('personnel')->middleware('auth:sanctum')->group(function () {
     // Vague F : scope.bureau filtre les listes selon le bureau de rattachement de l'utilisateur
-    Route::get('agents', [PersonnelController::class, 'agents'])->middleware('scope.bureau');
-    Route::get('stagiaires', [PersonnelController::class, 'stagiaires'])->middleware('scope.bureau');
+    Route::get('agents', [PersonnelController::class, 'agents'])
+        ->middleware(['permission:consulter-agents', 'scope.bureau']);
+    Route::get('stagiaires', [PersonnelController::class, 'stagiaires'])
+        ->middleware(['permission:consulter-agents', 'scope.bureau']);
     Route::get('agents/{agent}', [PersonnelController::class, 'afficher']);
     Route::post('agents/{agent}/archiver', [PersonnelController::class, 'archiver']);
     Route::post('agents/{agent}/desarchiver', [PersonnelController::class, 'desarchiver']);

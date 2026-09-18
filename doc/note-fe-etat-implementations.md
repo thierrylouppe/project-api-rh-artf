@@ -1000,7 +1000,8 @@ Menus : afficher le reporting si `consulter-reporting` (RH **et DG**). Pas les a
     "id": 12,
     "name": "Marie Nkounkou",
     "email": "m.nkounkou@artf.cg",
-    "bureau_id": 5,
+            "bureau_id": 5,
+            "vue_personnel": "globale",
     "bureau": {
       "id": 5,
       "nom": "BUREAU PERSONNEL",
@@ -1046,13 +1047,14 @@ Les routes suivantes filtrent automatiquement selon le bureau de l'utilisateur a
 | `GET /api/discipline/sanctions` | Sanctions des agents dans la structure |
 
 **Comportement** :
-- Utilisateur **sans bureau** (`bureau_id = null`) → **aucun filtre**, voit tout (DG, Directeur DRHL, `admin`, `rh@`).
-- Utilisateur **avec bureau** → listes filtrées selon **sa fonction** (niveau auto, §2k) :
-  - `agent` / `chef-bureau` → **bureau**
-  - `chef-service` → **service** (tous les bureaux du service)
-  - `directeur` → **direction** (tous les services / bureaux de la direction)
+- Permission **`consulter-agents-global`** (métier RH transverse : `rh`, `rh-personnel`, `rh-solde`, `rh-formation`, `rh-affaires-sociales`, `rh-etude`, plus DG / admin) → **aucun filtre**, tout le personnel ARTF, y compris l’équipe du user.
+- Sinon, utilisateur **sans bureau** (`bureau_id = null`) → **aucun filtre** (cas DG / Directeur DRHL).
+- Sinon, utilisateur **avec bureau** et **sans** `consulter-agents-global` (directeur, CS, CB hors métier RH) → listes limitées à **sa structure** :
+  - `chef-bureau` / `agent` → **bureau**
+  - `chef-service` → **service**
+  - `directeur` → **direction**
 
-> Le FE **n'a rien à changer** pour ces routes : la pagination, les filtres query string et les structures de réponse sont identiques. La liste est simplement plus courte pour les utilisateurs cloisonnés. Afficher un badge « Vue : {bureau} » pour expliquer le périmètre.
+Champ login `data.user.vue_personnel` : `"globale"` | `"direction"` | `"service"` | `"bureau"`. Badge FE recommandé : « Vue : tout le personnel » vs « Vue : D.F ».
 
 ---
 
@@ -1122,7 +1124,8 @@ Les comptes agents réels n’ont **plus** `admin` + `rh` empilés. Chaque utili
 ```
 data.user.roles[].name
 data.user.roles[].permissions[].name
-data.user.bureau_id          // null = vue globale
+data.user.bureau_id          // null = souvent vue globale
+data.user.vue_personnel      // "globale" | "direction" | "service" | "bureau"
 data.user.bureau.{id,nom,sigle}
 data.user.agent_id
 ```
@@ -1171,7 +1174,8 @@ Afficher le menu si **au moins une** des permissions de la colonne est présente
 | Référentiels (listes) | `consulter-referentiels` | tout le monde | — |
 | Référentiels (créer / modifier) | `creer-referentiels` / `modifier-referentiels` | `admin`, `rh` | hiérarchie, agent, rh-* |
 | Recrutement / intégration | `consulter-recrutement` | `admin`, `rh`, `rh-personnel` | directeur, CS, CB, agent |
-| Personnel / agents | `consulter-agents` | tout sauf `agent` | agent (self-service uniquement) |
+| Personnel / agents | `consulter-agents` | tout sauf `agent` simple | agent sans rôle DRHL |
+| Personnel — **vue globale** | `consulter-agents-global` | `rh` + `rh-*` + DG + admin | directeur / CS / CB hors métier RH (eux : uniquement leur structure) |
 | Carrière (affectations, nominations) | `consulter-nominations` | hiérarchie + RH | agent |
 | Contrats | `consulter-contrats` | `admin`, `rh`, `rh-personnel` | hiérarchie, agent |
 | Grille / salaires / paie | `consulter-salaires` | `admin`, `rh`, `directeur-general`, `rh-solde` | directeur, CS, CB, agent |
@@ -1486,6 +1490,7 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | Besoin écran | Permission |
 |--------------|------------|
 | Recrutement / intégration | `consulter-recrutement`, `creer-recrutement`, `valider-recrutement` |
+| Personnel (menu) | `consulter-agents` — liste filtrée par structure sauf `consulter-agents-global` (§2k) |
 | Contrats | `consulter-contrats`, `creer-contrats`, `modifier-contrats` |
 | Nominations (menus) | `consulter-nominations`, `gerer-nominations` — **pas encore** de middleware `permission:` sur les routes nomination |
 | Salaires / reclassements | `consulter-salaires`, `gerer-salaires` — DG a **lecture** `consulter-salaires` (file art. 74–75) |
@@ -1498,6 +1503,7 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | Users | `consulter-utilisateurs`, `creer-utilisateurs`, `modifier-utilisateurs` |
 | Rôles | `consulter-roles`, `creer-roles`, `modifier-roles` |
 | **Vague F — accès bureau** | `acces-bureau-personnel` / `acces-bureau-solde` / `acces-bureau-formation` / `acces-bureau-affaires-sociales` / `acces-bureau-etude` — vérifier **avant** d'afficher les menus bureau |
+| **Personnel vue globale** | `consulter-agents-global` — métier RH (`rh` + `rh-*`) + DG + admin : tout le personnel ARTF. Sans elle, directeur / CS / CB = uniquement leur structure. |
 | **Vague F — rattacher bureau** | `modifier-utilisateurs` — seul l'admin peut appeler `POST /users/{id}/bureau` |
 
 Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / contrats / recrutement / reporting, **sauf le DG** qui a `consulter-reporting` et la file de reclassements (lecture + approuver 74/75). Périmètre « ma structure » : **filtré côté API** via `scope.bureau` (Vague F, §2j), niveau selon la fonction (§2k). **Implémentation menus/actions : §2k (obligatoire).**

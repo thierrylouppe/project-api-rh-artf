@@ -51,7 +51,7 @@ trait HasBureauScope
         ?User $user,
         string $niveau = 'service'
     ): Builder {
-        if ($user === null || ! $user->estCloisonne()) {
+        if ($user === null || $user->voitPersonnelGlobal()) {
             return $query;
         }
 
@@ -73,8 +73,8 @@ trait HasBureauScope
         ?User $user,
         string $niveau = 'service'
     ): Builder {
-        // Pas de cloisonnement pour admin / DG (bureau_id null)
-        if ($user === null || ! $user->estCloisonne()) {
+        // Pas de cloisonnement : admin / DG / métier RH transverse (`consulter-agents-global`)
+        if ($user === null || $user->voitPersonnelGlobal()) {
             return $query;
         }
 

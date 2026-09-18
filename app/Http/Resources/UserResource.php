@@ -17,7 +17,8 @@ class UserResource extends JsonResource
             'is_active' => $this->is_active,
 
             // Vague F — rattachement bureau (null = pas de cloisonnement)
-            'bureau_id' => $this->bureau_id,
+            'bureau_id'          => $this->bureau_id,
+            'vue_personnel' => $this->vuePersonnel(),
             'bureau'    => $this->when(
                 $this->relationLoaded('bureau') && $this->bureau !== null,
                 fn () => [
