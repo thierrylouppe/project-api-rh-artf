@@ -2,7 +2,7 @@
 
 > Document **vivant** : à mettre à jour à chaque livraison API qui impacte le front.  
 > Objectif : un seul point d’entrée pour les échanges FE (quoi appeler, quoi ne plus attendre, où lire le détail).  
-> Dernière mise à jour : **2026-09-18** (Menus / actions par permissions — §2k)
+> Dernière mise à jour : **2026-09-18** (Liste Personnel filtrée — §2d + §2k)
 
 Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste résumé.**
 
@@ -42,7 +42,7 @@ Menus **et** boutons d’action : **permissions** (union de tous les rôles), pa
 | Structure org. | `/localites` … `/bureaux` | **Livré** | Hiérarchie Localité → Administration → Direction → Service → Bureau. `byParent` pour les selects. |
 | Référentiels | `/diplomes`, `/grades`, `/types-integrations`, etc. | **Livré** | `GET /diplomes` : `classe_grille` + **`bonification_echelons`** (annexe 1). Classes I–II **ne sont plus** des diplômes (emplois). Maîtrise (classe VIII) ajoutée. |
 | Intégration (entrée) | `/integration/…` | **Livré** | Dossier + documents + circuit + acte + compte + matériel + prise de service + stages. **Pas** affectation/nomination ici (carrière). |
-| Personnel | `/personnel/…` | **Livré** | Listes + **fiche vie courante** (infos, contacts, GED, archivage). §2d. Fiche wizard : `GET /integration/agents/{id}`. |
+| Personnel | `/personnel/…` | **Livré** | **Liste = `GET /personnel/agents` uniquement** (filtrée). **Interdit** : `GET /integration/agents` sur cet écran (non filtré). Fiche vie courante §2d. Wizard : `GET /integration/agents/{id}`. |
 | Carrière | `/carriere/…` | **Livré** | Affectations, nominations, contrats, salaires agent, synthèse, **reclassements art. 73–75**, **positions art. 76–80**. Alias `/integration/…` encore OK **sauf** `GET /carriere/agents/{id}`. |
 | Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | `consulter-salaires` / `gerer-salaires`. **DG/DC/DD hors grille** (art. 55) : `hors_grille` / `salaire_fonctionnel`. Bonif d’échelon à l’entrée : `meta.annexe1`. |
 | Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
@@ -426,12 +426,50 @@ Notifications : `domaine: position` (`soumise`, `approuvee`, `rejetee`, `cloture
 
 ---
 
-## 2d. Dossier agent (vie courante)
+## 2d. Dossier agent (vie courante) + liste Personnel
 
-Préfixe **`/api/personnel`**. Auth Bearer. Pas de permission dédiée (comme le reste de `/personnel` aujourd’hui). `GET /integration/agents/{id}` reste la fiche **wizard**.
+Préfixe **`/api/personnel`**. Auth Bearer + permission **`consulter-agents`** sur les listes.
+
+### Liste du menu Personnel — **obligatoire**
+
+| Écran FE | Endpoint | Filtré par structure | Permission |
+|----------|----------|----------------------|------------|
+| **Menu Personnel** (liste des agents) | **`GET /api/personnel/agents`** | **Oui** — `scope.bureau` + `vue_personnel` | `consulter-agents` |
+| Stagiaires | **`GET /api/personnel/stagiaires`** | **Oui** | `consulter-agents` |
+| Wizard recrutement / tous les dossiers | `GET /api/integration/agents` | **Non** — 61 fiches pour tout le monde | `consulter-recrutement` (écran Intégration seulement) |
+| Fiche wizard (création dossier) | `GET /api/integration/agents/{id}` | — | recrutement |
+| Fiche vie courante | `GET /api/personnel/agents/{id}` | — | consulter-agents |
+
+**Breaking FE si la liste Personnel appelle encore `/integration/agents` :** un chef de service (ex. Rémy MAMPOUYA) voit **toute l’ARTF**. Avec le bon endpoint il ne voit que **son service** (4 agents).
+
+Query `GET /personnel/agents` : `nom`, `prenom`, `matricule`, `statut` (`archive` pour les archives, hors liste par défaut), `type_integration_id`.  
+**Ne pas** ajouter `?bureau_id=` / `?direction_id=` pour cloisonner : déjà fait côté API.
+
+Réponse login à afficher en badge :
+
+```
+data.user.vue_personnel   // "globale" | "direction" | "service" | "bureau"
+data.user.bureau.sigle    // ex. B.O.M.M.A — absent si vue globale
+```
+
+| `vue_personnel` | Qui | Contenu de la liste |
+|-----------------|-----|---------------------|
+| `globale` | `admin`, `rh`, `rh-*`, DG (`consulter-agents-global`) | Tout le personnel intégré |
+| `direction` | `directeur` (hors DRHL métier) | Agents de **sa direction** |
+| `service` | `chef-service` | Agents de **son service** (lui + CB + agents du/des bureaux) |
+| `bureau` | `chef-bureau` | Agents de **son bureau** |
+
+Exemple recette : `remy.mampouya@artf.cg` / `Mampouya@2026` (`chef-service`, S.A.R / D.R)  
+→ `GET /personnel/agents` = **4** (MAMPOUYA, NGOUBILI, TSIBA, ITOUA).  
+→ `GET /integration/agents` = **61** (à n’utiliser **que** dans le module Intégration).
+
+403 `{ "message": "Accès refusé." }` sur `/personnel/agents` = pas de `consulter-agents` (agent simple). Masquer le menu.
+
+`GET /integration/agents/{id}` reste la fiche **wizard**. La fiche RH du quotidien = `GET /personnel/agents/{id}`.
 
 | Action | Méthode | URI |
 |--------|---------|-----|
+| **Liste menu Personnel** | `GET` | **`/personnel/agents`** |
 | Fiche complète | `GET` | `/personnel/agents/{id}` (infos, contacts, situation, documents) |
 | Infos perso / pro / famille | `GET` + `PUT` upsert | `…/informations-personnelles` · `…/informations-professionnelles` · `…/situation-familiale` (`data: null` si vide) |
 | Contacts urgence | `GET/POST` · `PUT/DELETE …/{id}` | `…/contacts-urgence` |
@@ -1101,6 +1139,7 @@ Aucun changement côté requête. Si la liste est vide alors qu'elle ne devrait 
 ### Ce qu'il ne faut PAS faire
 
 - **Ne pas** ajouter de filtre `?bureau_id=` côté FE pour cloisonner : le filtrage est automatique côté API.
+- **Ne pas** appeler `GET /api/integration/agents` pour le menu **Personnel** : cette liste n’est **pas** filtrée (un CS verrait toute l’ARTF). Utiliser **`GET /api/personnel/agents`** (§2d).
 - **Ne pas** modifier la logique des routes congés/absences/discipline : les réponses ont le même schéma.
 - **Ne pas** utiliser le rôle `rh` pour les nouveaux agents DRHL cloisonnés : préférer les rôles fins (`rh-personnel`, etc.) combinés au `bureau_id`.
 
@@ -1257,6 +1296,8 @@ Comptes **système** (mono-rôle, pour tester un 403) : `admin@artf.cg`, `rh@art
 canActivate: has('consulter-salaires')     → /paie, /grille
 canActivate: has('consulter-recrutement')  → /integration
 canActivate: has('consulter-agents')       → /personnel
+  data source UNIQUE : GET /api/personnel/agents
+  (jamais GET /api/integration/agents sur cet écran)
 canActivate: has('consulter-reporting')    → /reporting
 canActivate: has('creer-conges')           → /mes-conges
 canActivate: has('valider-conges')         → /conges/a-valider
@@ -1274,6 +1315,7 @@ Route inconnue / sans permission → redirection vers le premier menu autorisé,
 - Tester `roles[0].name === 'rh'` : GAMBOU a `directeur` **et** `rh` ; LOUBAKI a `agent` **et** `rh-formation`.
 - Utiliser `user.permissions` (absent du JSON).
 - Filtrer les listes agents avec `?bureau_id=` : le cloisonnement est déjà côté API (§2j).
+- **Brancher le menu Personnel sur `GET /integration/agents`** : non filtré → un chef voit toute l’ARTF. **Toujours** `GET /personnel/agents` (§2d).
 - Croire qu’un `403` est un bug API si le menu n’aurait pas dû s’afficher.
 
 ---
@@ -1282,7 +1324,8 @@ Route inconnue / sans permission → redirection vers le premier menu autorisé,
 
 1. Login `agent@artf.cg` → uniquement Mes congés / Mes absences / Référentiels lecture / cloche. **Aucun** menu Paie, Personnel, Recrutement.
 2. Login `rodrigue.nkaya@artf.cg` (agent D.F) → idem + listes vides hors son bureau si un écran agents fuyait.
-3. Login `pierre.biyoudi@artf.cg` (directeur D.F) → Agents, congés à valider, évaluations. **Pas** Paie / Recrutement / Reporting.
+3. Login `pierre.biyoudi@artf.cg` (directeur D.F) → Agents **uniquement D.F** via `GET /personnel/agents`. **Pas** Paie / Recrutement / Reporting.
+3b. Login `remy.mampouya@artf.cg` / `Mampouya@2026` (CS S.A.R) → Personnel = **4** agents (MAMPOUYA, NGOUBILI, TSIBA, ITOUA). Si la liste en montre 50+, le FE appelle encore `/integration/agents`.
 4. Login `yves.loubaki@artf.cg` → self-service **+** Formations (`rh-formation`). **Pas** Paie.
 5. Login `lydiane.gambou@artf.cg` → menus métier RH. **Pas** Audit / Paramètres app (réservés `admin`).
 6. Login `jean.pierre.moukala@artf.cg` → reporting, discipline prononcer, congés DG, salaires lecture. **Pas** CRUD utilisateurs (sauf s’il a `admin` — le DG seed n’a **pas** `admin`).
@@ -1479,7 +1522,7 @@ Le DG a `consulter-salaires` (seeder) pour cette file — **pas** `gerer-salaire
 
 Détail : [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) lot D.
 
-- Listes métier : `GET /personnel/agents` (intégrés) vs `GET /integration/agents` (tous les dossiers).
+- Listes métier : **`GET /personnel/agents`** (intégrés, **filtrés** par structure / `consulter-agents-global`) vs `GET /integration/agents` (**tous** les dossiers, **non filtrés** — écran Intégration / wizard uniquement). Détail §2d.
 
 Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquettes affectation / nomination dans `doc/maquettes/`.
 
