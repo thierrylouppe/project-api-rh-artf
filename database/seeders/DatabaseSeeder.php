@@ -80,6 +80,29 @@ class DatabaseSeeder extends Seeder
             // Par direction : permission validée, absence maladie, congé annuel
             // workflow complet N1 → RH → DG + demandes en attente.
             AbsenceCongeSeeder::class,
+
+            // ── 11. Données personnelles ─────────────────────────────────
+            // InformationsPersonnelles, SituationFamiliale, AyantsDroits, ContactUrgence
+            DonneesPersonnellesSeeder::class,
+
+            // ── 12. Soldes de congé ──────────────────────────────────────
+            // Calcul CCN art. 47-48 : base 30j + bonification ancienneté
+            // Années N-1 (clôturée) et N (en cours)
+            CongeSoldeSeeder::class,
+
+            // ── 13. Affectations éléments de paie ────────────────────────
+            // Primes et indemnités par fonction (transport, représentation, logement…)
+            PaieElementAffectationSeeder::class,
+
+            // ── 14. Lots de paie ─────────────────────────────────────────
+            // 4 mois : CLOTURE · VALIDE · CONTROLE · GENERE
+            // depends: SalaireAgent, PaieElementAffectation
+            PaieLotSeeder::class,
+
+            // ── 15. Enrichissement RH ────────────────────────────────────
+            // Visites médicales, Évaluations (N-1 clôturée + N ouverte),
+            // Documents agents (CIN, diplôme, photo), Sanctions/Avertissements
+            EnrichissementRHSeeder::class,
         ]);
     }
 }
