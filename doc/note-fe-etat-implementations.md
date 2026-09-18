@@ -2,7 +2,7 @@
 
 > Document **vivant** : à mettre à jour à chaque livraison API qui impacte le front.  
 > Objectif : un seul point d’entrée pour les échanges FE (quoi appeler, quoi ne plus attendre, où lire le détail).  
-> Dernière mise à jour : **2026-09-17** (Vague F cloisonnement — §2j)
+> Dernière mise à jour : **2026-09-18** (Menus / actions par permissions — §2k)
 
 Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste résumé.**
 
@@ -11,7 +11,8 @@ Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste ré
 | Suivi implémentation (vagues A–F) | [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) — D.2–D.6 + Vague E **livrés** ; **Vague F cloisonnement livré** — `bureau_id` / `scope.bureau` / rôles DRHL fins. Contrat §2j. |
 | Conformité CCN intégration / carrière / grille | [`plan-conformite-ccn-modules-3-4-5.md`](./plan-conformite-ccn-modules-3-4-5.md) — lots **A–E livrés** ; D.5 : [`plan-module-paie.md`](./plan-module-paie.md) |
 | Restes évaluation | [`plan-evaluation-complements.md`](./plan-evaluation-complements.md) — **lots A–D livrés** |
-| Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) |
+| Auth, rôles, menus, comptes démo | [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md) — **contrat menus/actions : §2k** |
+| Annuaire comptes agents (seed) | [`comptes-utilisateurs.md`](./comptes-utilisateurs.md) — rôles = fonction + affectation |
 | Routes carrière, lots, checklist 14/15 | [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md) |
 | Workflow intégration par type | [`workflow-integration-par-type.md`](./workflow-integration-par-type.md) |
 | Swagger / Try it out | [`swagger-front.md`](./swagger-front.md) |
@@ -29,7 +30,7 @@ Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste ré
 - Permission manquante : `403` → masquer l’action, ne pas la proposer
 - Source de vérité des endpoints : Swagger `/api/documentation`
 
-Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
+Menus **et** boutons d’action : **permissions** (union de tous les rôles), pas le nom du rôle. Contrat **§2k**. Un `403` `{ "message": "Accès refusé." }` = permission manquante → masquer, ne pas proposer.
 
 ---
 
@@ -48,7 +49,7 @@ Menus : **permissions**, pas le nom du rôle. Voir la note rôles.
 | Évaluations | `/avancements/…` | **Livré** | P1–P5 + lots A–C (art. 62, tableau D5, PDF). Contrat : §7b. Reclassement de **classe** : §4 (`/carriere/reclassements`), pas ici. |
 | Discipline | `/discipline` | **Livré** | Vague D.2 + CCN art. 89–91 — contrat §2e. Menus : `consulter-discipline` (RH/DG), `proposer-discipline` (N+1), `prononcer-discipline` (DG). |
 | Affaires sociales | `/affaires-sociales` | **Livré (P1 + D.3.4 + D.3.5)** | Vague D.3.1–D.3.5. Contrats §2f / §2f-bis / §2f-ter. Rôle `rh` global. Dossier retraite CNSS hors V1. |
-| **Cloisonnement bureau** | `POST/DELETE /users/{id}/bureau` | **Vague F livré** | Rattacher un utilisateur à son bureau DRHL. Scope « ma structure » sur les listes agents/congés/absences/sanctions. Rôles fins `rh-personnel / rh-solde / rh-formation / rh-affaires-sociales / rh-etude`. Contrat **§2j**. |
+| **Cloisonnement bureau** | `POST/DELETE /users/{id}/bureau` | **Vague F livré** | Rattacher un utilisateur à son bureau. Scope « ma structure » sur les listes. Rôles fins `rh-*`. Contrat **§2j**. **Menus/actions par permissions : §2k.** |
 | Formation | `/formations` | **Livré** | Vague D.4. Contrat §2g. Stages d’accueil restent `/integration/stages`. Conversion : `POST /integration/stages/{id}/convertir-agent`. |
 | Paie (lots / éléments) | `/paie` | **Livré (D.5)** | Éléments, affectations, lots, bulletin enrichi, export CSV/PDF. Plan : [`plan-module-paie.md`](./plan-module-paie.md). Contrat §2h. |
 | Reporting / dashboard | `/reporting` | **Livré (D.6)** | Dashboard, stats, alertes, export CSV/PDF. Plan : [`plan-module-reporting.md`](./plan-module-reporting.md). Contrat §2i. |
@@ -1045,10 +1046,13 @@ Les routes suivantes filtrent automatiquement selon le bureau de l'utilisateur a
 | `GET /api/discipline/sanctions` | Sanctions des agents dans la structure |
 
 **Comportement** :
-- Utilisateur **sans bureau** (`bureau_id = null`) → **aucun filtre**, voit tout (comportement actuel inchangé).
-- Utilisateur **avec bureau** → voit uniquement les agents/demandes dont l'affectation active est dans **son service** (niveau par défaut).
+- Utilisateur **sans bureau** (`bureau_id = null`) → **aucun filtre**, voit tout (DG, Directeur DRHL, `admin`, `rh@`).
+- Utilisateur **avec bureau** → listes filtrées selon **sa fonction** (niveau auto, §2k) :
+  - `agent` / `chef-bureau` → **bureau**
+  - `chef-service` → **service** (tous les bureaux du service)
+  - `directeur` → **direction** (tous les services / bureaux de la direction)
 
-> Le FE **n'a rien à changer** pour ces routes : la pagination, les filtres query string et les structures de réponse sont identiques. La liste est simplement plus courte pour les utilisateurs cloisonnés.
+> Le FE **n'a rien à changer** pour ces routes : la pagination, les filtres query string et les structures de réponse sont identiques. La liste est simplement plus courte pour les utilisateurs cloisonnés. Afficher un badge « Vue : {bureau} » pour expliquer le périmètre.
 
 ---
 
@@ -1097,6 +1101,188 @@ Aucun changement côté requête. Si la liste est vide alors qu'elle ne devrait 
 - **Ne pas** ajouter de filtre `?bureau_id=` côté FE pour cloisonner : le filtrage est automatique côté API.
 - **Ne pas** modifier la logique des routes congés/absences/discipline : les réponses ont le même schéma.
 - **Ne pas** utiliser le rôle `rh` pour les nouveaux agents DRHL cloisonnés : préférer les rôles fins (`rh-personnel`, etc.) combinés au `bureau_id`.
+
+---
+
+## 2k. Menus et actions — séparation par permissions (à implémenter FE)
+
+> **Date :** 2026-09-18  
+> **Breaking FE :** oui si les menus sont aujourd’hui affichés à tout utilisateur connecté, ou testés sur le **nom du rôle**.  
+> **Détail comptes seed :** [`comptes-utilisateurs.md`](./comptes-utilisateurs.md) · rôles Spatie : [`note-fe-roles-comptes.md`](./note-fe-roles-comptes.md)
+
+Les comptes agents réels n’ont **plus** `admin` + `rh` empilés. Chaque utilisateur a le rôle de **sa fonction** et, le cas échéant, un rôle de **bureau DRHL**. L’API refuse (403) toute route dont la permission manque. Le FE doit donc **masquer** menus et boutons en amont.
+
+---
+
+### 1. Source de vérité après login
+
+`POST /api/login` → `data.user` + `data.token`.  
+`GET /api/user` pour rafraîchir (même `UserResource`, sans token).
+
+```
+data.user.roles[].name
+data.user.roles[].permissions[].name
+data.user.bureau_id          // null = vue globale
+data.user.bureau.{id,nom,sigle}
+data.user.agent_id
+```
+
+`data.user.permissions` **n’est pas renvoyé** (permissions directes vides). Construire un Set :
+
+```
+permissions = union( user.roles[].permissions[].name )
+has(p)      = permissions.contains(p)
+hasAny(...) = au moins une
+```
+
+Un utilisateur a souvent **plusieurs rôles** (ex. `chef-bureau` + `rh-formation`). **Unionner** toutes les permissions. Ne pas lire uniquement `roles[0]`.
+
+Après un seed / un changement de rôles : **déconnexion puis reconnexion** (le token reste valable, le FE a l’ancien `user` en mémoire).
+
+---
+
+### 2. Règle unique — menus **et** boutons
+
+| Élément UI | Critère | Si faux |
+|------------|---------|---------|
+| Entrée de menu / route | `has(permission de consultation)` | Ne pas afficher, redirect accueil |
+| Bouton créer / modifier / valider / supprimer | `has(permission d’écriture ou de validation)` | Masquer (pas disabled « pour décor ») |
+| Réponse API `403` `{ "message": "Accès refusé." }` | Permission manquante | Toast + retirer l’action (ne pas relancer) |
+| Réponse API `401` | Token invalide | Login |
+
+**Ne pas** faire `if (role === 'rh')` / `if (role === 'admin')` pour afficher un module.  
+Le nom de rôle sert seulement aux cas **circuit métier** (qui clique Valider N+1 vs RH vs DG) déjà décrits en §2c / §2e.
+
+Exception assumée : `role:admin` sur `GET /audit-logs` et `parametres-application` — tester `hasRole('admin')` **ou** n’afficher ces écrans que si `admin` est dans `roles[].name`.
+
+---
+
+### 3. Matrice menus (permission → écran)
+
+Afficher le menu si **au moins une** des permissions de la colonne est présente.
+
+| Menu / zone | Permission(s) d’entrée | Qui l’a typiquement | Ne pas montrer à |
+|-------------|------------------------|---------------------|------------------|
+| Tableau de bord / reporting | `consulter-reporting` | `admin`, `rh`, `directeur-general`, `rh-solde`, `rh-etude` | directeur, CS, CB, agent |
+| Utilisateurs | `consulter-utilisateurs` | `admin`, `rh`, `rh-personnel` | hiérarchie, agent |
+| Rôles / permissions | `consulter-roles` | `admin`, `rh` (lecture) | les autres |
+| Audit / paramètres app | rôle `admin` | `admin` uniquement | **tous** les autres (y compris `rh`) |
+| Structure org. | `consulter-structure` | tout sauf `agent` | agent |
+| Référentiels (listes) | `consulter-referentiels` | tout le monde | — |
+| Référentiels (créer / modifier) | `creer-referentiels` / `modifier-referentiels` | `admin`, `rh` | hiérarchie, agent, rh-* |
+| Recrutement / intégration | `consulter-recrutement` | `admin`, `rh`, `rh-personnel` | directeur, CS, CB, agent |
+| Personnel / agents | `consulter-agents` | tout sauf `agent` | agent (self-service uniquement) |
+| Carrière (affectations, nominations) | `consulter-nominations` | hiérarchie + RH | agent |
+| Contrats | `consulter-contrats` | `admin`, `rh`, `rh-personnel` | hiérarchie, agent |
+| Grille / salaires / paie | `consulter-salaires` | `admin`, `rh`, `directeur-general`, `rh-solde` | directeur, CS, CB, agent |
+| Congés (pilotage / à valider) | `valider-conges` | hiérarchie + RH | agent |
+| Congés (mes demandes) | `creer-conges` | agent **et** hiérarchie (ils posent aussi les leurs) | — |
+| Absences (à valider) | `valider-absences` | hiérarchie + RH | agent |
+| Absences (mes saisies) | `creer-absences` | agent + hiérarchie | — |
+| Évaluations (sessions RH) | `creer-evaluations` | `admin`, `rh` | hiérarchie, agent |
+| Évaluations (noter / valider) | `valider-evaluations` | `admin`, `rh`, DG, directeur, CS, CB | agent (lecture `consulter-evaluations` seulement) |
+| Discipline (file globale) | `consulter-discipline` | `admin`, `rh`, DG, `rh-personnel` | directeur / CS / CB (eux : `proposer-discipline`) |
+| Discipline (mes dossiers) | compte avec `agent_id` | tout agent | — (`GET /discipline/moi/historique`, **sans** `consulter-discipline`) |
+| Affaires sociales | `consulter-affaires-sociales` | `admin`, `rh`, DG, `rh-affaires-sociales` | directeur, CS, CB, agent |
+| Formations | `consulter-formations` | `admin`, `rh`, DG, `rh-formation` | directeur, CS, CB, agent hors B.F |
+| Notifications (cloche) | authentifié | tout le monde | — |
+
+Bureaux DRHL — **en plus** du rôle de fonction, tester la permission discriminante :
+
+| Permission | Menu métier bureau |
+|------------|-------------------|
+| `acces-bureau-personnel` | Recrutement, carrière, congés, discipline |
+| `acces-bureau-solde` | Paie, grille, salaires |
+| `acces-bureau-formation` | Formations |
+| `acces-bureau-affaires-sociales` | Affaires sociales, prestations |
+| `acces-bureau-etude` | Reporting |
+
+Exemple : Yves LOUBAKI (`agent` + `rh-formation`) → self-service congés **et** menu Formations. **Pas** de paie, **pas** de recrutement.
+
+---
+
+### 4. Matrice actions (boutons)
+
+Même principe : un bouton = une permission. Le menu peut être visible en lecture, le bouton d’écriture masqué.
+
+| Action | Permission |
+|--------|------------|
+| Créer / modifier un utilisateur | `creer-utilisateurs` / `modifier-utilisateurs` |
+| Gérer les rôles Spatie | `creer-roles` / `modifier-roles` |
+| Rattacher un bureau à un user | `modifier-utilisateurs` — `POST/DELETE /users/{id}/bureau` |
+| Créer un agent / dossier d’intégration | `creer-recrutement` ou `creer-agents` |
+| Valider un dossier RH / DG | `valider-recrutement` |
+| Créer / résilier un contrat | `creer-contrats` / `modifier-contrats` |
+| Créer / activer affectation ou nomination | `gerer-nominations` (menus ; routes encore peu middleware) |
+| Générer / valider / clôturer un lot de paie | `gerer-salaires` |
+| Consulter bulletin PDF | `consulter-salaires` |
+| Nouvelle demande de congé / absence | `creer-conges` / `creer-absences` |
+| Valider ou rejeter N+1 / RH / DG | `valider-conges` **et** le bon rôle / N+1 (§2c) |
+| Ouvrir une session d’évaluation | `creer-evaluations` |
+| Noter / signer / valider RH une fiche | `valider-evaluations` ou `creer-evaluations` selon l’endpoint (§7b) |
+| Proposer une sanction (N+1) | `proposer-discipline` |
+| Instruire (RH) | `gerer-discipline` |
+| Prononcer (DG) | `prononcer-discipline` |
+| Décider une prestation | `decider-prestations` (DG + `rh-affaires-sociales`) |
+| CRUD catalogue / inscriptions formation | `gerer-formations` |
+
+Si le FE affiche un bouton sans la permission, l’API répond **403** `Accès refusé.` — c’est le middleware `CheckPermission` / `CheckRole`.
+
+---
+
+### 5. Empilement réel (seed agents)
+
+Ne plus se fier aux 7 comptes `admin@` / `rh@` seuls. Les comptes **agents** (`prenom.nom@artf.cg` / `Nom@2026`) portent :
+
+| Fonction | Rôles Spatie | `bureau_id` | Niveau listes |
+|----------|--------------|-------------|---------------|
+| DG | `directeur-general` | `null` (global) | — |
+| Directeur DRHL | `directeur` + `rh` | `null` (global RH) | — |
+| Autre directeur | `directeur` | bureau de sa direction | **direction** |
+| Chef de service | `chef-service` | bureau de son service | **service** |
+| Chef de bureau | `chef-bureau` (+ `rh-*` si DRHL) | son bureau | **bureau** |
+| Agent | `agent` (+ `rh-*` si DRHL) | son bureau | **bureau** |
+
+Comptes **système** (mono-rôle, pour tester un 403) : `admin@artf.cg`, `rh@artf.cg`, `agent@artf.cg`, etc.
+
+---
+
+### 6. Guards de routes (recommandation)
+
+```
+canActivate: has('consulter-salaires')     → /paie, /grille
+canActivate: has('consulter-recrutement')  → /integration
+canActivate: has('consulter-agents')       → /personnel
+canActivate: has('consulter-reporting')    → /reporting
+canActivate: has('creer-conges')           → /mes-conges
+canActivate: has('valider-conges')         → /conges/a-valider
+canActivate: has('consulter-formations')   → /formations
+canActivate: hasRole('admin')              → /audit, /parametres
+```
+
+Route inconnue / sans permission → redirection vers le premier menu autorisé, **pas** une page blanche 403.
+
+---
+
+### 7. Ce qu’il ne faut PAS faire
+
+- Afficher **tous** les menus dès qu’on est connecté (cause actuelle des 403).
+- Tester `roles[0].name === 'rh'` : GAMBOU a `directeur` **et** `rh` ; LOUBAKI a `agent` **et** `rh-formation`.
+- Utiliser `user.permissions` (absent du JSON).
+- Filtrer les listes agents avec `?bureau_id=` : le cloisonnement est déjà côté API (§2j).
+- Croire qu’un `403` est un bug API si le menu n’aurait pas dû s’afficher.
+
+---
+
+### 8. Recette minimale FE
+
+1. Login `agent@artf.cg` → uniquement Mes congés / Mes absences / Référentiels lecture / cloche. **Aucun** menu Paie, Personnel, Recrutement.
+2. Login `rodrigue.nkaya@artf.cg` (agent D.F) → idem + listes vides hors son bureau si un écran agents fuyait.
+3. Login `pierre.biyoudi@artf.cg` (directeur D.F) → Agents, congés à valider, évaluations. **Pas** Paie / Recrutement / Reporting.
+4. Login `yves.loubaki@artf.cg` → self-service **+** Formations (`rh-formation`). **Pas** Paie.
+5. Login `lydiane.gambou@artf.cg` → menus métier RH. **Pas** Audit / Paramètres app (réservés `admin`).
+6. Login `jean.pierre.moukala@artf.cg` → reporting, discipline prononcer, congés DG, salaires lecture. **Pas** CRUD utilisateurs (sauf s’il a `admin` — le DG seed n’a **pas** `admin`).
+7. Login `admin@artf.cg` → tout.
 
 ---
 
@@ -1314,7 +1500,7 @@ Détail : [`note-fe-routes-carriere.md`](./note-fe-routes-carriere.md). Maquette
 | **Vague F — accès bureau** | `acces-bureau-personnel` / `acces-bureau-solde` / `acces-bureau-formation` / `acces-bureau-affaires-sociales` / `acces-bureau-etude` — vérifier **avant** d'afficher les menus bureau |
 | **Vague F — rattacher bureau** | `modifier-utilisateurs` — seul l'admin peut appeler `POST /users/{id}/bureau` |
 
-Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / contrats / recrutement / reporting, **sauf le DG** qui a `consulter-reporting` et la file de reclassements (lecture + approuver 74/75). Périmètre « ma structure » : **filtré côté API** via `scope.bureau` (Vague F, §2j).
+Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / contrats / recrutement / reporting, **sauf le DG** qui a `consulter-reporting` et la file de reclassements (lecture + approuver 74/75). Périmètre « ma structure » : **filtré côté API** via `scope.bureau` (Vague F, §2j), niveau selon la fonction (§2k). **Implémentation menus/actions : §2k (obligatoire).**
 
 ---
 

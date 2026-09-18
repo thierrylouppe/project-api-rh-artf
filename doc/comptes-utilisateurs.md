@@ -3,13 +3,26 @@
 > Convention : **Email** `prenom.nom@artf.cg` · **Mot de passe** `Nom@2026`  
 > Les stagiaires n'ont pas de compte (CCN art. 46).
 
+**Rôles = fonction + structure d'affectation** (pas d'admin/rh généralisé) :
+
+| Poste | Rôle(s) | Périmètre listes (`bureau_id`) |
+|---|---|---|
+| DG | `directeur-general` | Global (pas de bureau) |
+| Directeur DRHL | `directeur` + `rh` | Global (pilotage RH) |
+| Autre directeur | `directeur` | Sa **direction** |
+| Chef de service | `chef-service` | Son **service** |
+| Chef de bureau | `chef-bureau` (+ `rh-*` si bureau DRHL) | Son **bureau** |
+| Agent | `agent` (+ `rh-*` si bureau DRHL) | Son **bureau** |
+
+Après un `migrate:fresh --seed` ou `db:seed --class=SyncAgentRolesSeeder` : **se déconnecter puis se reconnecter**.
+
 ---
 
 ## 🏛️ Directeur Général
 
 | Matricule | Nom & Prénom | Email | Mot de passe | Rôle |
 |-----------|-------------|-------|-------------|------|
-| ARFT-00001 | Jean-Pierre MOUKALA | jean.pierre.moukala@artf.cg | Moukala@2026 | `directeur-general` + `admin` |
+| ARFT-00001 | Jean-Pierre MOUKALA | jean.pierre.moukala@artf.cg | Moukala@2026 | `directeur-general` |
 
 ---
 
@@ -94,9 +107,9 @@
 #### Bureau Formation (B.F) — Rôle DRHL spécialisé
 | Matricule | Nom & Prénom | Fonction | Email | Mot de passe | Rôle |
 |-----------|-------------|---------|-------|-------------|------|
-| ARFT-00019 | Rosette MOUNANGA | Chef de bureau | rosette.mounanga@artf.cg | Mounanga@2026 | `rh-formation` |
-| ARFT-00020 | Yves LOUBAKI | Agent | yves.loubaki@artf.cg | Loubaki@2026 | `rh-formation` |
-| ARFT-00021 | Gilberte NKOUNKOU | Agent | gilberte.nkounkou@artf.cg | Nkounkou@2026 | `rh-formation` |
+| ARFT-00019 | Rosette MOUNANGA | Chef de bureau | rosette.mounanga@artf.cg | Mounanga@2026 | `chef-bureau` + `rh-formation` |
+| ARFT-00020 | Yves LOUBAKI | Agent | yves.loubaki@artf.cg | Loubaki@2026 | `agent` + `rh-formation` |
+| ARFT-00021 | Gilberte NKOUNKOU | Agent | gilberte.nkounkou@artf.cg | Nkounkou@2026 | `agent` + `rh-formation` |
 | STG-0004 | Fulgence BIKOUTA | Stagiaire | — | — | — |
 
 ---
@@ -251,9 +264,10 @@
 
 | Rôle | Permissions clés | Nb comptes agents |
 |------|-----------------|:-----------------:|
-| `directeur-general` | Tout consulter, valider congés/discipline, décider prestations | 1 |
-| `directeur` | Consulter agents/nominations, valider congés & évaluations, proposer discipline | 10 |
-| `chef-service` | Consulter agents, valider congés & évaluations, proposer discipline | 10 |
-| `chef-bureau` | Idem chef-service (périmètre bureau) | 7 |
-| `rh-formation` | Accès bureau formation : catalogue, plans, inscriptions (DRHL B.F) | 3 |
-| `agent` | Consulter référentiels, poser congés/absences, consulter évaluations | 20 |
+| `directeur-general` | Vue globale, valider DG, prononcer discipline, décider prestations | 1 |
+| `rh` | Métier RH complet (uniquement Directrice DRHL + compte `rh@`) | 1 |
+| `directeur` | Consulter / valider son **direction**, proposer discipline | 10 |
+| `chef-service` | Consulter / valider son **service** | 10 |
+| `chef-bureau` | Consulter / valider son **bureau** | 10 |
+| `rh-formation` | En plus, catalogue formations (B.F uniquement) | 3 |
+| `agent` | Self-service congés / absences / évaluations, périmètre **bureau** | 20 |

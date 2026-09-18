@@ -186,15 +186,8 @@ class VagueFCloisonnementTest extends TestCase
             ->maStructure($this->rhPersonnel, 'service')
             ->get();
 
-        // Les deux sont dans S.R.H, donc les deux devraient être visibles
-        // MAIS : le scope filtre par structurable, pas par service parent direct.
-        // Il voit B.P (bureau exact) + ceux affectés directement à S.R.H (service).
-        // Ici agentBS est affecté à Bureau::class / bureauSolde → pas visible avec niveau 'service'
-        // car le scope cherche Bureau == bureauPersonnel OU Service == service.
-        // agentBS est dans Bureau != bureauPersonnel → pas inclus à ce niveau.
-        // Ce comportement est intentionnel : le niveau 'service' inclut les agents
-        // affectés DIRECTEMENT au service, pas ceux dans d'autres bureaux du même service.
         $this->assertTrue($agentsDansMonService->contains('id', $agentBP->id));
+        $this->assertTrue($agentsDansMonService->contains('id', $agentBS->id));
     }
 
     /**

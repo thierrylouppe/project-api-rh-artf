@@ -14,9 +14,9 @@ use Symfony\Component\HttpFoundation\Response;
  * le scope Eloquent `maStructure` sans accéder directement à Auth.
  *
  * Utilisation dans les routes :
- *   ->middleware('scope.bureau')           // niveau 'service' (défaut)
- *   ->middleware('scope.bureau:direction') // niveau 'direction'
- *   ->middleware('scope.bureau:bureau')    // niveau 'bureau' (plus restrictif)
+ *   ->middleware('scope.bureau')           // niveau auto (fonction de l'utilisateur)
+ *   ->middleware('scope.bureau:direction') // niveau 'direction' (forcé)
+ *   ->middleware('scope.bureau:bureau')    // niveau 'bureau' (forcé)
  *
  * Dans un Repository/Service :
  *   $user = $request->get('bureau_scope_user');  // User|null
@@ -30,13 +30,13 @@ class ScopeByBureau
     /** Niveaux valides : du plus restrictif au plus large. */
     private const NIVEAUX = ['bureau', 'service', 'direction'];
 
-    public function handle(Request $request, Closure $next, string $niveau = 'service'): Response
+    public function handle(Request $request, Closure $next, string $niveau = 'auto'): Response
     {
-        if (! in_array($niveau, self::NIVEAUX, true)) {
-            $niveau = 'service';
-        }
-
         $user = $request->user();
+
+        if ($niveau === 'auto' || ! in_array($niveau, self::NIVEAUX, true)) {
+            $niveau = $user?->niveauCloisonnement() ?? 'service';
+        }
 
         // Injecter l'utilisateur et le niveau souhaité dans la requête
         // pour que les couches inférieures puissent appliquer le scope.

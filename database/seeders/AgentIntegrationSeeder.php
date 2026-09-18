@@ -58,15 +58,6 @@ use Illuminate\Support\Facades\Hash;
  */
 class AgentIntegrationSeeder extends Seeder
 {
-    // ── Rôle DRHL spécifique par bureau ─────────────────────────────────
-    private const ROLES_DRHL = [
-        'B.P'    => 'rh-personnel',
-        'B.F'    => 'rh-formation',
-        'B.S.'   => 'rh-solde',
-        'B.A.S.' => 'rh-affaires-sociales',
-        'B.PL'   => 'rh-etude',
-    ];
-
     // Référentiels chargés en run()
     private array $grades      = [];
     private array $categories  = [];
@@ -245,8 +236,7 @@ class AgentIntegrationSeeder extends Seeder
             $this->echelons[12], $this->tiRecId, '2010-01-15', 'actif',
         );
         $this->creerInfosPro($dg, 'DOC', 'Administration Publique', 'Université Marien Ngouabi', 20);
-        $dgUser = $this->creerUser($dg, 'directeur-general');
-        $dgUser->assignRole('admin'); // DG = accès système complet pour les tests
+        $dgUser = $this->creerUser($dg);
         $this->dgUserId  = $dgUser->id;
         $this->drhUserId = $dgUser->id; // sera mis à jour après création du DC DRHL
 
@@ -285,7 +275,7 @@ class AgentIntegrationSeeder extends Seeder
             $bureau  = $this->resoudreBureau($service, $h);
             $isDep   = str_starts_with($h['direction'], 'D.D');
             $sigleFonctDir = $isDep ? 'DD' : 'DC';
-            $roleCbAgents  = self::ROLES_DRHL[$h['bureau_sigle']] ?? null;
+            $estDrhl       = $h['direction'] === 'D.R.H.L';
 
             // ── DIRECTEUR ────────────────────────────────────────────────
             $d = $h['directeur'];
@@ -296,12 +286,11 @@ class AgentIntegrationSeeder extends Seeder
                 $this->tiRecId, $d['dps'], 'actif',
             );
             $this->creerInfosPro($directeur, 'DOC', 'Management & Administration', 'Université Marien Ngouabi', 15);
-            $directeurUser = $this->creerUser($directeur, 'directeur');
+            $directeurUser = $this->creerUser($directeur, $estDrhl ? null : $bureau->id, $h['direction'], false);
 
             // Si c'est la DRHL, mettre à jour le validateur DRH
             if ($h['direction'] === 'D.R.H.L') {
                 $this->drhUserId = $directeurUser->id;
-                $directeurUser->assignRole('rh'); // DRHL Director = accès métier RH complet
             }
 
             $dossierDir = $this->creerDossierIntegration(
@@ -345,7 +334,7 @@ class AgentIntegrationSeeder extends Seeder
                 $this->tiRecId, $cs['dps'], 'actif',
             );
             $this->creerInfosPro($chefService, 'DOC', 'Gestion des Ressources Humaines', 'Université Marien Ngouabi', 12);
-            $csUser = $this->creerUser($chefService, 'chef-service');
+            $csUser = $this->creerUser($chefService, $bureau->id, $h['direction'], false);
 
             $dossierCs = $this->creerDossierIntegration(
                 agent: $chefService, typeId: $this->tiRecId,
@@ -389,7 +378,7 @@ class AgentIntegrationSeeder extends Seeder
                 $this->tiRecId, $cb['dps'], 'actif',
             );
             $this->creerInfosPro($chefBureau, 'MST', 'Administration & Finances', 'Université Marien Ngouabi', 8);
-            $cbUser = $this->creerUser($chefBureau, $roleCbAgents ?? 'chef-bureau', $roleCbAgents ? $bureau->id : null);
+            $cbUser = $this->creerUser($chefBureau, $bureau->id, $h['direction'], true);
 
             $dossierCb = $this->creerDossierIntegration(
                 agent: $chefBureau, typeId: $this->tiRecId,
@@ -434,7 +423,7 @@ class AgentIntegrationSeeder extends Seeder
                     $this->tiRecId, $ag['dps'], 'actif',
                 );
                 $this->creerInfosPro($agent, 'LIC', 'Sciences Économiques', 'Université Marien Ngouabi', 3);
-                $agUser = $this->creerUser($agent, $roleCbAgents ?? 'agent', $roleCbAgents ? $bureau->id : null);
+                $agUser = $this->creerUser($agent, $bureau->id, $h['direction'], true);
 
                 $dossierAg = $this->creerDossierIntegration(
                     agent: $agent, typeId: $this->tiRecId,
@@ -874,8 +863,12 @@ class AgentIntegrationSeeder extends Seeder
         );
     }
 
-    private function creerUser(Agent $agent, string $role, ?int $bureauId = null): User
-    {
+    private function creerUser(
+        Agent $agent,
+        ?int $bureauId = null,
+        ?string $directionSigle = null,
+        bool $affecteAuBureau = false,
+    ): User {
         $email    = $this->email($agent->prenom, $agent->nom);
         $password = $this->password($agent->nom);
 
@@ -890,11 +883,19 @@ class AgentIntegrationSeeder extends Seeder
             ]
         );
 
-        if (! $user->agent_id) {
-            $user->update(['agent_id' => $agent->id, 'bureau_id' => $bureauId]);
-        }
+        $user->update([
+            'agent_id'  => $agent->id,
+            'bureau_id' => $bureauId,
+        ]);
 
-        $user->syncRoles([$role]);
+        $agent->loadMissing('fonction');
+        $bureauSigle = $bureauId ? Bureau::find($bureauId)?->sigle : null;
+        $user->syncRoles(SyncAgentRolesSeeder::rolesPour(
+            $agent->fonction?->sigle,
+            $bureauSigle,
+            $directionSigle,
+            $affecteAuBureau,
+        ));
 
         return $user;
     }

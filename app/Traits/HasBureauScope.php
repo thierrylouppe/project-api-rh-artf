@@ -86,10 +86,22 @@ trait HasBureauScope
         $service   = $bureau->service;
         $direction = $service?->direction;
 
-        // Construire les jeux d'IDs autorisés selon le niveau
         $bureauIds    = [$bureau->id];
         $serviceIds   = $service   ? [$service->id]   : [];
         $directionIds = $direction ? [$direction->id] : [];
+
+        // Chef de service : tous les bureaux de son service
+        if ($niveau === 'service' && $service) {
+            $bureauIds  = Bureau::where('service_id', $service->id)->pluck('id')->all();
+            $serviceIds = [$service->id];
+        }
+
+        // Directeur : tous les services et bureaux de sa direction
+        if ($niveau === 'direction' && $direction) {
+            $serviceIds   = Service::where('direction_id', $direction->id)->pluck('id')->all();
+            $bureauIds    = Bureau::whereIn('service_id', $serviceIds)->pluck('id')->all();
+            $directionIds = [$direction->id];
+        }
 
         $morphBureau    = Bureau::class;
         $morphService   = Service::class;

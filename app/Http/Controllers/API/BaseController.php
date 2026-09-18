@@ -30,7 +30,7 @@ abstract class BaseController extends Controller
         // au repository via les clés internes _scope_user / _scope_niveau.
         if ($scopeUser = $request->get('bureau_scope_user')) {
             $filters['_scope_user']  = $scopeUser;
-            $filters['_scope_niveau'] = $request->get('bureau_scope_niveau', 'service');
+            $filters['_scope_niveau'] = $request->get('bureau_scope_niveau', $scopeUser->niveauCloisonnement());
         }
 
         $items = $this->service->getAll($filters);

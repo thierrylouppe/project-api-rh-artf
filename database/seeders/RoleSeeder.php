@@ -73,6 +73,7 @@ class RoleSeeder extends Seeder
             // Métier RH (DRHL) : utilisateurs, référentiels, agents, recrutement, contrats, salaires, reporting
             'rh' => [
                 'consulter-utilisateurs', 'creer-utilisateurs', 'modifier-utilisateurs',
+                'consulter-roles',
                 'consulter-structure', 'consulter-referentiels', 'creer-referentiels', 'modifier-referentiels',
                 'consulter-agents', 'creer-agents', 'modifier-agents',
                 'consulter-recrutement', 'creer-recrutement', 'valider-recrutement',
@@ -92,8 +93,8 @@ class RoleSeeder extends Seeder
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
                 'consulter-salaires',
-                'consulter-conges', 'valider-conges',
-                'consulter-absences', 'valider-absences',
+                'consulter-conges', 'creer-conges', 'valider-conges',
+                'consulter-absences', 'creer-absences', 'valider-absences',
                 'consulter-discipline', 'prononcer-discipline',
                 'consulter-affaires-sociales', 'decider-prestations',
                 'consulter-formations',
@@ -103,8 +104,8 @@ class RoleSeeder extends Seeder
             'directeur' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
-                'consulter-conges', 'valider-conges',
-                'consulter-absences', 'valider-absences',
+                'consulter-conges', 'creer-conges', 'valider-conges',
+                'consulter-absences', 'creer-absences', 'valider-absences',
                 'proposer-discipline',
                 'consulter-evaluations', 'valider-evaluations',
             ],
@@ -112,14 +113,16 @@ class RoleSeeder extends Seeder
             'chef-service' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
-                'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
+                'consulter-conges', 'creer-conges', 'valider-conges',
+                'consulter-absences', 'creer-absences', 'valider-absences',
                 'proposer-discipline',
                 'consulter-evaluations', 'valider-evaluations',
             ],
             'chef-bureau' => [
                 'consulter-structure', 'consulter-referentiels', 'consulter-agents',
                 'consulter-nominations',
-                'consulter-conges', 'valider-conges', 'consulter-absences', 'valider-absences',
+                'consulter-conges', 'creer-conges', 'valider-conges',
+                'consulter-absences', 'creer-absences', 'valider-absences',
                 'proposer-discipline',
                 'consulter-evaluations', 'valider-evaluations',
             ],

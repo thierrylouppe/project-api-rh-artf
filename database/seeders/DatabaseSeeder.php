@@ -69,6 +69,7 @@ class DatabaseSeeder extends Seeder
             // depends: Direction, Service, Bureau, Grade, Categorie, Echelon,
             //          Fonction, TypeIntegration, TypeContrat
             AgentIntegrationSeeder::class,
+            SyncAgentRolesSeeder::class,        // rôles + bureau_id selon affectation et fonction
 
             // ── 9. Salaires agents ───────────────────────────────────────
             // Initialise le salaire grille pour chaque agent CDI/CDD.

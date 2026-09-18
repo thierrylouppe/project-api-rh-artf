@@ -21,15 +21,15 @@
 | Profil | Email | Mot de passe | Rôle |
 |---|---|---|---|
 | 🔧 Admin système | `admin@artf.cg` | `Admin@2026` | `admin` |
-| 🔧 Admin (compte réel) | `jean.pierre.moukala@artf.cg` | `Moukala@2026` | `admin` + `directeur-general` |
-| 👔 DG | `jean.pierre.moukala@artf.cg` | `Moukala@2026` | `directeur-general` + `admin` |
-| 🏢 DRH (DRHL) | `lydiane.gambou@artf.cg` | `Gambou@2026` | `directeur` + `rh` |
+| 👔 DG | `jean.pierre.moukala@artf.cg` | `Moukala@2026` | `directeur-general` (vue globale) |
+| 🏢 DRH (DRHL) | `lydiane.gambou@artf.cg` | `Gambou@2026` | `directeur` + `rh` (vue globale RH) |
 | 👥 RH générique | `rh@artf.cg` | `Rh@2026` | `rh` |
-| 📋 CS (DRHL) | `herve.milandou@artf.cg` | `Milandou@2026` | `chef-service` |
-| 📂 CB (DRHL) | `rosette.mounanga@artf.cg` | `Mounanga@2026` | `rh-formation` |
-| 👨 Directeur DF | `pierre.biyoudi@artf.cg` | `Biyoudi@2026` | `directeur` |
-| 🧑 Agent simple | `yves.loubaki@artf.cg` | `Loubaki@2026` | `agent` |
-| 🧑 Agent sanctionné | `rodrigue.nkaya@artf.cg` | `Nkaya@2026` | `agent` |
+| 📋 CS (DRHL) | `herve.milandou@artf.cg` | `Milandou@2026` | `chef-service` (périmètre S.R.H) |
+| 📂 CB Formation | `rosette.mounanga@artf.cg` | `Mounanga@2026` | `chef-bureau` + `rh-formation` (B.F) |
+| 👨 Directeur DF | `pierre.biyoudi@artf.cg` | `Biyoudi@2026` | `directeur` (périmètre D.F) |
+| 🧑 Agent DRHL | `yves.loubaki@artf.cg` | `Loubaki@2026` | `agent` + `rh-formation` (B.F) |
+| 🧑 Agent DF | `rodrigue.nkaya@artf.cg` | `Nkaya@2026` | `agent` (B.RCT) |
+| 🚫 Test 403 | `agent@artf.cg` | `Agent@2026` | `agent` seulement |
 
 ---
 

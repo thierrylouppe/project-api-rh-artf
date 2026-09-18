@@ -38,6 +38,11 @@ class User extends Authenticatable
         return $this->belongsTo(Bureau::class);
     }
 
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class);
+    }
+
     // ─── Helpers cloisonnement ────────────────────────────────────────────────
 
     /** Retourne l'ID du bureau de rattachement ou null. */
@@ -48,10 +53,27 @@ class User extends Authenticatable
 
     /**
      * Indique si l'utilisateur est cloisonné (a un bureau de rattachement).
-     * Un admin ou directeur-général sans bureau voit tout.
+     * Un admin, DG ou Directeur DRHL sans bureau voit tout.
      */
     public function estCloisonne(): bool
     {
         return $this->bureau_id !== null;
+    }
+
+    /**
+     * Niveau de cloisonnement dérivé du rôle de fonction.
+     * agent / chef-bureau → bureau · chef-service → service · directeur → direction
+     */
+    public function niveauCloisonnement(): string
+    {
+        if ($this->hasRole('directeur', 'api') || $this->hasRole('directeur-general', 'api')) {
+            return 'direction';
+        }
+
+        if ($this->hasRole('chef-service', 'api')) {
+            return 'service';
+        }
+
+        return 'bureau';
     }
 }

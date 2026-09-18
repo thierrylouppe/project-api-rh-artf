@@ -59,8 +59,7 @@ class AgentRepository extends BaseRepository implements AgentInterface
             $query->whereNotIn('statut', ['stagiaire', 'archive'])->filter($filters);
         }
 
-        // Vague F — cloisonnement : limiter au périmètre bureau de l'utilisateur
-        $query->maStructure($user);
+        $query->maStructure($user, $user?->niveauCloisonnement() ?? 'service');
 
         return $query
             ->with($this->relationsListePersonnel())
@@ -74,7 +73,7 @@ class AgentRepository extends BaseRepository implements AgentInterface
         return Agent::query()
             ->where('statut', 'stagiaire')
             ->filter($filters)
-            ->maStructure($user)           // Vague F
+            ->maStructure($user, $user?->niveauCloisonnement() ?? 'service')
             ->with($this->relationsListePersonnel())
             ->orderBy('nom')
             ->orderBy('prenom')

@@ -17,7 +17,7 @@ Les rôles sont **globaux** (pas liés à une direction / un service / un bureau
 | Self-service | `agent` | Ses demandes de congés / absences |
 
 `directeur`, `chef-service`, `chef-bureau` s’appliquent à **toutes** les directions / services / bureaux, pas seulement la DRHL.  
-Le périmètre « uniquement ma structure » n’est **pas encore** filtré côté API.
+Le périmètre « uniquement ma structure » est filtré côté API via `bureau_id` + `scope.bureau` (niveau selon la fonction : bureau / service / direction).
 
 ## 2. Auth — comment récupérer le rôle
 
@@ -109,7 +109,9 @@ Self-service discipline **sans** `consulter-discipline` : `GET /discipline/moi/h
 
 ## 6. À faire côté FE
 
+Contrat complet (matrice menus, boutons, guards, recette) : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md) **§2k**.
+
 1. Ne plus afficher salaires / contrats / recrutement / gestion utilisateurs aux rôles hiérarchiques. **Reporting : RH + DG** (`consulter-reporting`).
-2. Après `POST /login`, utiliser `data.user.roles[].permissions[].name` pour menus et guards (`GET /user` seulement pour rafraîchir).
-3. Tester les 7 comptes ci-dessus (un par profil).
-4. Un compte créé à l’intégration (email agent) n’a **pas** automatiquement un rôle Spatie tant que RH / admin ne l’assigne pas.
+2. Après `POST /login`, **unionner** `data.user.roles[].permissions[].name` pour menus et guards (`GET /user` seulement pour rafraîchir). `user.permissions` n’existe pas.
+3. Tester les comptes **agents réels** (`prenom.nom@artf.cg`) **et** les 7 comptes système. Un `403` = masquer l’entrée, ce n’est pas un bug API.
+4. Un compte créé à l’intégration (email agent) n’a **pas** automatiquement un rôle Spatie tant que RH / admin ne l’assigne pas (hors seed de démo).
