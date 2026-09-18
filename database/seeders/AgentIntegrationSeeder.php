@@ -246,6 +246,7 @@ class AgentIntegrationSeeder extends Seeder
         );
         $this->creerInfosPro($dg, 'DOC', 'Administration Publique', 'Université Marien Ngouabi', 20);
         $dgUser = $this->creerUser($dg, 'directeur-general');
+        $dgUser->assignRole('admin'); // DG = accès système complet pour les tests
         $this->dgUserId  = $dgUser->id;
         $this->drhUserId = $dgUser->id; // sera mis à jour après création du DC DRHL
 
@@ -300,6 +301,7 @@ class AgentIntegrationSeeder extends Seeder
             // Si c'est la DRHL, mettre à jour le validateur DRH
             if ($h['direction'] === 'D.R.H.L') {
                 $this->drhUserId = $directeurUser->id;
+                $directeurUser->assignRole('rh'); // DRHL Director = accès métier RH complet
             }
 
             $dossierDir = $this->creerDossierIntegration(

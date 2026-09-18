@@ -9,7 +9,7 @@
 
 | Matricule | Nom & Prénom | Email | Mot de passe | Rôle |
 |-----------|-------------|-------|-------------|------|
-| ARFT-00001 | Jean-Pierre MOUKALA | jean.pierre.moukala@artf.cg | Moukala@2026 | `directeur-general` |
+| ARFT-00001 | Jean-Pierre MOUKALA | jean.pierre.moukala@artf.cg | Moukala@2026 | `directeur-general` + `admin` |
 
 ---
 
@@ -84,7 +84,7 @@
 ### Directeur
 | Matricule | Nom & Prénom | Email | Mot de passe | Rôle |
 |-----------|-------------|-------|-------------|------|
-| ARFT-00017 | Lydiane GAMBOU | lydiane.gambou@artf.cg | Gambou@2026 | `directeur` |
+| ARFT-00017 | Lydiane GAMBOU | lydiane.gambou@artf.cg | Gambou@2026 | `directeur` + `rh` |
 
 ### Service des Ressources Humaines (S.R.H)
 | Matricule | Nom & Prénom | Fonction | Email | Mot de passe | Rôle |
