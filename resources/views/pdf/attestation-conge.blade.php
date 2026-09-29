@@ -13,9 +13,10 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'officiel'])
 <div class="page">
     <div class="header">
-        <div class="org">Autorité de Régulation des Transports Ferroviaires (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'officiel'])
         <div class="titre">Attestation de congé</div>
     </div>
     <p>

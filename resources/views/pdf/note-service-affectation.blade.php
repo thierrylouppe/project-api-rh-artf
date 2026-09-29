@@ -16,8 +16,8 @@
         .header .reference { font-size: 10px; color: #666; margin-top: 6px; }
 
         /* Méta-info */
-        .meta { display: flex; justify-content: space-between; margin-bottom: 24px; }
-        .meta .meta-item { font-size: 11px; }
+        .meta { display: block; margin-bottom: 24px; }
+        .meta .meta-item { display: inline-block; width: 32%; font-size: 11px; }
         .meta .meta-item strong { color: #003366; }
 
         /* Objet */
@@ -27,9 +27,9 @@
         /* Blocs info */
         .bloc { border: 1px solid #ccc; border-radius: 4px; padding: 14px 18px; margin-bottom: 16px; }
         .bloc-titre { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #003366; letter-spacing: 0.5px; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
-        .ligne { display: flex; margin-bottom: 5px; }
-        .ligne .label { width: 200px; font-weight: bold; color: #444; flex-shrink: 0; }
-        .ligne .valeur { flex: 1; }
+        .ligne { display: block; margin-bottom: 5px; }
+        .ligne .label { width: 200px; font-weight: bold; color: #444; display: inline-block; vertical-align: top; }
+        .ligne .valeur { display: inline-block; vertical-align: top; width: 60%; }
 
         /* Corps du texte */
         .corps { text-align: justify; margin-bottom: 20px; font-size: 11.5px; line-height: 1.8; }
@@ -39,8 +39,9 @@
         .motif-bloc { border: 1px solid #e0e0e0; border-radius: 4px; padding: 12px 16px; margin-bottom: 20px; background: #fafafa; font-style: italic; }
 
         /* Signatures */
-        .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
-        .sign-bloc { text-align: center; width: 45%; }
+        .signatures { display: block; margin-top: 40px; }
+        .sign-bloc { display: inline-block; vertical-align: top; text-align: center; width: 44%; }
+        .sign-bloc + .sign-bloc { margin-left: 10%; }
         .sign-bloc .sign-titre { font-weight: bold; font-size: 10px; text-transform: uppercase; color: #003366; margin-bottom: 8px; }
         .sign-bloc .sign-espace { height: 60px; border-bottom: 1px solid #999; margin-bottom: 8px; }
         .sign-bloc .sign-nom { font-size: 10px; color: #555; }
@@ -53,11 +54,12 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'officiel'])
 <div class="page">
 
     {{-- En-tête --}}
     <div class="header">
-        <div class="org">Autorité de Régulation des Transports Ferroviaires (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'officiel'])
         <div class="titre">Note de Service</div>
         <div class="sous-titre">Affectation de Personnel</div>
         <div class="reference">
@@ -93,7 +95,7 @@
 
     {{-- Corps principal --}}
     <p class="corps">
-        Le <span class="signataire">Directeur Général de l'Autorité de Régulation des Transports Ferroviaires</span>,<br>
+        Le <span class="signataire">Directeur Général de l'Agence de Régulation des Transferts de Fonds</span>,<br>
         <br>
         décide de l'affectation de l'agent dont les informations figurent ci-dessous,
         avec prise d'effet au <strong>{{ $affectation->date_affectation?->format('d/m/Y') ?? '—' }}</strong>.

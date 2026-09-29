@@ -18,9 +18,10 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'officiel'])
 <div class="page">
     <div class="header">
-        <div class="org">Agence de régulation des transferts de fonds (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'officiel'])
         <div class="titre">Décision disciplinaire</div>
         <div class="ref">Prononcée par le directeur général — CCN art. 91</div>
     </div>

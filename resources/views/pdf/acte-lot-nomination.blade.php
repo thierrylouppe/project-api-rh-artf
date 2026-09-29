@@ -20,9 +20,10 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'officiel'])
 <div class="page">
     <div class="header">
-        <div class="org">Autorité de Régulation des Transports Ferroviaires (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'officiel'])
         <div class="titre">{{ $typeActe->titreDocument() }} de nomination</div>
         <div class="reference">Réf. : {{ $reference }} · {{ now()->format('d/m/Y') }} · Lot n° {{ $lot->id }}</div>
     </div>

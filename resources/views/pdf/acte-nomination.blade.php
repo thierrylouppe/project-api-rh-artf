@@ -16,13 +16,14 @@
         .objet strong { color: #003366; }
         .bloc { border: 1px solid #ccc; border-radius: 4px; padding: 14px 18px; margin-bottom: 16px; }
         .bloc-titre { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #003366; letter-spacing: 0.5px; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
-        .ligne { display: flex; margin-bottom: 5px; }
-        .ligne .label { width: 200px; font-weight: bold; color: #444; flex-shrink: 0; }
-        .ligne .valeur { flex: 1; }
+        .ligne { display: block; margin-bottom: 5px; }
+        .ligne .label { width: 200px; font-weight: bold; color: #444; display: inline-block; vertical-align: top; }
+        .ligne .valeur { display: inline-block; vertical-align: top; width: 60%; }
         .corps { text-align: justify; margin-bottom: 20px; font-size: 11.5px; line-height: 1.8; }
         .signataire { font-weight: bold; text-decoration: underline; }
-        .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
-        .sign-bloc { text-align: center; width: 45%; }
+        .signatures { display: block; margin-top: 40px; }
+        .sign-bloc { display: inline-block; vertical-align: top; text-align: center; width: 44%; }
+        .sign-bloc + .sign-bloc { margin-left: 10%; }
         .sign-bloc .sign-titre { font-weight: bold; font-size: 10px; text-transform: uppercase; color: #003366; margin-bottom: 8px; }
         .sign-bloc .sign-espace { height: 60px; border-bottom: 1px solid #999; margin-bottom: 8px; }
         .footer { position: fixed; bottom: 20px; left: 50px; right: 50px; text-align: center; font-size: 9px; color: #aaa; border-top: 1px solid #ddd; padding-top: 6px; }
@@ -30,9 +31,10 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'officiel'])
 <div class="page">
     <div class="header">
-        <div class="org">Autorité de Régulation des Transports Ferroviaires (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'officiel'])
         <div class="titre">{{ $typeActe->titreDocument() }}</div>
         <div class="sous-titre">Nomination</div>
         <div class="reference">
@@ -53,7 +55,7 @@
     </div>
 
     <p class="corps">
-        Le <span class="signataire">Directeur Général de l'Autorité de Régulation des Transports Ferroviaires</span>,<br><br>
+        Le <span class="signataire">Directeur Général de l'Agence de Régulation des Transferts de Fonds</span>,<br><br>
         décide de nommer l'agent dont les informations figurent ci-dessous,
         avec prise d'effet au <strong>{{ $nomination->date_debut?->format('d/m/Y') ?? '—' }}</strong>.
     </p>

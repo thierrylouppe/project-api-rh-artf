@@ -18,9 +18,10 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'compact', 'marge' => 36])
 <div class="page">
     <div class="header">
-        <div class="org">Autorité de Régulation des Transports Ferroviaires (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'compact'])
         <div class="titre">Fiche individuelle d'évaluation</div>
         <div>CCN art. 63 — Session {{ $fiche->session?->debut_session?->format('d/m/Y') }}</div>
     </div>
