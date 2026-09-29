@@ -78,6 +78,7 @@
     .charte-pied-texte .cote { width: 10%; text-align: right; color: #888; }
     .charte-pagenum:before { content: counter(page); }
 </style>
+@include('pdf.partials.corps')
 
 @if($variante === 'officiel')
     <div class="charte-filigrane"><img src="{{ resource_path('pdf/img/filigrane.png') }}" alt=""></div>
