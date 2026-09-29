@@ -115,19 +115,19 @@
         @if($affectation->agent?->grade)
         <div class="ligne">
             <span class="label">Grade</span>
-            <span class="valeur">{{ $affectation->agent->grade->libelle }}</span>
+            <span class="valeur">{{ $affectation->agent->grade->nom }}</span>
         </div>
         @endif
         @if($affectation->agent?->categorie)
         <div class="ligne">
             <span class="label">Catégorie</span>
-            <span class="valeur">{{ $affectation->agent->categorie->libelle }}</span>
+            <span class="valeur">{{ $affectation->agent->categorie->nom }}</span>
         </div>
         @endif
         @if($affectation->agent?->echelon)
         <div class="ligne">
             <span class="label">Échelon</span>
-            <span class="valeur">{{ $affectation->agent->echelon->libelle }}</span>
+            <span class="valeur">{{ $affectation->agent->echelon->nom }}</span>
         </div>
         @endif
     </div>

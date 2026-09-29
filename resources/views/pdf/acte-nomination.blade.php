@@ -73,7 +73,7 @@
         @if($nomination->agent?->grade)
         <div class="ligne">
             <span class="label">Grade</span>
-            <span class="valeur">{{ $nomination->agent->grade->libelle }}</span>
+            <span class="valeur">{{ $nomination->agent->grade->nom }}</span>
         </div>
         @endif
     </div>
