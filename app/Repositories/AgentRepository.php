@@ -68,6 +68,15 @@ class AgentRepository extends BaseRepository implements AgentInterface
             ->get();
     }
 
+    public function getSansDossierIntegration(): Collection
+    {
+        return Agent::query()
+            ->whereDoesntHave('dossierIntegration')
+            ->with(['affectationActive', 'fonction'])
+            ->orderBy('id')
+            ->get();
+    }
+
     public function getStagiaires(array $filters = [], ?User $user = null): Collection
     {
         return Agent::query()

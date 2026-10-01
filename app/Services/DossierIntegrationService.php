@@ -51,6 +51,49 @@ class DossierIntegrationService extends BaseService
         return $data;
     }
 
+    /**
+     * Pose un dossier au statut INTEGRE pour chaque agent qui n'en a pas.
+     * Sert à la reprise gestRHdb : ces agents sont déjà en poste.
+     *
+     * @return int Nombre de dossiers créés.
+     */
+    public function integrerAgentsSansDossier(int $demandeurId): int
+    {
+        $agents = $this->agentRepository->getSansDossierIntegration();
+        $crees = 0;
+
+        DB::transaction(function () use ($agents, $demandeurId, &$crees) {
+            $annee = (int) now()->year;
+            $seq = $this->repository->dernierNumeroReference($annee);
+
+            foreach ($agents as $agent) {
+                if ($agent->type_integration_id === null) {
+                    continue;
+                }
+
+                $seq++;
+                $affectation = $agent->affectationActive;
+                $this->repository->create([
+                    'reference' => sprintf('ARTF-INT-%d-%06d', $annee, $seq),
+                    'type_integration_id' => $agent->type_integration_id,
+                    'demandeur_id' => $demandeurId,
+                    'structurable_type' => $affectation?->structurable_type,
+                    'structurable_id' => $affectation?->structurable_id,
+                    'poste_demande' => $agent->fonction?->nom,
+                    'nombre_postes' => 1,
+                    'statut' => StatutDossier::INTEGRE,
+                    'agent_id' => $agent->id,
+                    'date_demande' => $agent->date_prise_service?->toDateString() ?? '2023-10-04',
+                    'motif' => 'Reprise du dossier gestRHdb du 01/07/2024',
+                    'notes' => 'Statut INTEGRE posé pour l\'annuaire du personnel.',
+                ]);
+                $crees++;
+            }
+        });
+
+        return $crees;
+    }
+
     public function genererReference(): string
     {
         return DB::transaction(function () {

@@ -27,6 +27,9 @@ interface AgentInterface extends BaseInterface
      */
     public function getStagiaires(array $filters = [], ?User $user = null): Collection;
 
+    /** Agents sans dossier d'intégration, avec affectation active et fonction. */
+    public function getSansDossierIntegration(): Collection;
+
     public function assignerMatricule(int $agentId, string $matricule): Agent;
 
     public function modifierMatricule(int $agentId, string $nouveauMatricule): Agent;

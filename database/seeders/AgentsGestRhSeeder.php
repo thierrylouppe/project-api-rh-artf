@@ -174,6 +174,9 @@ class AgentsGestRhSeeder extends Seeder
                 $bilan['liens_mis_a_jour'],
                 count($bilan['ambigus']),
             ));
+
+            $dossiers = app(\App\Services\DossierIntegrationService::class)->integrerAgentsSansDossier((int) $createdBy);
+            $this->command?->info("Dossiers INTEGRE créés : {$dossiers}.");
         }
     }
 
