@@ -25,7 +25,7 @@ class AuthService
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-        $user->load('roles.permissions');
+        $user->load(['roles.permissions', ...User::relationsContexte()]);
 
         return ['user' => $user, 'token' => $token];
     }
@@ -37,6 +37,6 @@ class AuthService
 
     public function me(User $user): User
     {
-        return $user->load('roles.permissions');
+        return $user->load(['roles.permissions', ...User::relationsContexte()]);
     }
 }

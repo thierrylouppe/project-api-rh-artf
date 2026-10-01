@@ -68,7 +68,8 @@ class LotAffectationService extends BaseService
                     ? (int) $ligne['superieur_hierarchique_id']
                     : $this->affectationRepository->resoudreSuperiorParStructure(
                         $ligne['structurable_type'],
-                        (int) $ligne['structurable_id']
+                        (int) $ligne['structurable_id'],
+                        (int) $ligne['agent_id'],
                     );
 
                 $this->affectationRepository->create([

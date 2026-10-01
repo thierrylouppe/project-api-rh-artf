@@ -164,6 +164,89 @@ class AgentsGestRhSeeder extends Seeder
             $stats['diplomes'],
             $stats['comptes'],
         ));
+
+        $createdBy = User::query()->where('email', 'admin@artf.cg')->value('id');
+        if ($createdBy) {
+            $bilan = app(\App\Services\RepriseHierarchieGestRhService::class)->appliquer((int) $createdBy);
+            $this->command?->info(sprintf(
+                'Hiérarchie : %d nominations, %d liens N+1, %d structures ambiguës.',
+                $bilan['nominations_creees'],
+                $bilan['liens_mis_a_jour'],
+                count($bilan['ambigus']),
+            ));
+        }
+    }
+
+    /**
+     * Placements courants du dump, une fiche par identité.
+     * En cas de doublon, la fiche qui a une structure est retenue.
+     *
+     * @return list<array{
+     *     ancien_id: int,
+     *     cle: string,
+     *     matricule: string|null,
+     *     nom: string,
+     *     prenom: string,
+     *     date_naissance: string|null,
+     *     fonction: string,
+     *     placement: array{type: class-string, id: int}|null,
+     *     conflit: bool
+     * }>
+     */
+    public function extrairePlacements(): array
+    {
+        $path = base_path(self::DUMP);
+        if (! is_file($path)) {
+            throw new RuntimeException('Dump introuvable : '.self::DUMP);
+        }
+
+        $dump = $this->chargerDump((string) file_get_contents($path));
+        $refs = $this->chargerReferentiels();
+        $parCle = [];
+
+        foreach ($dump['users'] as $user) {
+            $prenom = $this->texte($user[2] ?? null);
+            $nom = $this->texte($user[1] ?? null);
+            if ($prenom === null || $nom === null) {
+                continue;
+            }
+
+            $ancienId = (int) $user[0];
+            $date = $this->date($this->texte($user[5] ?? null));
+            $cle = $this->norm($nom).'|'.$this->norm($prenom).'|'.($date ?? '');
+            $matricule = $this->recrutement($dump['recrutements'][$ancienId] ?? []);
+            $ligne = [
+                'ancien_id' => $ancienId,
+                'cle' => $cle,
+                'matricule' => $matricule !== null ? mb_strtoupper(trim($matricule)) : null,
+                'nom' => $nom,
+                'prenom' => $prenom,
+                'date_naissance' => $date,
+                'fonction' => self::FONCTIONS[(int) ($user[13] ?? 0)] ?? 'Agent',
+                'placement' => $this->placement($user, $dump, $refs),
+                'conflit' => false,
+            ];
+
+            if (! isset($parCle[$cle])) {
+                $parCle[$cle] = $ligne;
+                continue;
+            }
+
+            $ancien = $parCle[$cle];
+            if ($ancien['placement'] === null && $ligne['placement'] !== null) {
+                $parCle[$cle] = $ligne;
+                continue;
+            }
+
+            if ($ancien['placement'] !== null && $ligne['placement'] !== null
+                && ($ancien['placement']['type'] !== $ligne['placement']['type']
+                    || $ancien['placement']['id'] !== $ligne['placement']['id']
+                    || $ancien['fonction'] !== $ligne['fonction'])) {
+                $parCle[$cle]['conflit'] = true;
+            }
+        }
+
+        return array_values($parCle);
     }
 
     private function retirerAgentsFictifs(): int

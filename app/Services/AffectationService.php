@@ -51,7 +51,8 @@ class AffectationService extends BaseService
         if (empty($data['superieur_hierarchique_id']) && ! empty($data['structurable_type']) && ! empty($data['structurable_id'])) {
             $data['superieur_hierarchique_id'] = $this->repository->resoudreSuperiorParStructure(
                 $data['structurable_type'],
-                (int) $data['structurable_id']
+                (int) $data['structurable_id'],
+                isset($data['agent_id']) ? (int) $data['agent_id'] : null,
             );
         }
 

@@ -21,7 +21,7 @@ class UserService extends BaseService
             $user->assignRole($data['role']);
         }
 
-        return $user->load('roles');
+        return $this->pourReponse($user->load('roles'));
     }
 
     public function updateUser(int $id, array $data): User
@@ -32,7 +32,7 @@ class UserService extends BaseService
             unset($data['role']);
         }
 
-        return $this->update($id, $data)->load('roles');
+        return $this->pourReponse($this->update($id, $data)->load('roles'));
     }
 
     public function assignRole(int $userId, string $role): User
@@ -40,7 +40,7 @@ class UserService extends BaseService
         $user = $this->findById($userId);
         $user->assignRole($role);
 
-        return $user->load('roles');
+        return $this->pourReponse($user->load('roles'));
     }
 
     public function revokeRole(int $userId, string $role): User
@@ -48,17 +48,17 @@ class UserService extends BaseService
         $user = $this->findById($userId);
         $user->removeRole($role);
 
-        return $user->load('roles');
+        return $this->pourReponse($user->load('roles'));
     }
 
     public function activer(int $id): User
     {
-        return $this->update($id, ['is_active' => true]);
+        return $this->pourReponse($this->update($id, ['is_active' => true]));
     }
 
     public function desactiver(int $id): User
     {
-        return $this->update($id, ['is_active' => false]);
+        return $this->pourReponse($this->update($id, ['is_active' => false]));
     }
 
     // ─── Vague F — cloisonnement ──────────────────────────────────────────────
@@ -69,8 +69,20 @@ class UserService extends BaseService
      */
     public function rattacherBureau(int $userId, ?int $bureauId): User
     {
-        return $this->update($userId, ['bureau_id' => $bureauId])
-                    ->load(['roles', 'bureau']);
+        return $this->pourReponse(
+            $this->update($userId, ['bureau_id' => $bureauId])->load('roles')
+        );
+    }
+
+    /** @return list<string> */
+    public function relationsContexte(): array
+    {
+        return User::relationsContexte();
+    }
+
+    private function pourReponse(User $user): User
+    {
+        return $user->chargerContexte();
     }
 
     protected function beforeCreate(array $data): array

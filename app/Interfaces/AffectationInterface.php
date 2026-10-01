@@ -14,8 +14,14 @@ interface AffectationInterface extends BaseInterface
 
     public function terminer(int $id, ?string $dateFin): Affectation;
 
-    /** Remonte la hiérarchie (Bureau → Service → Direction) pour trouver l'agent_id du responsable actif. */
-    public function resoudreSuperiorParStructure(string $structurableType, int $structurableId): ?int;
+    /**
+     * Remonte Bureau → Service → Direction pour trouver l'agent d'une nomination active.
+     * $saufAgentId est écarté (un chef n'est pas son propre supérieur).
+     */
+    public function resoudreSuperiorParStructure(string $structurableType, int $structurableId, ?int $saufAgentId = null): ?int;
+
+    /** Affectations actives, avec agent, fonction et structure parente. */
+    public function getActivesPourHierarchie(): Collection;
 
     /** Agents dont l'affectation active désigne ce supérieur. */
     public function getActivesParSuperieur(int $superieurId): Collection;

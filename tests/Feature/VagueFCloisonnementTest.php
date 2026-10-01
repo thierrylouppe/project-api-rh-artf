@@ -7,6 +7,7 @@ use App\Models\Agent;
 use App\Models\Affectation;
 use App\Models\Bureau;
 use App\Models\Direction;
+use App\Models\Fonction;
 use App\Models\Localite;
 use App\Models\Service;
 use App\Models\User;
@@ -100,12 +101,59 @@ class VagueFCloisonnementTest extends TestCase
         ])
             ->assertOk()
             ->assertJsonPath('data.bureau_id', $this->bureauPersonnel->id)
+            ->assertJsonPath('data.bureau.nom', 'Bureau Personnel')
             ->assertJsonPath('data.bureau.sigle', 'B.P');
 
         $this->assertDatabaseHas('users', [
             'id'        => $user->id,
             'bureau_id' => $this->bureauPersonnel->id,
         ]);
+    }
+
+    /** GET /api/user expose le nom complet de la structure et de la fonction. */
+    public function test_profil_expose_nom_structure_et_fonction(): void
+    {
+        Role::findOrCreate('chef-service', 'api');
+
+        $fonction = Fonction::create(['nom' => 'Chef de service', 'sigle' => 'C.S']);
+        $agent = Agent::create([
+            'nom' => 'DIAOUA BOUESSO',
+            'prenom' => 'FLORA NADINE',
+            'date_naissance' => '1990-01-01',
+            'genre' => 'F',
+            'statut' => 'actif',
+            'fonction_id' => $fonction->id,
+        ]);
+
+        $user = User::factory()->create([
+            'name' => 'FLORA NADINE DIAOUA BOUESSO',
+            'email' => 'flora.diaoua@artf.cg',
+            'agent_id' => $agent->id,
+            'bureau_id' => $this->bureauPersonnel->id,
+        ]);
+        $user->assignRole('chef-service');
+
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/user')
+            ->assertOk()
+            ->assertJsonPath('data.bureau_id', $this->bureauPersonnel->id)
+            ->assertJsonPath('data.vue_personnel', 'service')
+            ->assertJsonPath('data.bureau.nom', 'Bureau Personnel')
+            ->assertJsonPath('data.bureau.service.nom', 'Service RH')
+            ->assertJsonPath('data.bureau.service.direction.nom', 'DRHL')
+            ->assertJsonPath('data.structure.type', 'service')
+            ->assertJsonPath('data.structure.nom', 'Service RH')
+            ->assertJsonPath('data.fonction.id', $fonction->id)
+            ->assertJsonPath('data.fonction.nom', 'Chef de service');
+
+        $this->postJson('/api/login', [
+            'email' => 'flora.diaoua@artf.cg',
+            'password' => 'password',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.user.structure.nom', 'Service RH')
+            ->assertJsonPath('data.user.fonction.nom', 'Chef de service');
     }
 
     /** DELETE /users/{id}/bureau remet bureau_id à null. */
