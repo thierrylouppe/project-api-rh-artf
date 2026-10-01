@@ -45,9 +45,10 @@ class DossierIntegrationRepository extends BaseRepository implements DossierInte
 
     public function dernierNumeroReference(int $annee): int
     {
-        $dernier = DossierIntegration::whereYear('created_at', $annee)
+        $dernier = DossierIntegration::query()
+            ->where('reference', 'like', sprintf('ARTF-INT-%d-%%', $annee))
             ->lockForUpdate()
-            ->orderByDesc('id')
+            ->orderByDesc('reference')
             ->value('reference');
 
         if (! $dernier) {

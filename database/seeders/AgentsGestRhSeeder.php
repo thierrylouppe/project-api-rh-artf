@@ -175,8 +175,10 @@ class AgentsGestRhSeeder extends Seeder
                 count($bilan['ambigus']),
             ));
 
-            $dossiers = app(\App\Services\DossierIntegrationService::class)->integrerAgentsSansDossier((int) $createdBy);
-            $this->command?->info("Dossiers INTEGRE créés : {$dossiers}.");
+            $service = app(\App\Services\DossierIntegrationService::class);
+            $dossiers = $service->integrerAgentsSansDossier((int) $createdBy);
+            $references = $service->alignerReferencesReprise();
+            $this->command?->info("Dossiers INTEGRE créés : {$dossiers}. Références recales : {$references}.");
         }
     }
 

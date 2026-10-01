@@ -53,7 +53,7 @@ class DossierIntegrationService extends BaseService
 
     /**
      * Pose un dossier au statut INTEGRE pour chaque agent qui n'en a pas.
-     * Sert à la reprise gestRHdb : ces agents sont déjà en poste.
+     * Sert à la reprise gestRHdb : la référence porte l'année de la prise de service.
      *
      * @return int Nombre de dossiers créés.
      */
@@ -63,18 +63,23 @@ class DossierIntegrationService extends BaseService
         $crees = 0;
 
         DB::transaction(function () use ($agents, $demandeurId, &$crees) {
-            $annee = (int) now()->year;
-            $seq = $this->repository->dernierNumeroReference($annee);
+            $sequences = [];
 
             foreach ($agents as $agent) {
                 if ($agent->type_integration_id === null) {
                     continue;
                 }
 
-                $seq++;
+                $date = $agent->date_prise_service?->toDateString() ?? '2023-10-04';
+                $annee = (int) substr($date, 0, 4);
+                if (! isset($sequences[$annee])) {
+                    $sequences[$annee] = $this->repository->dernierNumeroReference($annee);
+                }
+                $sequences[$annee]++;
+
                 $affectation = $agent->affectationActive;
                 $this->repository->create([
-                    'reference' => sprintf('ARTF-INT-%d-%06d', $annee, $seq),
+                    'reference' => sprintf('ARTF-INT-%d-%06d', $annee, $sequences[$annee]),
                     'type_integration_id' => $agent->type_integration_id,
                     'demandeur_id' => $demandeurId,
                     'structurable_type' => $affectation?->structurable_type,
@@ -83,7 +88,7 @@ class DossierIntegrationService extends BaseService
                     'nombre_postes' => 1,
                     'statut' => StatutDossier::INTEGRE,
                     'agent_id' => $agent->id,
-                    'date_demande' => $agent->date_prise_service?->toDateString() ?? '2023-10-04',
+                    'date_demande' => $date,
                     'motif' => 'Reprise du dossier gestRHdb du 01/07/2024',
                     'notes' => 'Statut INTEGRE posé pour l\'annuaire du personnel.',
                 ]);
@@ -92,6 +97,54 @@ class DossierIntegrationService extends BaseService
         });
 
         return $crees;
+    }
+
+    /**
+     * Recale les références des dossiers de reprise sur l'année de la date de décision
+     * (date de prise de service). La création courante reste sur l'année en cours.
+     *
+     * @return int Nombre de dossiers repris.
+     */
+    public function alignerReferencesReprise(): int
+    {
+        $motif = 'Reprise du dossier gestRHdb du 01/07/2024';
+
+        return DB::transaction(function () use ($motif) {
+            $dossiers = $this->repository->getAll()
+                ->filter(fn ($dossier) => $dossier->motif === $motif)
+                ->values();
+
+            foreach ($dossiers as $dossier) {
+                $this->repository->update($dossier->id, [
+                    'reference' => sprintf('REPRISE-%d', $dossier->id),
+                ]);
+            }
+
+            $groupes = [];
+            foreach ($dossiers as $dossier) {
+                $date = $dossier->agent?->date_prise_service?->toDateString()
+                    ?? $dossier->date_demande?->toDateString()
+                    ?? '2023-10-04';
+                $annee = (int) substr($date, 0, 4);
+                $groupes[$annee][] = ['dossier' => $dossier, 'date' => $date];
+            }
+
+            $maj = 0;
+            foreach ($groupes as $annee => $liste) {
+                usort($liste, fn (array $a, array $b) => [$a['date'], $a['dossier']->id] <=> [$b['date'], $b['dossier']->id]);
+                $seq = $this->repository->dernierNumeroReference((int) $annee);
+                foreach ($liste as $item) {
+                    $seq++;
+                    $this->repository->update($item['dossier']->id, [
+                        'reference' => sprintf('ARTF-INT-%d-%06d', $annee, $seq),
+                        'date_demande' => $item['date'],
+                    ]);
+                    $maj++;
+                }
+            }
+
+            return $maj;
+        });
     }
 
     public function genererReference(): string
