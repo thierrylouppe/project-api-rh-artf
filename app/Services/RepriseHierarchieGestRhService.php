@@ -17,6 +17,11 @@ use Illuminate\Support\Facades\DB;
  */
 class RepriseHierarchieGestRhService extends BaseService
 {
+    /** Structure normalisée => identité « NOM PRENOM » du chef retenu. */
+    private const CHEFS_RETENUS = [
+        'BUREAU DEVELOPPEMENT' => 'TCHICAYA DUC',
+    ];
+
     public function __construct(
         private readonly AffectationInterface $affectations,
         private readonly NominationInterface $nominations,
@@ -58,7 +63,10 @@ class RepriseHierarchieGestRhService extends BaseService
             $structures[$personne['type'].'#'.$personne['structure_id']] = $affectation->structure->nom;
         }
 
-        $plan = $this->organigramme->calculer(array_values($personnes));
+        $plan = $this->organigramme->calculer(
+            array_values($personnes),
+            $this->chefsRetenus($personnes, $libelles, $structures),
+        );
 
         $nominationsCreees = 0;
         $nominationsDeja = 0;
@@ -126,6 +134,44 @@ class RepriseHierarchieGestRhService extends BaseService
             'sans_superieur' => $sansSuperieur,
             'ambigus' => $ambigus,
         ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $personnes
+     * @param  array<int, string>  $libelles
+     * @param  array<string, string>  $structures
+     * @return list<int>
+     */
+    private function chefsRetenus(array $personnes, array $libelles, array $structures): array
+    {
+        $ids = [];
+        foreach ($personnes as $personne) {
+            $structure = $this->norm($structures[$personne['type'].'#'.$personne['structure_id']] ?? '');
+            $attendu = self::CHEFS_RETENUS[$structure] ?? null;
+            if ($attendu === null) {
+                continue;
+            }
+            if ($this->norm($libelles[$personne['agent_id']] ?? '') === $attendu) {
+                $ids[] = $personne['agent_id'];
+            }
+        }
+
+        return $ids;
+    }
+
+    private function norm(string $valeur): string
+    {
+        if (class_exists(\Normalizer::class)) {
+            $decompose = \Normalizer::normalize($valeur, \Normalizer::FORM_D);
+            if (is_string($decompose)) {
+                $valeur = preg_replace('/\p{Mn}/u', '', $decompose) ?? $valeur;
+            }
+        }
+
+        $valeur = mb_strtoupper($valeur);
+        $valeur = preg_replace('/[^A-Z0-9]+/u', ' ', $valeur) ?? $valeur;
+
+        return trim(preg_replace('/\s+/', ' ', $valeur) ?? $valeur);
     }
 
     /**

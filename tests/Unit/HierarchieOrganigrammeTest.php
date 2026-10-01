@@ -49,6 +49,31 @@ class HierarchieOrganigrammeTest extends TestCase
         $this->assertCount(1, $plan['ambigus']);
     }
 
+    public function test_tchicaya_est_retenu_comme_chef_du_bureau_developpement(): void
+    {
+        $plan = (new HierarchieOrganigramme)->calculer([
+            $this->personne(1, 5, 'Directeur Général', Direction::class, 1, null, 1),
+            $this->personne(78, 3, 'Chef de service', Service::class, 1, 1, 1),
+            $this->personne(99, 2, 'Chef de bureau', Bureau::class, 3, 1, 1),
+            $this->personne(100, 2, 'Chef de bureau', Bureau::class, 3, 1, 1),
+            $this->personne(101, 1, 'Agent', Bureau::class, 3, 1, 1),
+        ], [99]);
+
+        $liens = [];
+        foreach ($plan['liens'] as $lien) {
+            $liens[$lien['agent_id']] = $lien['superieur_id'];
+        }
+
+        $this->assertSame(78, $liens[99]);
+        $this->assertSame(99, $liens[100]);
+        $this->assertSame(99, $liens[101]);
+        $this->assertSame([], $plan['ambigus']);
+        $this->assertContains(
+            '99@3',
+            array_map(fn (array $nomination) => $nomination['agent_id'].'@'.$nomination['structure_id'], $plan['nominations']),
+        );
+    }
+
     /**
      * @return array<string, mixed>
      */

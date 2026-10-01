@@ -16,6 +16,9 @@ use App\Models\Service;
  */
 class HierarchieOrganigramme
 {
+    /** @var list<int> */
+    private array $retenus = [];
+
     public const RANG_AGENT = 1;
 
     public const RANG_CHEF_BUREAU = 2;
@@ -38,14 +41,16 @@ class HierarchieOrganigramme
      *     direction_id: int|null,
      *     date_debut: string
      * }>  $personnes
+     * @param  list<int>  $chefsRetenus  Agent retenu quand plusieurs occupent le même niveau.
      * @return array{
      *     nominations: list<array{agent_id: int, poste: string, type: class-string, structure_id: int, date_debut: string}>,
      *     liens: list<array{affectation_id: int, agent_id: int, superieur_id: int|null}>,
      *     ambigus: list<array{type: class-string, structure_id: int, rang: int, agent_ids: list<int>}>
      * }
      */
-    public function calculer(array $personnes): array
+    public function calculer(array $personnes, array $chefsRetenus = []): array
     {
+        $this->retenus = array_values(array_unique($chefsRetenus));
         $ambigus = [];
         $nominations = [];
 
@@ -148,6 +153,10 @@ class HierarchieOrganigramme
     {
         $trouves = $this->auNiveau($personnes, $type, $id, $rang);
         if (count($trouves) > 1) {
+            $elu = $this->elu($trouves);
+            if ($elu !== null) {
+                return $elu;
+            }
             $this->noterAmbigu($ambigus, $type, $id, $rang, $trouves);
 
             return null;
@@ -183,6 +192,13 @@ class HierarchieOrganigramme
     private function superieur(array $personnes, array $personne, array &$ambigus): ?int
     {
         $rang = $personne['rang'];
+
+        if ($personne['type'] === Bureau::class && $rang === self::RANG_CHEF_BUREAU) {
+            $retenu = $this->retenuId($personnes, Bureau::class, $personne['structure_id'], self::RANG_CHEF_BUREAU, $personne['agent_id']);
+            if ($retenu !== null) {
+                return $retenu;
+            }
+        }
 
         if ($personne['type'] === Bureau::class && $rang < self::RANG_CHEF_BUREAU) {
             $chef = $this->unique($personnes, Bureau::class, $personne['structure_id'], self::RANG_CHEF_BUREAU, $ambigus, $personne['agent_id']);
@@ -230,8 +246,14 @@ class HierarchieOrganigramme
      */
     private function unique(array $personnes, string $type, int $id, int $rang, array &$ambigus, int $saufAgentId): ?int
     {
+        $tous = $this->auNiveau($personnes, $type, $id, $rang);
+        $elu = $this->elu($tous);
+        if ($elu !== null) {
+            return $elu['agent_id'] === $saufAgentId ? null : $elu['agent_id'];
+        }
+
         $trouves = array_values(array_filter(
-            $this->auNiveau($personnes, $type, $id, $rang),
+            $tous,
             fn (array $personne) => $personne['agent_id'] !== $saufAgentId,
         ));
 
@@ -242,6 +264,33 @@ class HierarchieOrganigramme
         }
 
         return count($trouves) === 1 ? $trouves[0]['agent_id'] : null;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $personnes
+     */
+    private function retenuId(array $personnes, string $type, int $id, int $rang, int $saufAgentId): ?int
+    {
+        $elu = $this->elu($this->auNiveau($personnes, $type, $id, $rang));
+        if ($elu === null || $elu['agent_id'] === $saufAgentId) {
+            return null;
+        }
+
+        return $elu['agent_id'];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $trouves
+     * @return array<string, mixed>|null
+     */
+    private function elu(array $trouves): ?array
+    {
+        $preferes = array_values(array_filter(
+            $trouves,
+            fn (array $personne) => in_array($personne['agent_id'], $this->retenus, true),
+        ));
+
+        return count($preferes) === 1 ? $preferes[0] : null;
     }
 
     /**
