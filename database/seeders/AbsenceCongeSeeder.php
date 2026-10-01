@@ -21,7 +21,7 @@ use Illuminate\Database\Seeder;
  *   • 1 Absence pour maladie  (Agent → validée par chef de bureau)
  *   • 1 Congé annuel          (CS → workflow complet N1 → RH → DG)
  *
- * Prérequis : AgentIntegrationSeeder déjà exécuté.
+ * Prérequis : des agents déjà présents en base.
  */
 class AbsenceCongeSeeder extends Seeder
 {
