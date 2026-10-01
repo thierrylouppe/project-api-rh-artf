@@ -2,15 +2,20 @@
 
 namespace App\Services;
 
+use App\Enums\MotifArchivage;
+use App\Enums\StatutAgent;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\DossierIntegrationInterface;
+use App\Interfaces\UserInterface;
 use App\Models\Agent;
 use App\Models\Diplome;
 use App\Models\DossierIntegration;
 use App\Models\Echelon;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /** @property AgentInterface $repository */
 class AgentService extends BaseService
@@ -18,34 +23,90 @@ class AgentService extends BaseService
     public function __construct(
         AgentInterface $repository,
         private readonly DossierIntegrationInterface $dossierRepository,
+        private readonly UserInterface $userRepository,
     ) {
         parent::__construct($repository);
+    }
+
+    protected function beforeUpdate(int $id, array $data): array
+    {
+        if (isset($data['statut']) && StatutAgent::estPositionConventionnelle((string) $data['statut'])) {
+            throw ValidationException::withMessages([
+                'statut' => 'Utiliser POST /carriere/positions',
+            ]);
+        }
+
+        return $data;
     }
 
     /**
      * Crée l'agent puis initialise automatiquement son dossier d'intégration en arrière-plan.
      * Le dossier est créé au statut BROUILLON avec type_integration_id, agent_id et date_demande.
      *
-     * @return array{agent: Agent, dossier: DossierIntegration}
+     * @return array{agent: Agent, dossier: DossierIntegration, priorite_reembauche: array}
      */
     public function creerAvecDossier(array $data): array
     {
-        return DB::transaction(function () use ($data) {
+        $result = DB::transaction(function () use ($data) {
             $data = $this->resoudreInfosDepuisDiplome($data);
 
             $agent = $this->repository->create($data);
 
             $dossier = $this->dossierRepository->create([
                 'type_integration_id' => $data['type_integration_id'],
-                'agent_id'            => $agent->id,
-                'demandeur_id'        => Auth::id(),
-                'date_demande'        => now()->toDateString(),
-                'statut'              => 'BROUILLON',
-                'reference'           => $this->genererReferenceDossier(),
+                'agent_id' => $agent->id,
+                'demandeur_id' => Auth::id(),
+                'date_demande' => now()->toDateString(),
+                'statut' => 'BROUILLON',
+                'reference' => $this->genererReferenceDossier(),
             ]);
 
             return compact('agent', 'dossier');
         });
+
+        $result['agent']->loadMissing('typeIntegration');
+
+        $result['priorite_reembauche'] = $result['agent']->typeIntegration?->estEmbaucheCcn()
+            ? $this->evaluerPrioriteReembauche(
+                $result['agent']->nom,
+                $result['agent']->prenom,
+                $result['agent']->numero_cnss
+            )
+            : ['priorite_reembauche' => false];
+
+        return $result;
+    }
+
+    /**
+     * Art. 48 : signalement (sans blocage) si un homonyme / n° CNSS archivé est encore prioritaire.
+     *
+     * @return array{priorite_reembauche: bool, nouvel_essai_requis?: bool, prioritaire_jusquau?: string|null, agents?: list<array>}
+     */
+    public function evaluerPrioriteReembauche(string $nom, string $prenom, ?string $numeroCnss): array
+    {
+        $archives = $this->repository->trouverArchivesPrioritaires($nom, $prenom, $numeroCnss);
+
+        if ($archives->isEmpty()) {
+            return ['priorite_reembauche' => false];
+        }
+
+        $meilleure = $archives->first();
+        $jusquau   = $meilleure->prioritaire_reembauche_jusquau;
+        $aujourdhui = now()->startOfDay();
+
+        return [
+            'priorite_reembauche'  => true,
+            'nouvel_essai_requis'  => $jusquau !== null && $jusquau->lt($aujourdhui),
+            'prioritaire_jusquau'  => $jusquau?->format('Y-m-d'),
+            'agents'               => $archives->map(fn (Agent $a) => [
+                'id'                              => $a->id,
+                'matricule'                       => $a->matricule,
+                'nom'                             => $a->nom,
+                'prenom'                          => $a->prenom,
+                'numero_cnss'                     => $a->numero_cnss,
+                'prioritaire_reembauche_jusquau'  => $a->prioritaire_reembauche_jusquau?->format('Y-m-d'),
+            ])->values()->all(),
+        ];
     }
 
     /**
@@ -68,7 +129,7 @@ class AgentService extends BaseService
         $classe = $diplome->classeGrille;
 
         $data['categorie_id'] = $data['categorie_id'] ?? $classe->categorie_id;
-        $data['grade_id']     = $data['grade_id']     ?? $classe->grade_id;
+        $data['grade_id'] = $data['grade_id'] ?? $classe->grade_id;
 
         if (empty($data['echelon_id'])) {
             $echelon1 = Echelon::where('numero', 1)->first();
@@ -80,9 +141,9 @@ class AgentService extends BaseService
 
     private function genererReferenceDossier(): string
     {
-        $annee   = now()->year;
+        $annee = now()->year;
         $dernier = $this->dossierRepository->dernierNumeroReference($annee);
-        $seq     = str_pad($dernier + 1, 6, '0', STR_PAD_LEFT);
+        $seq = str_pad($dernier + 1, 6, '0', STR_PAD_LEFT);
 
         return "ARTF-INT-{$annee}-{$seq}";
     }
@@ -125,8 +186,148 @@ class AgentService extends BaseService
         return $this->repository->getByStatut($statut);
     }
 
+    /** Vague F : $user = null → pas de cloisonnement (admin / DG). */
+    public function listerIntegres(array $filters = [], ?User $user = null)
+    {
+        return $this->repository->getIntegres($filters, $user);
+    }
+
+    /** Vague F : $user = null → pas de cloisonnement. */
+    public function listerStagiaires(array $filters = [], ?User $user = null)
+    {
+        return $this->repository->getStagiaires($filters, $user);
+    }
+
     public function findByMatricule(string $matricule): ?Agent
     {
         return $this->repository->findByMatricule($matricule);
+    }
+
+    public function syntheseCarriere(int $id): Agent
+    {
+        /** @var Agent $agent */
+        $agent = $this->repository->findById($id);
+        $agent->load([
+            'contratActif.typeContrat',
+            'affectationActive.structure',
+            'nominationActive.structure',
+            'salaireActuel',
+            'fonction',
+        ]);
+
+        return $agent;
+    }
+
+    public function fichePersonnel(int $id): Agent
+    {
+        /** @var Agent $agent */
+        $agent = $this->repository->findById($id);
+        $agent->load([
+            'grade',
+            'categorie',
+            'echelon',
+            'fonction',
+            'typeIntegration',
+            'informationsPersonnelles',
+            'informationsProfessionnelles.diplome',
+            'contactsUrgence',
+            'situationFamiliale',
+            'documents.typeDocument',
+            'affectationActive',
+            'nominationActive',
+            'contratActif',
+        ]);
+
+        return $agent;
+    }
+
+    /**
+     * @param  array{motif_code?: string|null, prioritaire_reembauche?: bool}  $options
+     */
+    public function archiver(int $id, string $motif, array $options = []): Agent
+    {
+        /** @var Agent $agent */
+        $agent = $this->repository->findById($id);
+
+        abort_if($agent->statut === 'archive', 422, 'Cet agent est déjà archivé.');
+        abort_if($agent->statut === 'stagiaire', 422, 'Un stagiaire se clôture via le module stage, pas par archivage RH.');
+
+        $code = MotifArchivage::tryFrom((string) ($options['motif_code'] ?? ''))
+            ?? MotifArchivage::tryFrom($motif);
+
+        $prioritaire = $code?->ouvrePrioriteReembauche()
+            || filter_var($options['prioritaire_reembauche'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        $agent = $this->repository->update($id, [
+            'statut' => 'archive',
+            'archived_at' => now(),
+            'archived_by' => Auth::id(),
+            'motif_archivage' => $motif,
+            'motif_archivage_code' => $code?->value,
+            'prioritaire_reembauche_jusquau' => $prioritaire ? now()->addYears(2)->toDateString() : null,
+        ]);
+
+        $compte = $this->userRepository->findByAgentId($id);
+        if ($compte) {
+            $this->userRepository->update($compte->id, ['is_active' => false]);
+        }
+
+        return $agent->fresh();
+    }
+
+    public function desarchiver(int $id): Agent
+    {
+        /** @var Agent $agent */
+        $agent = $this->repository->findById($id);
+
+        abort_unless($agent->statut === 'archive', 422, 'Cet agent n\'est pas archivé.');
+
+        $agent = $this->repository->update($id, [
+            'statut' => 'inactif',
+            'archived_at' => null,
+            'archived_by' => null,
+            'motif_archivage' => null,
+            'motif_archivage_code' => null,
+            'prioritaire_reembauche_jusquau' => null,
+        ]);
+
+        $compte = $this->userRepository->findByAgentId($id);
+        if ($compte) {
+            $this->userRepository->update($compte->id, ['is_active' => true]);
+        }
+
+        return $agent->fresh();
+    }
+
+    public function suspendrePourDiscipline(int $id): Agent
+    {
+        /** @var Agent $agent */
+        $agent = $this->repository->findById($id);
+
+        if ($agent->statut === StatutAgent::ARCHIVE->value || $agent->archived_at !== null) {
+            return $agent;
+        }
+
+        if ($agent->statut === StatutAgent::SUSPENDU->value) {
+            return $agent;
+        }
+
+        if ($agent->statut !== StatutAgent::ACTIF->value) {
+            return $agent;
+        }
+
+        return $this->repository->update($id, ['statut' => StatutAgent::SUSPENDU->value]);
+    }
+
+    public function leverSuspensionDisciplinaire(int $id): Agent
+    {
+        /** @var Agent $agent */
+        $agent = $this->repository->findById($id);
+
+        if ($agent->statut !== StatutAgent::SUSPENDU->value) {
+            return $agent;
+        }
+
+        return $this->repository->update($id, ['statut' => StatutAgent::ACTIF->value]);
     }
 }

@@ -15,4 +15,9 @@ interface DossierIntegrationInterface extends BaseInterface
     public function changerStatut(int $id, StatutDossier $nouveauStatut): DossierIntegration;
 
     public function dernierNumeroReference(int $annee): int;
+
+    /**
+     * Dossiers INTEGRE dont le type exige un contrat (hors stage).
+     */
+    public function getIntegresNecessitantContrat(): Collection;
 }

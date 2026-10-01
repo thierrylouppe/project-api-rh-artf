@@ -6,37 +6,104 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Ordre d'exécution — respecter les chaînes de dépendances :
+     *
+     * Auth          : Permission → Role → (User plus bas)
+     * Structure     : Localite → Administration → Direction → Service → Bureau
+     * Grille        : Grade + Categorie → Classegrillesalariale → Diplome
+     *               (+ Echelon → Parametregrile, cohérence sans FK)
+     * Intégration   : TypeDocument → TypeIntegration → CircuitValidation
+     */
     public function run(): void
     {
         $this->call([
-            // Module 1.3 — Administration système (en premier)
+            // ── 1. Auth Spatie ──────────────────────────────────────────
             PermissionSeeder::class,
             RoleSeeder::class,
-            // Module 1.1 — Structure organisationnelle
+
+            // ── 2. Structure organisationnelle ──────────────────────────
             LocaliteSeeder::class,
             AdministrationSeeder::class,
             DirectionSeeder::class,
             ServiceSeeder::class,
             BureauSeeder::class,
-            // Module 1.2 — Référentiels RH
-            DiplomeSeeder::class,
+
+            // ── 3. Grille salariale & carrière ──────────────────────────
             GradeSeeder::class,
             CategorieSeeder::class,
             EchelonSeeder::class,
+            ClassegrillesalarialeSeeder::class, // depends: Grade, Categorie
+            DiplomeSeeder::class,               // depends: Classegrillesalariale
+            ParametregrileSeeder::class,        // cohérent avec Echelon (1–12)
+            // SalaireAgentSeeder : backfill optionnel (agents CDI/CDD déjà présents)
+            // → php artisan db:seed --class=SalaireAgentSeeder
+
+            // ── 4. Référentiels RH indépendants ─────────────────────────
             FonctionSeeder::class,
             TypeContratSeeder::class,
-            TypeDocumentSeeder::class,
-            TypeIntegrationSeeder::class,
-            CircuitValidationSeeder::class,
             TypeAbsenceSeeder::class,
             TypeCongeSeeder::class,
+            JourFerieSeeder::class,
+            RegleAcquisitionCongeSeeder::class,
+            PalierAncienneteCongeSeeder::class,
             MotifAdministratifSeeder::class,
-            // Module 1.3 — Utilisateurs & paramètres
-            UserSeeder::class,
+            TypeSanctionSeeder::class,
+            OrganismeSocialSeeder::class,
+            PaieElementSeeder::class,
+
+            // ── 5. Module Évaluation / Notation / Avancement ────────────
+            QuestionEvaluationSeeder::class,
+
+            // ── 6. Recrutement / intégration ────────────────────────────
+            TypeDocumentSeeder::class,
+            TypeIntegrationSeeder::class,  // depends: TypeDocument
+            CircuitValidationSeeder::class, // depends: TypeIntegration
+
+            // ── 7. Utilisateurs & paramètres applicatifs ────────────────
+            UserSeeder::class,                  // depends: Role
             ParametreApplicationSeeder::class,
-            // Module Grille Salariale (dépend des référentiels categories + grades)
-            ClassegrillesalarialeSeeder::class,
-            ParametregrileSeeder::class,
+
+            // ── 8. Agents & stagiaires intégrés ─────────────────────────
+            // DG + par direction : Directeur · CS · CB · 2 Agents · 1 Stagiaire
+            // depends: Direction, Service, Bureau, Grade, Categorie, Echelon,
+            //          Fonction, TypeIntegration, TypeContrat
+            AgentIntegrationSeeder::class,
+            SyncAgentRolesSeeder::class,        // rôles + bureau_id selon affectation et fonction
+
+            // ── 9. Salaires agents ───────────────────────────────────────
+            // Initialise le salaire grille pour chaque agent CDI/CDD.
+            // Les Directeurs (DG, DC, DD) sont ignorés (hors grille, art. 55).
+            // Génère la grille salariale si elle n'existe pas encore.
+            SalaireAgentSeeder::class,
+
+            // ── 10. Absences, Permissions d'absence & Congés ────────────
+            // Par direction : permission validée, absence maladie, congé annuel
+            // workflow complet N1 → RH → DG + demandes en attente.
+            AbsenceCongeSeeder::class,
+
+            // ── 11. Données personnelles ─────────────────────────────────
+            // InformationsPersonnelles, SituationFamiliale, AyantsDroits, ContactUrgence
+            DonneesPersonnellesSeeder::class,
+
+            // ── 12. Soldes de congé ──────────────────────────────────────
+            // Calcul CCN art. 47-48 : base 30j + bonification ancienneté
+            // Années N-1 (clôturée) et N (en cours)
+            CongeSoldeSeeder::class,
+
+            // ── 13. Affectations éléments de paie ────────────────────────
+            // Primes et indemnités par fonction (transport, représentation, logement…)
+            PaieElementAffectationSeeder::class,
+
+            // ── 14. Lots de paie ─────────────────────────────────────────
+            // 4 mois : CLOTURE · VALIDE · CONTROLE · GENERE
+            // depends: SalaireAgent, PaieElementAffectation
+            PaieLotSeeder::class,
+
+            // ── 15. Enrichissement RH ────────────────────────────────────
+            // Visites médicales, Évaluations (N-1 clôturée + N ouverte),
+            // Documents agents (CIN, diplôme, photo), Sanctions/Avertissements
+            EnrichissementRHSeeder::class,
         ]);
     }
 }

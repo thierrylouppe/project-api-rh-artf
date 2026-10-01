@@ -16,7 +16,7 @@ class ServiceResource extends JsonResource
             'description' => $this->description,
             'direction_id' => $this->when(! $this->relationLoaded('direction'), $this->direction_id),
             'direction' => new DirectionResource($this->whenLoaded('direction')),
-            'bureaux' => BureauResource::collection($this->whenLoaded('bureaux')),
+            'bureaux' => StructureOrganisationnelleListResource::collection($this->whenLoaded('bureaux')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

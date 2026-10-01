@@ -26,14 +26,15 @@ class ConventionStage extends Model
         'statut_stage',
         'note_finale',
         'appreciation',
+        'dossier_conversion_id',
     ];
 
     protected $casts = [
-        'date_debut'   => 'date',
-        'date_fin'     => 'date',
-        'note_finale'  => 'decimal:2',
+        'date_debut' => 'date',
+        'date_fin' => 'date',
+        'note_finale' => 'decimal:2',
         'statut_stage' => StatutConventionStage::class,
-        'type_stage'   => TypeStage::class,
+        'type_stage' => TypeStage::class,
     ];
 
     protected array $filterable = ['statut_stage', 'type_stage', 'agent_id'];
@@ -56,6 +57,11 @@ class ConventionStage extends Model
     public function tuteurInterne(): BelongsTo
     {
         return $this->belongsTo(Agent::class, 'tuteur_interne_id');
+    }
+
+    public function dossierConversion(): BelongsTo
+    {
+        return $this->belongsTo(DossierIntegration::class, 'dossier_conversion_id');
     }
 
     public function joursAvantFin(): int

@@ -2,4 +2,11 @@
 
 namespace App\Interfaces;
 
-interface TypeCongeInterface extends BaseInterface {}
+use App\Models\TypeConge;
+use Illuminate\Support\Collection;
+
+interface TypeCongeInterface extends BaseInterface
+{
+    /** @return Collection<int, TypeConge> */
+    public function getDebitantSolde(): Collection;
+}

@@ -25,66 +25,78 @@ class ActeAdministratifService extends BaseService
     }
 
     /**
-     * Génère un acte administratif pour un dossier et fait passer ce dernier
-     * au statut ACTE_GENERE — le tout dans une transaction atomique.
+     * Enregistre l'acte d'entrée : type du dossier si omis, numéro auto, idempotent.
      *
-     * Guards :
-     *  - Le dossier doit être en VALIDE_DG.
-     *  - Aucun acte du même type ne doit déjà exister pour ce dossier.
+     * @return array{acte: ActeAdministratif, cree: bool, dossier: DossierIntegration}
      */
-    public function generer(int $dossierId, TypeActeAdministratif $typeActe, ?string $contenu = null): ActeAdministratif
-    {
+    public function enregistrerPourDossier(
+        int $dossierId,
+        ?TypeActeAdministratif $typeActe = null,
+        ?string $contenu = null
+    ): array {
         return DB::transaction(function () use ($dossierId, $typeActe, $contenu) {
             /** @var DossierIntegration $dossier */
             $dossier = $this->dossierRepository->findById($dossierId);
+            $dossier->load('typeIntegration');
 
             abort_unless(
-                $dossier->statut === StatutDossier::VALIDE_DG,
+                in_array($dossier->statut, [StatutDossier::VALIDE_DG, StatutDossier::INTEGRE], true),
                 422,
-                "L'acte ne peut être généré qu'après la validation DG (statut actuel : {$dossier->statut->label()})."
+                "L'acte ne peut être enregistré qu'après validation DG ou en post-intégration (statut actuel : {$dossier->statut->label()})."
             );
+
+            $typeActe ??= $dossier->typeIntegration?->acteAdministratifEnum();
 
             abort_if(
-                $this->repository->acteExistePourType($dossierId, $typeActe->value),
+                $typeActe === null,
                 422,
-                "Un acte « {$typeActe->label()} » existe déjà pour ce dossier."
+                "Aucun acte administratif configuré pour le type d'intégration « {$dossier->typeIntegration?->nom} »."
             );
 
-            $numero = $this->repository->genererNumero($typeActe);
+            $existant = $this->repository->trouverPourDossierEtType($dossierId, $typeActe->value);
+            if ($existant !== null) {
+                return [
+                    'acte'    => $existant,
+                    'cree'    => false,
+                    'dossier' => $dossier,
+                ];
+            }
 
-            $acte = $this->repository->create([
+            $userId = Auth::id();
+            abort_if($userId === null, 401, 'Non authentifié.');
+
+            $numero = $this->repository->genererNumero($typeActe);
+            $acte   = $this->repository->create([
                 'dossier_integration_id' => $dossierId,
                 'type_acte'              => $typeActe->value,
                 'numero'                 => $numero,
                 'contenu'                => $contenu,
             ]);
 
-            // Transition VALIDE_DG → ACTE_GENERE (validation de la transition + historique)
-            abort_unless(
-                $dossier->statut->peutTransitionnerVers(StatutDossier::ACTE_GENERE),
-                422,
-                "Transition invalide : {$dossier->statut->label()} → Acte généré."
-            );
-
-            $this->dossierRepository->changerStatut($dossierId, StatutDossier::ACTE_GENERE);
-
             $this->historiqueRepository->enregistrer(
                 DossierIntegration::class,
                 $dossierId,
-                Auth::id() ?? 1,
-                'transition_statut',
-                ['statut' => $dossier->statut->value],
-                ['statut' => StatutDossier::ACTE_GENERE->value],
-                "Acte {$typeActe->label()} généré (n° {$numero})"
+                $userId,
+                'acte_genere',
+                null,
+                ['acte_id' => $acte->id, 'numero' => $numero, 'type_acte' => $typeActe->value],
+                "Acte {$typeActe->label()} enregistré (n° {$numero})"
             );
 
-            return $acte;
+            return [
+                'acte'    => $acte,
+                'cree'    => true,
+                'dossier' => $dossier->fresh(['typeIntegration', 'actes', 'agent']),
+            ];
         });
     }
 
     public function signer(int $id): ActeAdministratif
     {
-        return $this->repository->signer($id, Auth::id());
+        $userId = Auth::id();
+        abort_if($userId === null, 401, 'Non authentifié.');
+
+        return $this->repository->signer($id, $userId);
     }
 
     public function getByDossier(int $dossierId): Collection

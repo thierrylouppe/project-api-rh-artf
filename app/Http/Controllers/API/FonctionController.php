@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\Fonction\CreateRequest;
 use App\Http\Requests\Fonction\UpdateRequest;
 use App\Http\Resources\FonctionResource;
+use App\Http\Resources\ReferentielRhListResource;
 use App\Services\FonctionService;
 use Illuminate\Http\JsonResponse;
 
@@ -18,6 +19,11 @@ class FonctionController extends BaseController
     protected function resource(): string
     {
         return FonctionResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return ReferentielRhListResource::class;
     }
 
     public function store(CreateRequest $request): JsonResponse

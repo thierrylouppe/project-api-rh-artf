@@ -33,7 +33,7 @@ return new class extends Migration
             $table->foreignId('fonction_id')->nullable()->constrained('fonctions')->nullOnDelete();
             $table->foreignId('type_integration_id')->nullable()->constrained('type_integrations')->nullOnDelete();
             $table->date('date_prise_service')->nullable();
-            $table->enum('statut', ['actif', 'inactif', 'suspendu', 'retraite'])->default('actif');
+            $table->enum('statut', ['actif', 'inactif', 'suspendu', 'retraite', 'stagiaire'])->default('actif');
             $table->timestamps();
         });
 

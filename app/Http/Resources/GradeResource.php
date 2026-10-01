@@ -13,6 +13,7 @@ class GradeResource extends JsonResource
             'id'          => $this->id,
             'nom'         => $this->nom,
             'sigle'       => $this->sigle ?? null,
+            'niveau'      => $this->niveau,
             'description' => $this->description,
             'created_at'  => $this->created_at,
             'updated_at'  => $this->updated_at,

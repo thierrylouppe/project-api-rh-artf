@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Requests\User\CreateRequest;
+use App\Http\Requests\User\RattacherBureauRequest;
 use App\Http\Requests\User\UpdateRequest;
 use App\Http\Resources\UserResource;
 use App\Services\UserService;
@@ -55,5 +56,35 @@ class UserController extends BaseController
         $this->service->delete($user);
 
         return response()->json(['message' => 'Supprimé avec succès']);
+    }
+
+    // ─── Vague F — Cloisonnement ──────────────────────────────────────────────
+
+    /**
+     * POST /users/{user}/bureau
+     * Rattache l'utilisateur à un bureau DRHL (ou modifie le rattachement).
+     */
+    public function rattacherBureau(RattacherBureauRequest $request, int $user): JsonResponse
+    {
+        $updated = $this->service->rattacherBureau($user, $request->validated('bureau_id'));
+
+        return response()->json([
+            'data'    => new UserResource($updated),
+            'message' => 'Bureau de rattachement mis à jour.',
+        ]);
+    }
+
+    /**
+     * DELETE /users/{user}/bureau
+     * Retire le bureau de rattachement (accès global, pas de cloisonnement).
+     */
+    public function retirerBureau(int $user): JsonResponse
+    {
+        $updated = $this->service->rattacherBureau($user, null);
+
+        return response()->json([
+            'data'    => new UserResource($updated),
+            'message' => 'Bureau de rattachement retiré. Accès global rétabli.',
+        ]);
     }
 }

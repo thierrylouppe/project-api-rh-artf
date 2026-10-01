@@ -11,4 +11,9 @@ class EchelonRepository extends BaseRepository implements EchelonInterface
     {
         return Echelon::class;
     }
+
+    public function findByNumero(int $numero): ?Echelon
+    {
+        return Echelon::where('numero', $numero)->first();
+    }
 }

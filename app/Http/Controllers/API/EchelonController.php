@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Requests\Echelon\CreateRequest;
 use App\Http\Requests\Echelon\UpdateRequest;
+use App\Http\Resources\EchelonListResource;
 use App\Http\Resources\EchelonResource;
 use App\Services\EchelonService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,11 @@ class EchelonController extends BaseController
     protected function resource(): string
     {
         return EchelonResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return EchelonListResource::class;
     }
 
     public function store(CreateRequest $request): JsonResponse

@@ -22,6 +22,15 @@ class TypeDocumentRepository extends BaseRepository implements TypeDocumentInter
         return TypeDocument::whereIn('id', $ids)->orderBy('nom')->get();
     }
 
+    public function findByNoms(array $noms): Collection
+    {
+        if ($noms === []) {
+            return collect();
+        }
+
+        return TypeDocument::whereIn('nom', $noms)->orderBy('nom')->get();
+    }
+
     public function getObligatoires(): Collection
     {
         return TypeDocument::where('obligatoire', true)->orderBy('nom')->get();

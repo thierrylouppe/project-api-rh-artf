@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Swagger\Schemas\Integration;
+
+use OpenApi\Attributes as OA;
+
+#[OA\Schema(
+    schema: 'ValidationCircuitResponse',
+    properties: [
+        new OA\Property(
+            property: 'data',
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/ValidationWorkflow')
+        ),
+    ]
+)]
+class ValidationCircuitResponse {}

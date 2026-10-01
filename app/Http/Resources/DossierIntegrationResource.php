@@ -19,12 +19,16 @@ class DossierIntegrationResource extends JsonResource
             'nombre_postes'        => $this->nombre_postes,
             'motif'                => $this->motif,
             'notes'                => $this->notes,
+            'deja_salarie'         => (bool) $this->deja_salarie,
             'type_integration_id'  => $this->when(! $this->relationLoaded('typeIntegration'), $this->type_integration_id),
             'type_integration'     => new TypeIntegrationResource($this->whenLoaded('typeIntegration')),
             'demandeur_id'         => $this->when(! $this->relationLoaded('demandeur'), $this->demandeur_id),
             'demandeur'            => new UserResource($this->whenLoaded('demandeur')),
-            'agent_id'             => $this->when(! $this->relationLoaded('agent'), $this->agent_id),
-            'agent'                => new AgentResource($this->whenLoaded('agent')),
+            'agent_id'             => $this->agent_id,
+            'agent'                => $this->when(
+                $this->relationLoaded('agent'),
+                fn () => $this->agent ? new AgentIdentiteResource($this->agent) : null
+            ),
             'documents'            => DocumentDossierResource::collection($this->whenLoaded('documents')),
             'validations'          => ValidationWorkflowResource::collection($this->whenLoaded('validations')),
             'actes'                => ActeAdministratifResource::collection($this->whenLoaded('actes')),

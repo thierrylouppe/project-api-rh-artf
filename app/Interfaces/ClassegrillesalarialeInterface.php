@@ -2,4 +2,13 @@
 
 namespace App\Interfaces;
 
-interface ClassegrillesalarialeInterface extends BaseInterface {}
+use App\Models\Classegrillesalariale;
+
+interface ClassegrillesalarialeInterface extends BaseInterface
+{
+    public function findByCategorieAndGrade(int $categorieId, int $gradeId): ?Classegrillesalariale;
+
+    public function findByGradeNom(string $nom): ?Classegrillesalariale;
+
+    public function findAvecGrade(int $id): Classegrillesalariale;
+}

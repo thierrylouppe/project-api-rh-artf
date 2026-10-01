@@ -36,15 +36,24 @@ class SalaireService extends BaseService
     }
 
     /**
-     * Génère la grille salariale complète (10 classes × 12 échelons = 120 lignes).
+     * Génère la grille salariale complète (classes × plage d'échelons).
+     *
+     * Plage lue depuis parametregrilles (`echelon_depart` → `echelon_fin`).
+     * Les indices de base restent le barème FP Congo (BASE_INDICES) :
+     * `indice_base` / `ecart_depart` en base sont conservés pour affichage / évolution future,
+     * mais n'entrent pas dans la formule (contrat de sortie inchangé).
      *
      * @param  float|null  $valeurPointIndice  Valeur du point d'indice fournie par l'appelant.
      *                                         Si null, utilise la valeur stockée dans parametregrilles.
+     * @return array{total: int, valeur_point_indice: float, echelon_depart: int, echelon_fin: int}
      */
-    public function generateGrille(?float $valeurPointIndice = null): int
+    public function generateGrille(?float $valeurPointIndice = null): array
     {
-        $pointIndice = $valeurPointIndice
-            ?? $this->parametregrille->getCurrent()->valeur_point_indice;
+        $params = $this->parametregrille->getCurrent();
+
+        $pointIndice = (float) ($valeurPointIndice ?? $params->valeur_point_indice);
+        $echelonDepart = max(1, (int) $params->echelon_depart);
+        $echelonFin = max($echelonDepart, (int) $params->echelon_fin);
 
         $classes = $this->classegrille->getAll();
         $now     = now()->toDateTimeString();
@@ -57,7 +66,7 @@ class SalaireService extends BaseService
 
             $indiceBase = self::BASE_INDICES[$classe->coefficient];
 
-            for ($echelon = 1; $echelon <= 12; $echelon++) {
+            for ($echelon = $echelonDepart; $echelon <= $echelonFin; $echelon++) {
                 $indice   = $indiceBase + ($echelon * $classe->coefficient);
                 $lignes[] = [
                     'classegrillesalariale_id' => $classe->id,
@@ -72,7 +81,12 @@ class SalaireService extends BaseService
 
         $this->repository->generateGrille($lignes);
 
-        return count($lignes);
+        return [
+            'total'               => count($lignes),
+            'valeur_point_indice' => $pointIndice,
+            'echelon_depart'      => $echelonDepart,
+            'echelon_fin'         => $echelonFin,
+        ];
     }
 
     public function getGrille(): Collection

@@ -16,11 +16,26 @@ abstract class BaseController extends Controller
 
     abstract protected function resource(): string;
 
+    /** Resource utilisée pour les listes (index). Par défaut = resource de détail. */
+    protected function listResource(): string
+    {
+        return $this->resource();
+    }
+
     public function index(Request $request): JsonResponse
     {
-        $items = $this->service->getAll($request->query());
+        $filters = $request->query();
 
-        return $this->collectionResponse($this->resource()::collection($items));
+        // Vague F — si le middleware ScopeByBureau a injecté un utilisateur, le propager
+        // au repository via les clés internes _scope_user / _scope_niveau.
+        if ($scopeUser = $request->get('bureau_scope_user')) {
+            $filters['_scope_user']  = $scopeUser;
+            $filters['_scope_niveau'] = $request->get('bureau_scope_niveau', $scopeUser->niveauCloisonnement());
+        }
+
+        $items = $this->service->getAll($filters);
+
+        return $this->collectionResponse($this->listResource()::collection($items));
     }
 
     public function show(Request $request): JsonResponse

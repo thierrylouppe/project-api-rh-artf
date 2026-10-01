@@ -2,20 +2,23 @@
 
 namespace App\Services;
 
+use App\Enums\NiveauValidation;
 use App\Enums\StatutDossier;
 use App\Enums\TypeStage;
-use App\Interfaces\ActeAdministratifInterface;
 use App\Interfaces\AgentInterface;
 use App\Interfaces\CircuitValidationInterface;
 use App\Interfaces\CompteIntegrationInterface;
 use App\Interfaces\ConventionStageInterface;
 use App\Interfaces\DossierIntegrationInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
+use App\Interfaces\UserInterface;
 use App\Interfaces\ValidationWorkflowInterface;
 use App\Models\ActeAdministratif;
 use App\Models\DossierIntegration;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /** @property DossierIntegrationInterface $repository */
 class DossierIntegrationService extends BaseService
@@ -25,12 +28,15 @@ class DossierIntegrationService extends BaseService
         private readonly ValidationWorkflowInterface $workflowRepository,
         private readonly CircuitValidationInterface $circuitValidationRepository,
         private readonly HistoriqueIntegrationInterface $historiqueRepository,
-        private readonly ActeAdministratifInterface $acteRepository,
+        private readonly ActeAdministratifService $acteService,
         private readonly AgentInterface $agentRepository,
         private readonly ConventionStageInterface $conventionStageRepository,
         private readonly CompteIntegrationInterface $compteRepository,
         private readonly DocumentDossierService $documentDossierService,
         private readonly CompteIntegrationService $compteService,
+        private readonly NotificationService $notificationService,
+        private readonly UserInterface $userRepository,
+        private readonly AffiliationSocialeService $affiliationSocialeService,
     ) {
         parent::__construct($repository);
     }
@@ -58,6 +64,8 @@ class DossierIntegrationService extends BaseService
 
     public function soumettre(int $id): DossierIntegration
     {
+        $this->assertDocumentsObligatoiresDeposesSiEmbauche($id);
+
         return $this->transitionner($id, StatutDossier::SOUMIS, 'Dossier soumis pour étude RH');
     }
 
@@ -73,18 +81,19 @@ class DossierIntegrationService extends BaseService
 
     public function marquerComplet(int $id): DossierIntegration
     {
-        if (! $this->documentDossierService->tousObligatoiresDeposes($id)) {
-            $manquants = $this->documentDossierService->getDocumentsObligatoiresManquants($id)
-                ->pluck('type_document.nom')
-                ->implode(', ');
+        $etat = $this->documentDossierService->getEtatDocuments($id);
 
-            abort(422, "Impossible de marquer le dossier complet : documents obligatoires manquants ({$manquants}).");
+        $manquants = collect($etat['manquants'])
+            ->filter(fn (array $item) => $item['est_obligatoire']);
+
+        if ($manquants->isNotEmpty()) {
+            $noms = $manquants->pluck('type_document.nom')->implode(', ');
+
+            abort(422, "Impossible de marquer le dossier complet : documents obligatoires manquants ({$noms}).");
         }
 
-        $nonValides = $this->documentDossierService->getDocumentsObligatoiresNonValides($id);
-
-        if ($nonValides->isNotEmpty()) {
-            $noms = $nonValides->pluck('typeDocument.nom')->implode(', ');
+        if ($etat['non_valides']->isNotEmpty()) {
+            $noms = $etat['non_valides']->pluck('typeDocument.nom')->implode(', ');
 
             abort(422, "Impossible de marquer le dossier complet : documents obligatoires non validés ({$noms}).");
         }
@@ -94,16 +103,26 @@ class DossierIntegrationService extends BaseService
 
     public function validerRH(int $id): DossierIntegration
     {
-        $dossier = $this->transitionner($id, StatutDossier::VALIDE_RH, 'Validation RH effectuée');
+        $this->assertDocumentsObligatoiresDeposesSiEmbauche($id);
 
-        // Résolution du circuit configuré pour ce type d'intégration.
-        // Si aucun niveau n'est configuré, le repository replie sur le circuit complet par défaut.
-        $niveaux = $this->circuitValidationRepository->getCircuitPourType($dossier->type_integration_id);
+        $dossier = $this->transitionner($id, StatutDossier::VALIDE_RH, 'Validation RH effectuée');
+        $dossier->load('typeIntegration');
+
+        $niveaux = $this->resoudreCircuitPourType($dossier);
+
+        // Aucun niveau restant (ex. type sans DG et sans circuit configuré) → prêt pour la suite.
+        if ($niveaux === []) {
+            return $this->transitionner(
+                $id,
+                StatutDossier::VALIDE_DG,
+                'Circuit hiérarchique / validation DG non requis pour ce type — dossier prêt'
+            );
+        }
 
         $this->workflowRepository->initialiserCircuit(
             DossierIntegration::class,
             $id,
-            $niveaux ?: null
+            $niveaux
         );
 
         return $dossier;
@@ -131,6 +150,13 @@ class DossierIntegrationService extends BaseService
 
     public function marquerContratSigne(int $id): DossierIntegration
     {
+        $dossier = $this->repository->findById($id);
+
+        // Mode post-intégration : pas de rejeu du workflow de statuts.
+        if ($dossier->statut === StatutDossier::INTEGRE) {
+            return $dossier;
+        }
+
         return $this->transitionner($id, StatutDossier::CONTRAT_SIGNE, 'Contrat signé');
     }
 
@@ -163,8 +189,9 @@ class DossierIntegrationService extends BaseService
             $this->agentRepository->assignerMatricule($dossier->agent_id, $matricule);
 
             // Statut déjà MATRICULE_CREE (acte généré sans contrat) : pas de transition à refaire
-            if ($dossier->statut === StatutDossier::MATRICULE_CREE) {
-                return $dossier->fresh();
+            // Statut INTEGRE : mode post-intégration — on assigne le matricule sans rejouer le workflow
+            if (in_array($dossier->statut, [StatutDossier::MATRICULE_CREE, StatutDossier::INTEGRE], true)) {
+                return $dossier->fresh(['agent']);
             }
 
             return $this->transitionner($id, StatutDossier::MATRICULE_CREE, "Matricule {$matricule} assigné (source : système externe)");
@@ -204,16 +231,19 @@ class DossierIntegrationService extends BaseService
      * Intègre le dossier en un seul appel depuis VALIDE_DG (flux simplifié)
      * ou depuis PRISE_DE_SERVICE (flux complet legacy).
      *
-     * Depuis VALIDE_DG : crée automatiquement le compte utilisateur de l'agent
-     * et retourne la liste des tâches post-intégration restantes.
+     * Depuis VALIDE_DG : crée automatiquement le compte utilisateur si le type
+     * le requiert (`necessite_compte_utilisateur`), puis retourne les tâches post-intégration.
      *
+     * @param  array{numero_cnss?: string|null}  $data
      * @return array{dossier: DossierIntegration, compte: ?object, taches_post_integration: array}
      */
-    public function integrer(int $id): array
+    public function integrer(int $id, array $data = []): array
     {
-        return DB::transaction(function () use ($id) {
+        return DB::transaction(function () use ($id, $data) {
             $dossier = $this->repository->findById($id);
             $dossier->load('typeIntegration', 'agent.contratActif');
+
+            $this->assurerImmatriculationCnss($dossier, $data['numero_cnss'] ?? null);
 
             $depuisValideeDG = $dossier->statut === StatutDossier::VALIDE_DG;
 
@@ -221,8 +251,9 @@ class DossierIntegrationService extends BaseService
             $dossier->load('typeIntegration', 'agent.contratActif');
 
             $compte = null;
+            $necessiteCompte = (bool) ($dossier->typeIntegration?->necessite_compte_utilisateur ?? true);
 
-            if ($depuisValideeDG && $dossier->agent_id) {
+            if ($depuisValideeDG && $necessiteCompte && $dossier->agent_id) {
                 $agent = $this->agentRepository->findById($dossier->agent_id);
 
                 if ($this->compteRepository->findByAgent($dossier->agent_id) === null) {
@@ -235,9 +266,12 @@ class DossierIntegrationService extends BaseService
                 $this->creerConventionStage($dossier);
             }
 
+            // Recharger l'agent (ex. statut stagiaire) après les automatismes post-intégration
+            $dossier->load('typeIntegration', 'agent.contratActif');
+
             return [
-                'dossier'                => $dossier,
-                'compte'                 => $compte,
+                'dossier'                 => $dossier,
+                'compte'                  => $compte,
                 'taches_post_integration' => $this->tachesPostIntegration($id),
             ];
         });
@@ -246,16 +280,34 @@ class DossierIntegrationService extends BaseService
     /**
      * Retourne la liste des tâches post-intégration avec leur statut (fait / non_fait).
      *
-     * Chaque tâche indique si l'action a déjà été réalisée en inspectant
-     * les données associées au dossier et à son agent.
+     * La liste est filtrée selon les flags du type d'intégration
+     * (`necessite_contrat`, `necessite_compte_utilisateur`, stage…).
+     * Les clés FE existantes (`etape`, `label`, `endpoint`, `statut`, `obligatoire`) sont préservées.
      */
     public function tachesPostIntegration(int $id): array
     {
         $dossier = $this->repository->findById($id);
-        $dossier->load('agent.affectations', 'agent.nominations', 'agent.remisesMateriel', 'priseDeService', 'actes');
+        $dossier->load(
+            'typeIntegration',
+            'agent.affectations',
+            'agent.nominations',
+            'agent.nominationActive',
+            'agent.remisesMateriel',
+            'agent.salaireActuel',
+            'agent.contratActif',
+            'priseDeService',
+            'actes'
+        );
 
         $agent             = $dossier->agent;
-        $necessite_contrat = (bool) $dossier->typeIntegration?->necessite_contrat;
+        $type              = $dossier->typeIntegration;
+        $necessiteContrat  = (bool) ($type?->necessite_contrat);
+        $necessiteCompte   = (bool) ($type?->necessite_compte_utilisateur ?? true);
+        $estStage          = (bool) ($type?->estUnStage());
+
+        $compteExistant = $agent
+            ? $this->compteRepository->findByAgent($agent->id) !== null
+            : false;
 
         $taches = [];
 
@@ -267,7 +319,7 @@ class DossierIntegrationService extends BaseService
             'obligatoire' => true,
         ];
 
-        if ($necessite_contrat) {
+        if ($necessiteContrat) {
             $taches[] = [
                 'etape'       => 12,
                 'label'       => 'Marquer le contrat signé',
@@ -275,6 +327,16 @@ class DossierIntegrationService extends BaseService
                 'statut'      => $agent?->contratActif ? 'fait' : 'non_fait',
                 'obligatoire' => false,
             ];
+
+            if (! $estStage) {
+                $taches[] = [
+                    'etape'       => 12,
+                    'label'       => 'Salaire initial (auto à la création du contrat CDI/CDD)',
+                    'endpoint'    => "GET /integration/agents/{$agent?->id}/salaires/actuel",
+                    'statut'      => $agent?->salaireActuel ? 'fait' : 'non_fait',
+                    'obligatoire' => false,
+                ];
+            }
         }
 
         $taches[] = [
@@ -287,19 +349,31 @@ class DossierIntegrationService extends BaseService
 
         $taches[] = [
             'etape'       => 14,
-            'label'       => 'Affecter l\'agent',
-            'endpoint'    => 'POST /integration/affectations',
+            'label'       => 'Affecter l\'agent (module carrière)',
+            'endpoint'    => 'POST /carriere/affectations',
             'statut'      => $agent?->affectations?->isNotEmpty() ? 'fait' : 'non_fait',
-            'obligatoire' => true,
-        ];
-
-        $taches[] = [
-            'etape'       => 15,
-            'label'       => 'Nommer l\'agent (poste de responsabilité)',
-            'endpoint'    => 'POST /integration/nominations',
-            'statut'      => $agent?->nominations?->isNotEmpty() ? 'fait' : 'non_fait',
             'obligatoire' => false,
         ];
+
+        if (! $estStage) {
+            $taches[] = [
+                'etape'       => 15,
+                'label'       => 'Nommer l\'agent (module carrière)',
+                'endpoint'    => 'POST /carriere/nominations',
+                'statut'      => $agent?->nominationActive ? 'fait' : 'non_fait',
+                'obligatoire' => false,
+            ];
+        }
+
+        if ($necessiteCompte) {
+            $taches[] = [
+                'etape'       => 16,
+                'label'       => 'Compte utilisateur',
+                'endpoint'    => 'POST /integration/comptes/provisionner',
+                'statut'      => $compteExistant ? 'fait' : 'non_fait',
+                'obligatoire' => true,
+            ];
+        }
 
         $taches[] = [
             'etape'       => 17,
@@ -356,52 +430,116 @@ class DossierIntegrationService extends BaseService
     }
 
     /**
-     * Génère automatiquement l'acte administratif correspondant au type d'intégration du dossier.
+     * Enregistre l'acte d'entrée (délègue au service actes). Idempotent.
+     * Chemin A (VALIDE_DG, premier enregistrement) : transition ACTE_GENERE / MATRICULE_CREE.
+     * Chemin B (INTEGRE) : le dossier ne change pas de statut.
      *
-     * - Le type d'acte est déterminé par TypeIntegration::type_acte_administratif.
-     * - Si le type nécessite un contrat, le statut reste ACTE_GENERE (étape CONTRAT_SIGNE à suivre).
-     * - Sinon, le statut passe directement à MATRICULE_CREE (le contrat n'est pas requis).
-     *
-     * @return array{acte: ActeAdministratif, dossier: DossierIntegration, necessite_contrat: bool}
+     * @return array{acte: ActeAdministratif, dossier: DossierIntegration, necessite_contrat: bool, cree: bool}
      */
     public function genererActeAdministratif(int $id): array
     {
         return DB::transaction(function () use ($id) {
-            $dossier = $this->repository->findById($id);
-            $dossier->load('typeIntegration');
+            $result            = $this->acteService->enregistrerPourDossier($id);
+            $dossier           = $result['dossier'];
+            $necessite_contrat = (bool) $dossier->typeIntegration?->necessite_contrat;
 
-            abort_unless(
-                $dossier->statut === StatutDossier::VALIDE_DG,
-                422,
-                "L'acte ne peut être généré qu'après la validation DG (statut actuel : {$dossier->statut->label()})"
-            );
+            if (
+                $result['cree']
+                && $dossier->statut === StatutDossier::VALIDE_DG
+            ) {
+                $dossier = $this->transitionner(
+                    $id,
+                    StatutDossier::ACTE_GENERE,
+                    "Acte {$result['acte']->type_acte->label()} enregistré (n° {$result['acte']->numero})"
+                );
 
-            $typeIntegration = $dossier->typeIntegration;
-            $typeActe = $typeIntegration->acteAdministratifEnum();
-
-            abort_if(
-                $typeActe === null,
-                422,
-                "Aucun acte administratif configuré pour le type d'intégration « {$typeIntegration->nom} »"
-            );
-
-            $numero = $this->acteRepository->genererNumero($typeActe);
-            $acte   = $this->acteRepository->create([
-                'dossier_integration_id' => $id,
-                'type_acte'              => $typeActe->value,
-                'numero'                 => $numero,
-            ]);
-
-            $dossier = $this->transitionner($id, StatutDossier::ACTE_GENERE, "Acte {$typeActe->label()} généré automatiquement (n° {$numero})");
-
-            $necessite_contrat = (bool) $typeIntegration->necessite_contrat;
-
-            if (! $necessite_contrat) {
-                $dossier = $this->transitionner($id, StatutDossier::MATRICULE_CREE, 'Pas de contrat requis — passage direct à la création du matricule');
+                if (! $necessite_contrat) {
+                    $dossier = $this->transitionner(
+                        $id,
+                        StatutDossier::MATRICULE_CREE,
+                        'Pas de contrat requis — passage direct à la création du matricule'
+                    );
+                }
             }
 
-            return compact('acte', 'dossier', 'necessite_contrat');
+            return [
+                'acte'              => $result['acte'],
+                'dossier'           => $dossier->fresh(['typeIntegration', 'actes', 'agent']),
+                'necessite_contrat' => $necessite_contrat,
+                'cree'              => $result['cree'],
+            ];
         });
+    }
+
+    /**
+     * Résout le circuit hiérarchique applicable à un dossier selon son type.
+     *
+     * - Circuit configuré sur le type, sinon circuit complet par défaut.
+     * - Si `necessite_validation_dg = false`, le niveau Directeur Général est retiré.
+     *
+     * @return list<array{niveau: string, ordre: int}>
+     */
+    private function resoudreCircuitPourType(DossierIntegration $dossier): array
+    {
+        $niveaux = $this->circuitValidationRepository->getCircuitPourType($dossier->type_integration_id);
+
+        if ($niveaux === []) {
+            $niveaux = array_map(
+                fn (NiveauValidation $n) => ['niveau' => $n->value, 'ordre' => $n->ordre()],
+                NiveauValidation::circuitComplet()
+            );
+        }
+
+        $necessiteDg = (bool) ($dossier->typeIntegration?->necessite_validation_dg ?? true);
+
+        if (! $necessiteDg) {
+            $niveaux = array_values(array_filter(
+                $niveaux,
+                fn (array $step) => ($step['niveau'] ?? null) !== NiveauValidation::DIRECTEUR_GENERAL->value
+            ));
+        }
+
+        return $niveaux;
+    }
+
+    private function assertDocumentsObligatoiresDeposesSiEmbauche(int $id): void
+    {
+        $dossier = $this->repository->findById($id);
+        $dossier->loadMissing('typeIntegration');
+
+        if (! $dossier->typeIntegration?->estEmbaucheCcn()) {
+            return;
+        }
+
+        $manquants = $this->documentDossierService->getDocumentsObligatoiresManquants($id);
+
+        if ($manquants->isNotEmpty()) {
+            abort(422, 'Documents obligatoires manquants ('.$manquants->pluck('type_document.nom')->implode(', ').').');
+        }
+    }
+
+    private function assurerImmatriculationCnss(DossierIntegration $dossier, ?string $numeroPayload): void
+    {
+        if (! $dossier->typeIntegration?->estEmbaucheCcn()) {
+            return;
+        }
+
+        abort_if(
+            $dossier->agent_id === null,
+            422,
+            'Impossible d\'intégrer sans fiche agent : immatriculation CNSS obligatoire (art. 47).'
+        );
+
+        $agent  = $this->agentRepository->findById((int) $dossier->agent_id);
+        $numero = trim((string) ($numeroPayload ?? $agent->numero_cnss ?? ''));
+
+        if ($numero === '') {
+            throw ValidationException::withMessages([
+                'numero_cnss' => 'Immatriculation CNSS obligatoire (art. 47).',
+            ]);
+        }
+
+        $this->affiliationSocialeService->assurerAffiliationCnss((int) $agent->id, $numero);
     }
 
     private function transitionner(int $id, StatutDossier $cible, string $commentaire): DossierIntegration
@@ -426,6 +564,8 @@ class DossierIntegrationService extends BaseService
                 $commentaire
             );
 
+            $this->notifierTransition($dossier, $cible);
+
             return $dossier;
         });
     }
@@ -438,5 +578,56 @@ class DossierIntegrationService extends BaseService
     public function findByReference(string $reference): ?DossierIntegration
     {
         return $this->repository->findByReference($reference);
+    }
+
+    private function notifierTransition(DossierIntegration $dossier, StatutDossier $cible): void
+    {
+        $message = match ($cible) {
+            StatutDossier::VALIDE_RH => "Le dossier {$dossier->reference} a été validé par les RH.",
+            StatutDossier::REJETE    => "Le dossier {$dossier->reference} a été rejeté.",
+            StatutDossier::VALIDE_DG => "Le dossier {$dossier->reference} a reçu la validation DG.",
+            StatutDossier::INTEGRE   => "Le dossier {$dossier->reference} est intégré.",
+            default                  => null,
+        };
+
+        if ($message === null) {
+            return;
+        }
+
+        $action = match ($cible) {
+            StatutDossier::VALIDE_RH => 'validee_rh',
+            StatutDossier::REJETE    => 'rejetee',
+            StatutDossier::VALIDE_DG => 'validee_dg',
+            StatutDossier::INTEGRE   => 'integre',
+            default                  => 'mise_a_jour',
+        };
+
+        $destinataires = collect();
+
+        if ($dossier->demandeur_id) {
+            $demandeur = $this->userRepository->findOptional((int) $dossier->demandeur_id);
+            if ($demandeur instanceof User) {
+                $destinataires->push($demandeur);
+            }
+        }
+
+        if ($dossier->agent_id) {
+            $compte = $this->userRepository->findByAgentId((int) $dossier->agent_id);
+            if ($compte instanceof User) {
+                $destinataires->push($compte);
+            }
+        }
+
+        $this->notificationService->notifierEvenementGroupe(
+            $destinataires,
+            'integration',
+            $action,
+            $message,
+            [
+                'dossier_id' => $dossier->id,
+                'reference'  => $dossier->reference,
+                'statut'     => $cible->value,
+            ]
+        );
     }
 }

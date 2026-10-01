@@ -2,4 +2,9 @@
 
 namespace App\Interfaces;
 
-interface EchelonInterface extends BaseInterface {}
+use App\Models\Echelon;
+
+interface EchelonInterface extends BaseInterface
+{
+    public function findByNumero(int $numero): ?Echelon;
+}

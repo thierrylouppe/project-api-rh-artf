@@ -14,6 +14,7 @@ class FonctionResource extends JsonResource
             'nom'         => $this->nom,
             'sigle'       => $this->sigle ?? null,
             'description' => $this->description,
+            'hors_grille' => $this->estHorsGrille(),
             'created_at'  => $this->created_at,
             'updated_at'  => $this->updated_at,
         ];

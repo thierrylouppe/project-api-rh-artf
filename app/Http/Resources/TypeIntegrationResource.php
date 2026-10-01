@@ -17,9 +17,10 @@ class TypeIntegrationResource extends JsonResource
             'necessite_contrat'            => $this->necessite_contrat,
             'necessite_validation_dg'      => $this->necessite_validation_dg,
             'necessite_compte_utilisateur' => $this->necessite_compte_utilisateur,
+            'est_embauche_ccn'             => $this->estEmbaucheCcn(),
             'prefixe_matricule'            => $this->prefixe_matricule,
             'duree_max_mois'               => $this->duree_max_mois,
-            'documents_obligatoires'       => TypeDocumentResource::collection(
+            'documents_obligatoires'       => TypeDocumentListResource::collection(
                 $this->whenLoaded('documentsObligatoires')
             ),
             'created_at'                   => $this->created_at,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\Direction\CreateRequest;
 use App\Http\Requests\Direction\UpdateRequest;
 use App\Http\Resources\DirectionResource;
+use App\Http\Resources\StructureOrganisationnelleListResource;
 use App\Services\DirectionService;
 use Illuminate\Http\JsonResponse;
 
@@ -18,6 +19,11 @@ class DirectionController extends BaseController
     protected function resource(): string
     {
         return DirectionResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return StructureOrganisationnelleListResource::class;
     }
 
     protected function showRelations(): array
@@ -39,6 +45,6 @@ class DirectionController extends BaseController
     {
         $items = $this->service->getByAdministration($administrationId);
 
-        return response()->json(['data' => DirectionResource::collection($items)]);
+        return $this->collectionResponse(StructureOrganisationnelleListResource::collection($items));
     }
 }

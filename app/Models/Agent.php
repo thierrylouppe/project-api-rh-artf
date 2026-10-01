@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\StatutNomination;
+use App\Traits\HasBureauScope;
 use App\Traits\HasFilterScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Agent extends Model
 {
-    use HasFilterScope;
+    use HasBureauScope, HasFilterScope;
 
     protected $table = 'agents';
 
@@ -36,14 +38,21 @@ class Agent extends Model
         'type_integration_id',
         'date_prise_service',
         'statut',
+        'archived_at',
+        'archived_by',
+        'motif_archivage',
+        'motif_archivage_code',
+        'prioritaire_reembauche_jusquau',
     ];
 
     protected $casts = [
-        'date_naissance'    => 'date',
+        'date_naissance' => 'date',
         'date_prise_service' => 'date',
+        'archived_at' => 'datetime',
+        'prioritaire_reembauche_jusquau' => 'date',
     ];
 
-    protected array $filterable = ['nom', 'prenom', 'matricule', 'statut', 'genre'];
+    protected array $filterable = ['nom', 'prenom', 'matricule', 'statut', 'genre', 'type_integration_id'];
 
     public function getNomCompletAttribute(): string
     {
@@ -127,11 +136,107 @@ class Agent extends Model
 
     public function nominationActive(): HasOne
     {
-        return $this->hasOne(Nomination::class)->where('statut', 'active')->latest();
+        return $this->hasOne(Nomination::class)->where('statut', StatutNomination::ACTIVE)->latest();
+    }
+
+    public function positionsConventionnelles(): HasMany
+    {
+        return $this->hasMany(PositionConventionnelle::class);
+    }
+
+    public function estHorsGrille(): bool
+    {
+        $this->loadMissing(['nominationActive', 'fonction']);
+
+        if ($this->nominationActive !== null) {
+            return Fonction::estNomHorsGrille($this->nominationActive->poste);
+        }
+
+        return $this->fonction?->estHorsGrille() ?? false;
     }
 
     public function contratActif(): HasOne
     {
         return $this->hasOne(Contrat::class)->where('statut', 'actif')->latest();
+    }
+
+    public function salairesAgents(): HasMany
+    {
+        return $this->hasMany(SalaireAgent::class);
+    }
+
+    public function salaireActuel(): HasOne
+    {
+        return $this->hasOne(SalaireAgent::class)->where('statut', 'actif')->latest('date_debut');
+    }
+
+    public function informationsPersonnelles(): HasOne
+    {
+        return $this->hasOne(InformationsPersonnelle::class);
+    }
+
+    public function informationsProfessionnelles(): HasOne
+    {
+        return $this->hasOne(InformationsProfessionnelle::class);
+    }
+
+    public function contactsUrgence(): HasMany
+    {
+        return $this->hasMany(ContactUrgence::class);
+    }
+
+    public function situationFamiliale(): HasOne
+    {
+        return $this->hasOne(SituationFamiliale::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(DocumentAgent::class);
+    }
+
+    public function sanctions(): HasMany
+    {
+        return $this->hasMany(Sanction::class);
+    }
+
+    public function avertissements(): HasMany
+    {
+        return $this->hasMany(Avertissement::class);
+    }
+
+    public function affiliations(): HasMany
+    {
+        return $this->hasMany(AffiliationSociale::class);
+    }
+
+    public function ayantsDroit(): HasMany
+    {
+        return $this->hasMany(AyantDroit::class);
+    }
+
+    public function prestations(): HasMany
+    {
+        return $this->hasMany(Prestation::class);
+    }
+
+    public function visitesMedicales(): HasMany
+    {
+        return $this->hasMany(VisiteMedicale::class);
+    }
+
+    public function prisesEnCharge(): HasMany
+    {
+        return $this->hasMany(PriseEnCharge::class);
+    }
+
+    public function arretsSante(): HasMany
+    {
+        return $this->hasMany(ArretSante::class);
+    }
+
+    public function archivedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'archived_by');
     }
 }

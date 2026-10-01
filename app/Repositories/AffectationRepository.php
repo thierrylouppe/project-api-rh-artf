@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Enums\StatutAffectation;
+use App\Enums\StatutNomination;
 use App\Interfaces\AffectationInterface;
 use App\Models\Affectation;
 use App\Models\Bureau;
@@ -18,9 +19,20 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
         return Affectation::class;
     }
 
+    public function getAll(array $filters = []): Collection
+    {
+        $query = Affectation::query()->with('agent');
+
+        if (method_exists(Affectation::class, 'scopeFilter')) {
+            $query->filter($filters);
+        }
+
+        return $query->get();
+    }
+
     public function getByAgent(int $agentId): Collection
     {
-        return Affectation::where('agent_id', $agentId)->get();
+        return Affectation::where('agent_id', $agentId)->with('agent')->get();
     }
 
     public function getActive(int $agentId): ?Affectation
@@ -29,6 +41,31 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
             ->where('statut', StatutAffectation::ACTIVE)
             ->latest()
             ->first();
+    }
+
+    public function getActivesParSuperieur(int $superieurId): Collection
+    {
+        return Affectation::query()
+            ->where('superieur_hierarchique_id', $superieurId)
+            ->where('statut', StatutAffectation::ACTIVE)
+            ->with(['agent', 'structure'])
+            ->orderByDesc('date_affectation')
+            ->get();
+    }
+
+    public function getPourAgentSurPeriode(int $agentId, $debut, $fin): Collection
+    {
+        return Affectation::query()
+            ->where('agent_id', $agentId)
+            ->whereIn('statut', [StatutAffectation::ACTIVE, StatutAffectation::TERMINEE])
+            ->whereDate('date_affectation', '<', $fin)
+            ->where(function ($query) use ($debut) {
+                $query->whereNull('date_fin')
+                    ->orWhereDate('date_fin', '>=', $debut);
+            })
+            ->with('structure')
+            ->orderBy('date_affectation')
+            ->get();
     }
 
     public function terminer(int $id, ?string $dateFin): Affectation
@@ -76,11 +113,26 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
         return null;
     }
 
+    public function getByLot(int $lotId): Collection
+    {
+        return Affectation::query()
+            ->where('lot_affectation_id', $lotId)
+            ->orderBy('id')
+            ->get();
+    }
+
+    public function updateStatutByLot(int $lotId, StatutAffectation $statut): void
+    {
+        Affectation::query()
+            ->where('lot_affectation_id', $lotId)
+            ->update(['statut' => $statut]);
+    }
+
     private function nominationActiveParStructure(string $type, int $id): ?Nomination
     {
         return Nomination::where('structurable_type', $type)
             ->where('structurable_id', $id)
-            ->where('statut', 'active')
+            ->where('statut', StatutNomination::ACTIVE)
             ->latest()
             ->first();
     }

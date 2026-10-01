@@ -15,4 +15,6 @@ interface ActeAdministratifInterface extends BaseInterface
     public function genererNumero(TypeActeAdministratif $type): string;
 
     public function acteExistePourType(int $dossierId, string $typeActe): bool;
+
+    public function trouverPourDossierEtType(int $dossierId, string $typeActe): ?ActeAdministratif;
 }

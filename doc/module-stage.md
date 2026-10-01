@@ -238,11 +238,11 @@ Réutilise `DossierIntegration` avec règles stage sur `TypeIntegration` (un enr
 
 | Étape agent classique | Comportement stage |
 |---|---|
-| Validation DG | Paramétrable (`necessite_validation_dg`) — indépendant de la pièce « demande au DG » |
+| Validation DG | Paramétrable (`necessite_validation_dg`) — si `false`, niveau DG retiré du circuit |
 | Matricule | Préfixe `STG` ou `ARTF` selon config |
-| Compte utilisateur | Optionnel, accès restreint |
-| Salaire / grille | Gratification sur convention uniquement |
-| Nomination | Fonction « Stagiaire » (automatique) |
+| Compte utilisateur | Respecte `necessite_compte_utilisateur` (stages seedés : `false`) |
+| Salaire / grille | Gratification sur convention uniquement (hors tâches grille) |
+| Nomination | Absente des tâches post-intégration stage |
 | Documents | Liste paramétrable par `TypeIntegration` |
 
 **Documents obligatoires — communs à tous les types** :

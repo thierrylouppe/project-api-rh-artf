@@ -14,7 +14,7 @@ class LocaliteResource extends JsonResource
             'nom' => $this->nom,
             'sigle' => $this->sigle,
             'description' => $this->description,
-            'administrations' => AdministrationResource::collection($this->whenLoaded('administrations')),
+            'administrations' => StructureOrganisationnelleListResource::collection($this->whenLoaded('administrations')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

@@ -11,11 +11,18 @@ class AffectationResource extends JsonResource
     {
         return [
             'id'                          => $this->id,
-            'agent_id'                    => $this->when(! $this->relationLoaded('agent'), $this->agent_id),
-            'agent'                       => new AgentResource($this->whenLoaded('agent')),
+            'agent_id'                    => $this->agent_id,
+            'agent'                       => $this->when(
+                $this->relationLoaded('agent'),
+                fn () => $this->agent ? new AgentIdentiteResource($this->agent) : null
+            ),
+            'lot_affectation_id'          => $this->lot_affectation_id,
             'structurable_type'           => $this->structurable_type,
             'structurable_id'             => $this->structurable_id,
             'motif'                       => $this->motif,
+            'motif_code'                  => $this->motif_code,
+            'commentaire_opportunite'     => $this->commentaire_opportunite,
+            'pieces_rapprochement'        => $this->pieces_rapprochement,
             'note_service'                => $this->note_service,
             'note_service_nom_original'   => $this->note_service_nom_original,
             'date_affectation'            => $this->date_affectation?->format('Y-m-d'),

@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Enums\MotifAffectation;
+use App\Enums\PieceRapprochement;
 use App\Enums\StatutAffectation;
 use App\Interfaces\AffectationInterface;
 use App\Interfaces\HistoriqueIntegrationInterface;
@@ -10,12 +12,15 @@ use App\Models\Affectation;
 use App\Models\Bureau;
 use App\Models\Direction;
 use App\Models\Service;
+use App\Notifications\AffectationEvenementNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Arr;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use ZipArchive;
 
 /** @property AffectationInterface $repository */
 class AffectationService extends BaseService
@@ -24,6 +29,7 @@ class AffectationService extends BaseService
         AffectationInterface $repository,
         private readonly ValidationWorkflowInterface $workflowRepository,
         private readonly HistoriqueIntegrationInterface $historiqueRepository,
+        private readonly NotificationService $notificationService,
     ) {
         parent::__construct($repository);
     }
@@ -32,6 +38,14 @@ class AffectationService extends BaseService
     {
         $data['created_by'] = $data['created_by'] ?? Auth::id();
         $data['statut']     = StatutAffectation::EN_ATTENTE_VALIDATION;
+
+        foreach (PieceRapprochement::toutes() as $piece) {
+            unset($data[$piece->champFichier()]);
+        }
+
+        if (MotifAffectation::estRapprochement($data['motif_code'] ?? null, $data['motif'] ?? null)) {
+            $data['motif_code'] = MotifAffectation::RAPPROCHEMENT_CONJOINTS->value;
+        }
 
         // Résolution automatique du supérieur hiérarchique si non fourni
         if (empty($data['superieur_hierarchique_id']) && ! empty($data['structurable_type']) && ! empty($data['structurable_id'])) {
@@ -57,6 +71,8 @@ class AffectationService extends BaseService
             $model->toArray(),
             null
         );
+
+        $this->notifier($model, 'creee');
 
         return $model;
     }
@@ -85,7 +101,10 @@ class AffectationService extends BaseService
                 null
             );
 
-            return $affectation->fresh();
+            $affectation = $affectation->fresh();
+            $this->notifier($affectation, 'approuvee');
+
+            return $affectation;
         });
     }
 
@@ -94,37 +113,75 @@ class AffectationService extends BaseService
         return DB::transaction(function () use ($id) {
             $affectation = $this->repository->findById($id);
 
-            abort_unless(
-                $affectation->statut->peutTransitionnerVers(StatutAffectation::ACTIVE),
+            abort_if(
+                $affectation->lot_affectation_id,
                 422,
-                "L'affectation ne peut être activée que depuis le statut « Approuvée ». Statut actuel : « {$affectation->statut->label()} »."
+                'Cette affectation appartient à un lot : activez le lot, pas la ligne.'
             );
 
-            $ancienneActive = $this->repository->getActive($affectation->agent_id);
-            if ($ancienneActive && $ancienneActive->id !== $id) {
-                $this->repository->terminer($ancienneActive->id, null);
-            }
-
-            $affectation->update(['statut' => StatutAffectation::ACTIVE]);
-
-            $this->historiqueRepository->enregistrer(
-                Affectation::class,
-                $id,
-                Auth::id(),
-                'affectation_activee',
-                ['statut' => StatutAffectation::APPROUVEE->value],
-                ['statut' => StatutAffectation::ACTIVE->value],
-                null
-            );
-
-            return $affectation->fresh();
+            return $this->executerActivation($affectation);
         });
+    }
+
+    public function activerLigneDeLot(int $id): Affectation
+    {
+        $affectation = $this->repository->findById($id);
+
+        abort_unless(
+            $affectation->lot_affectation_id,
+            422,
+            'Cette affectation n\'appartient pas à un lot.'
+        );
+
+        return $this->executerActivation($affectation);
+    }
+
+    private function executerActivation(Affectation $affectation): Affectation
+    {
+        $id = (int) $affectation->id;
+
+        abort_unless(
+            $affectation->statut->peutTransitionnerVers(StatutAffectation::ACTIVE),
+            422,
+            "L'affectation ne peut être activée que depuis le statut « Approuvée ». Statut actuel : « {$affectation->statut->label()} »."
+        );
+
+        $ancienneActive = $this->repository->getActive($affectation->agent_id);
+        if ($ancienneActive && $ancienneActive->id !== $id) {
+            $this->repository->terminer($ancienneActive->id, null);
+        }
+
+        $affectation->update(['statut' => StatutAffectation::ACTIVE]);
+
+        $this->historiqueRepository->enregistrer(
+            Affectation::class,
+            $id,
+            Auth::id(),
+            'affectation_activee',
+            ['statut' => StatutAffectation::APPROUVEE->value],
+            ['statut' => StatutAffectation::ACTIVE->value],
+            null
+        );
+
+        $affectation = $affectation->fresh();
+
+        if (! $affectation->lot_affectation_id) {
+            $this->notifier($affectation, 'activee');
+        }
+
+        return $affectation;
     }
 
     public function rejeter(int $id, string $commentaire): Affectation
     {
         return DB::transaction(function () use ($id, $commentaire) {
             $affectation = $this->repository->findById($id);
+
+            abort_if(
+                $affectation->lot_affectation_id,
+                422,
+                'Cette affectation appartient à un lot : rejetez le lot, pas la ligne.'
+            );
 
             abort_unless(
                 $affectation->statut->peutTransitionnerVers(StatutAffectation::REJETEE),
@@ -145,7 +202,10 @@ class AffectationService extends BaseService
                 $commentaire
             );
 
-            return $affectation->fresh();
+            $affectation = $affectation->fresh();
+            $this->notifier($affectation, 'rejetee');
+
+            return $affectation;
         });
     }
 
@@ -172,44 +232,31 @@ class AffectationService extends BaseService
         return $this->repository->getActive($agentId);
     }
 
-    /**
-     * Crée une affectation par agent, chacun vers sa propre structure et son propre supérieur
-     * hiérarchique. Seuls date_affectation, motif et note_service sont communs au lot.
-     *
-     * @param  array{
-     *     date_affectation: string,
-     *     motif: string|null,
-     *     note_service: string|null,
-     *     note_service_nom_original: string|null,
-     *     agents: array<array{
-     *         agent_id: int,
-     *         structurable_type: string,
-     *         structurable_id: int,
-     *         superieur_hierarchique_id: int|null
-     *     }>
-     * } $data
-     * @return Collection<Affectation>
-     */
-    public function affecterGroupe(array $data): Collection
+    public function creerUnitaire(array $data, ?UploadedFile $noteService = null, array $piecesRapprochement = []): Affectation
     {
-        return DB::transaction(function () use ($data) {
-            $commonData = Arr::except($data, ['agents']);
+        $agentId = (int) $data['agent_id'];
 
-            return collect($data['agents'])->map(function (array $agentData) use ($commonData) {
-                $superieurId = ! empty($agentData['superieur_hierarchique_id'])
-                    ? (int) $agentData['superieur_hierarchique_id']
-                    : $this->repository->resoudreSuperiorParStructure(
-                        $agentData['structurable_type'],
-                        (int) $agentData['structurable_id']
-                    );
+        if ($noteService !== null) {
+            $data['note_service']              = $noteService->store("affectations/{$agentId}/notes-service", 'local');
+            $data['note_service_nom_original'] = $noteService->getClientOriginalName();
+        }
 
-                $payload = array_merge($commonData, $agentData, [
-                    'superieur_hierarchique_id' => $superieurId,
-                ]);
+        if (MotifAffectation::estRapprochement($data['motif_code'] ?? null, $data['motif'] ?? null)) {
+            $stockees = [];
+            foreach (PieceRapprochement::toutes() as $piece) {
+                $fichier = $piecesRapprochement[$piece->value] ?? null;
+                if (! $fichier instanceof UploadedFile) {
+                    throw ValidationException::withMessages([
+                        $piece->champFichier() => $piece->label().' est obligatoire pour un rapprochement de conjoints (art. 81).',
+                    ]);
+                }
+                $stockees[$piece->value] = $fichier->store("affectations/{$agentId}/rapprochement", 'local');
+            }
+            $data['pieces_rapprochement'] = $stockees;
+            $data['motif_code']           = MotifAffectation::RAPPROCHEMENT_CONJOINTS->value;
+        }
 
-                return $this->create($payload);
-            });
-        });
+        return $this->create($data);
     }
 
     /**
@@ -240,7 +287,7 @@ class AffectationService extends BaseService
         $path = "affectations/{$affectation->agent_id}/notes-service/generated/note-service-{$id}.pdf";
         Storage::disk('local')->put($path, $pdf->output());
 
-        $nomOriginal = "NS-AFF-" . date('Y') . "-" . str_pad($id, 4, '0', STR_PAD_LEFT) . ".pdf";
+        $nomOriginal = $this->nomFichierNoteService($id);
 
         $affectation->update([
             'note_service'               => $path,
@@ -248,5 +295,57 @@ class AffectationService extends BaseService
         ]);
 
         return $path;
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return array{path: string, filename: string}
+     */
+    public function genererNotesServiceZip(array $ids): array
+    {
+        $tempDir = storage_path('app/temp');
+
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+
+        $zipPath = $tempDir . '/notes-service-lot-' . time() . '.zip';
+        $zip     = new ZipArchive();
+        $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+        foreach ($ids as $id) {
+            try {
+                $path     = $this->genererNoteServicePdf((int) $id);
+                $fullPath = Storage::disk('local')->path($path);
+                $zip->addFile($fullPath, $this->nomFichierNoteService((int) $id));
+            } catch (\Throwable) {
+                // Les affectations introuvables ou en erreur sont ignorées.
+            }
+        }
+
+        $zip->close();
+
+        return [
+            'path'     => $zipPath,
+            'filename' => 'notes-service-affectations-' . date('Y-m-d') . '.zip',
+        ];
+    }
+
+    public function nomFichierNoteService(int $id): string
+    {
+        return 'NS-AFF-' . date('Y') . '-' . str_pad((string) $id, 4, '0', STR_PAD_LEFT) . '.pdf';
+    }
+
+    private function notifier(Affectation $affectation, string $action): void
+    {
+        $destinataires = $this->notificationService->destinatairesAuteurEtAgent(
+            $affectation->created_by ? (int) $affectation->created_by : null,
+            $affectation->agent_id ? (int) $affectation->agent_id : null,
+        );
+
+        $this->notificationService->envoyerGroupe(
+            $destinataires,
+            new AffectationEvenementNotification($affectation, $action)
+        );
     }
 }

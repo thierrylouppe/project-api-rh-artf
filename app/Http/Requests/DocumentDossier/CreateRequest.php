@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\DocumentDossier;
 
-use App\Models\DossierIntegration;
+use App\Services\DocumentDossierService;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -46,18 +46,12 @@ class CreateRequest extends FormRequest
             $typeDocumentId = (int) $this->input('type_document_id');
             $dossierId      = (int) $this->route('dossier');
 
-            $dossier = DossierIntegration::with('typeIntegration.documentsObligatoires')
-                ->find($dossierId);
+            $idsAutorises = app(DocumentDossierService::class)->idsTypesAutorisesPourDossier($dossierId);
 
-            if (! $dossier) {
+            if ($idsAutorises === null) {
                 $v->errors()->add('type_document_id', 'Dossier introuvable.');
                 return;
             }
-
-            $idsAutorises = $dossier->typeIntegration
-                ?->documentsObligatoires
-                ?->pluck('id')
-                ->all() ?? [];
 
             if ($idsAutorises !== [] && ! in_array($typeDocumentId, $idsAutorises, true)) {
                 $v->errors()->add(

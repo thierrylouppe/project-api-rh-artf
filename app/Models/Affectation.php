@@ -21,6 +21,9 @@ class Affectation extends Model
         'structurable_type',
         'structurable_id',
         'motif',
+        'motif_code',
+        'commentaire_opportunite',
+        'pieces_rapprochement',
         'note_service',
         'note_service_nom_original',
         'superieur_hierarchique_id',
@@ -28,15 +31,17 @@ class Affectation extends Model
         'date_fin',
         'statut',
         'created_by',
+        'lot_affectation_id',
     ];
 
     protected $casts = [
-        'date_affectation' => 'date',
-        'date_fin'         => 'date',
-        'statut'           => StatutAffectation::class,
+        'date_affectation'      => 'date',
+        'date_fin'              => 'date',
+        'statut'                => StatutAffectation::class,
+        'pieces_rapprochement'  => 'array',
     ];
 
-    protected array $filterable = ['agent_id', 'statut'];
+    protected array $filterable = ['agent_id', 'statut', 'lot_affectation_id'];
 
     public function agent(): BelongsTo
     {
@@ -56,6 +61,11 @@ class Affectation extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function lot(): BelongsTo
+    {
+        return $this->belongsTo(LotAffectation::class, 'lot_affectation_id');
     }
 
     public function validations(): MorphMany

@@ -14,7 +14,8 @@ class ActiverRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'dossier_integration_id' => ['nullable', 'integer', 'exists:dossier_integrations,id'],
+            // Conservé pour compatibilité FE — ignoré côté métier (carrière ≠ dossier).
+            'dossier_integration_id' => ['nullable', 'integer', 'exists:dossiers_integration,id'],
         ];
     }
 }

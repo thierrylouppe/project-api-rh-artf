@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PieceCcnArt46;
 use App\Models\TypeDocument;
 use Illuminate\Database\Seeder;
 
@@ -19,6 +20,13 @@ class TypeDocumentSeeder extends Seeder
             ['nom' => 'Casier judiciaire',          'obligatoire' => true,  'description' => 'Extrait du casier judiciaire — obligatoire CDI/CDD'],
             ['nom' => 'Certificat médical',         'obligatoire' => true,  'description' => 'Certificat d\'aptitude médicale — obligatoire CDI/CDD'],
             ['nom' => 'Acte de naissance',          'obligatoire' => true,  'description' => 'Extrait d\'acte de naissance — obligatoire CDI/CDD'],
+
+            // CCN art. 46 — ACE toujours (pivot embauche) ; les autres sont conditionnels
+            ['nom' => PieceCcnArt46::ACE->value,                'obligatoire' => false, 'description' => 'Récépissé ACE (ex ONEMO) — art. 46, recrutement externe / contractuel'],
+            ['nom' => PieceCcnArt46::ACTE_MARIAGE->value,       'obligatoire' => false, 'description' => 'Extrait d\'acte de mariage — art. 46, si marié'],
+            ['nom' => PieceCcnArt46::CARTE_TRAVAIL->value,      'obligatoire' => false, 'description' => 'Carte de travail — art. 46, si déjà salarié'],
+            ['nom' => PieceCcnArt46::CERTIFICAT_TRAVAIL->value, 'obligatoire' => false, 'description' => 'Certificat du précédent employeur — art. 46, si déjà salarié'],
+            ['nom' => PieceCcnArt46::NUMERO_CNSS->value,        'obligatoire' => false, 'description' => 'Justificatif n° CNSS — art. 46 si déjà salarié, ou champ agent.numero_cnss'],
 
             // Document administratif complémentaire
             ['nom' => 'Nomination',                 'obligatoire' => false, 'description' => 'Acte de nomination à un poste ou une fonction'],

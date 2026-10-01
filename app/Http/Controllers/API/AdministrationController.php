@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Requests\Administration\CreateRequest;
 use App\Http\Requests\Administration\UpdateRequest;
 use App\Http\Resources\AdministrationResource;
+use App\Http\Resources\StructureOrganisationnelleListResource;
 use App\Services\AdministrationService;
 use Illuminate\Http\JsonResponse;
 
@@ -18,6 +19,11 @@ class AdministrationController extends BaseController
     protected function resource(): string
     {
         return AdministrationResource::class;
+    }
+
+    protected function listResource(): string
+    {
+        return StructureOrganisationnelleListResource::class;
     }
 
     protected function showRelations(): array
@@ -39,6 +45,6 @@ class AdministrationController extends BaseController
     {
         $items = $this->service->getByLocalite($localiteId);
 
-        return response()->json(['data' => AdministrationResource::collection($items)]);
+        return $this->collectionResponse(StructureOrganisationnelleListResource::collection($items));
     }
 }

@@ -8,6 +8,8 @@ interface TypeDocumentInterface extends BaseInterface
 {
     public function findByIds(array $ids): Collection;
 
+    public function findByNoms(array $noms): Collection;
+
     public function getObligatoires(): Collection;
 
     public function getOptionnels(): Collection;

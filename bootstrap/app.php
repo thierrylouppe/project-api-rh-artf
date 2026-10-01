@@ -20,8 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'permission' => \App\Http\Middleware\CheckPermission::class,
-            'role' => \App\Http\Middleware\CheckRole::class,
+            'permission'   => \App\Http\Middleware\CheckPermission::class,
+            'role'         => \App\Http\Middleware\CheckRole::class,
+            // Vague F — cloisonnement par bureau DRHL
+            'scope.bureau' => \App\Http\Middleware\ScopeByBureau::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

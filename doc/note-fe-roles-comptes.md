@@ -1,0 +1,117 @@
+# Note frontend — rôles, permissions et comptes de démo
+
+> Date : 2026-08-16  
+> Breaking : **oui pour les menus** — le métier RH n’est plus exposé aux rôles hiérarchiques.
+
+Préfixe API : `/api`.
+
+## 1. Principe
+
+Les rôles sont **globaux** (pas liés à une direction / un service / un bureau).
+
+| Famille | Rôles | Usage FE |
+|---|---|---|
+| Système | `admin` | Accès complet (toutes les permissions) |
+| Métier RH (DRHL) | `rh` | **Seul** rôle métier RH : utilisateurs, référentiels (écriture), recrutement, contrats, salaires, reporting |
+| Hiérarchie | `directeur-general`, `directeur`, `chef-service`, `chef-bureau` | Structure + agents en lecture + validations d’équipe. **Pas** de menus RH, **sauf le DG** (`consulter-reporting`, `decider-prestations`, file reclassements) |
+| Self-service | `agent` | Ses demandes de congés / absences |
+
+`directeur`, `chef-service`, `chef-bureau` s’appliquent à **toutes** les directions / services / bureaux, pas seulement la DRHL.  
+Le périmètre « uniquement ma structure » est filtré côté API via `bureau_id` + `scope.bureau` (niveau selon la fonction : bureau / service / direction).
+
+## 2. Auth — comment récupérer le rôle
+
+`POST /login` renvoie `data.user` (via `UserResource`, avec `roles.permissions`) et `data.token`.
+
+```
+data.user.roles[].name
+data.user.roles[].permissions[].name
+```
+
+`GET /user` produit la même structure utilisateur (`data` = user, sans token). Utile pour rafraîchir le profil, pas obligatoire juste après le login.
+
+Préférer les **permissions** plutôt que le nom du rôle pour afficher/masquer un bouton.
+
+Un `403` = permission manquante : masquer l’action, ne pas la proposer.
+
+## 3. Comptes de démo (seeder)
+
+Mot de passe : respecter la casse.
+
+| Email | Mot de passe | Rôle |
+|---|---|---|
+| `admin@artf.cg` | `Admin@2026` | `admin` |
+| `rh@artf.cg` | `Rh@2026` | `rh` |
+| `dg@artf.cg` | `Dg@2026` | `directeur-general` |
+| `directeur@artf.cg` | `Directeur@2026` | `directeur` |
+| `chef-service@artf.cg` | `ChefService@2026` | `chef-service` |
+| `chef-bureau@artf.cg` | `ChefBureau@2026` | `chef-bureau` |
+| `agent@artf.cg` | `Agent@2026` | `agent` |
+
+## 4. Menus recommandés
+
+| Module / écran | `admin` | `rh` | `directeur-general` | `directeur` | `chef-service` | `chef-bureau` | `agent` |
+|---|---|---|---|---|---|---|---|
+| Utilisateurs / rôles | oui | utilisateurs (pas rôles) | — | — | — | — | — |
+| Structure org. | oui | lecture | lecture | lecture | lecture | lecture | — |
+| Référentiels RH (écriture) | oui | oui | — | — | — | — | — |
+| Référentiels (lecture listes) | oui | oui | oui | oui | oui | oui | oui |
+| Recrutement / intégration (pilotage) | oui | oui | — | — | — | — | — |
+| Contrats | oui | oui | — | — | — | — | — |
+| Salaires / grille | oui | oui | reclassements (lecture + approuver 74/75) | — | — | — | — |
+| Reporting RH | oui | oui | — | — | — | — | — |
+| Discipline | oui | oui (instruire) | **prononcer** | **proposer** (équipe) | **proposer** (équipe) | **proposer** (équipe) | **ses dossiers** (`/discipline/moi/…`) |
+| Affaires sociales | oui | oui | lecture | — | — | — | — |
+| Formations | oui | oui | lecture | — | — | — | — |
+| Agents (consultation) | oui | oui | oui | oui | oui | oui | — |
+| Congés / absences (validation) | oui | oui | oui | oui | oui | oui | — |
+| Congés / absences (créer les siens) | oui | — | — | — | — | — | oui |
+| Évaluations (validation) | oui | lecture | oui | oui | — | — | — |
+
+## 5. Permissions (noms API)
+
+### Métier RH — `rh` (+ `admin`)
+
+`consulter-utilisateurs`, `creer-utilisateurs`, `modifier-utilisateurs`  
+`creer-referentiels`, `modifier-referentiels`  
+`creer-agents`, `modifier-agents`  
+`consulter-recrutement`, `creer-recrutement`, `valider-recrutement`  
+`consulter-contrats`, `creer-contrats`, `modifier-contrats`  
+`consulter-nominations`, `gerer-nominations` (menus ; pas encore de `permission:` sur les routes)  
+`consulter-salaires`, `gerer-salaires`  
+`consulter-discipline`, `gerer-discipline`, `proposer-discipline`  
+`consulter-affaires-sociales`, `gerer-affaires-sociales`, `decider-prestations`  
+`consulter-formations`, `gerer-formations`  
+`consulter-reporting`
+
+### Partagés hiérarchie + RH
+
+`consulter-structure`, `consulter-referentiels`, `consulter-agents`, `consulter-nominations`  
+`consulter-salaires` (**DG seulement** parmi la hiérarchie — file reclassements art. 74–75)  
+`consulter-reporting` (**DG seulement** parmi la hiérarchie — dashboard RH)  
+`consulter-conges`, `valider-conges`  
+`consulter-absences`, `valider-absences`  
+`consulter-evaluations` (`valider-evaluations` : DG / directeur / admin uniquement)  
+`consulter-discipline` (**DG seulement** parmi la hiérarchie — lecture globale)  
+`consulter-affaires-sociales` (**DG seulement** parmi la hiérarchie — lecture globale)  
+`consulter-formations` (**DG seulement** parmi la hiérarchie — lecture globale)  
+`prononcer-discipline` (**DG seulement** — art. 91)  
+`decider-prestations` (**DG seulement** — art. 119–121 et 122–135)  
+`proposer-discipline` (`directeur`, `chef-service`, `chef-bureau` — rapport N+1)
+
+### Agent
+
+`consulter-referentiels`  
+`consulter-conges`, `creer-conges`  
+`consulter-absences`, `creer-absences`
+
+Self-service discipline **sans** `consulter-discipline` : `GET /discipline/moi/historique` (compte avec `agent_id`).
+
+## 6. À faire côté FE
+
+Contrat complet (matrice menus, boutons, guards, recette) : [`note-fe-etat-implementations.md`](./note-fe-etat-implementations.md) **§2k**.
+
+1. Ne plus afficher salaires / contrats / recrutement / gestion utilisateurs aux rôles hiérarchiques. **Reporting : RH + DG** (`consulter-reporting`).
+2. Après `POST /login`, **unionner** `data.user.roles[].permissions[].name` pour menus et guards (`GET /user` seulement pour rafraîchir). `user.permissions` n’existe pas.
+3. Tester les comptes **agents réels** (`prenom.nom@artf.cg`) **et** les 7 comptes système. Un `403` = masquer l’entrée, ce n’est pas un bug API.
+4. Un compte créé à l’intégration (email agent) n’a **pas** automatiquement un rôle Spatie tant que RH / admin ne l’assigne pas (hors seed de démo).

@@ -10,10 +10,14 @@ class CheckPermission
 {
     public function handle(Request $request, Closure $next, string $permission): Response
     {
-        if (! $request->user()?->hasPermissionTo($permission, 'api')) {
-            return response()->json(['message' => 'Accès refusé.'], 403);
+        $user = $request->user();
+
+        foreach (explode('|', $permission) as $name) {
+            if ($user?->hasPermissionTo(trim($name), 'api')) {
+                return $next($request);
+            }
         }
 
-        return $next($request);
+        return response()->json(['message' => 'Accès refusé.'], 403);
     }
 }

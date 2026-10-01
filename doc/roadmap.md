@@ -2,6 +2,8 @@
 > Construction par module fonctionnel. Chaque module est autonome et livrable indépendamment.  
 > Documents de référence : [`instruction_projet.md`](./instruction_projet.md) · [`architecture.md`](./architecture.md) · [`structuration_par_module.md`](./structuration_par_module.md)
 
+**État d’implémentation (2026-09-17) :** ce fichier décrit *comment* construire. Le **statut réel** est dans [`plan-prochaines-fonctionnalites.md`](./plan-prochaines-fonctionnalites.md) et [`suivi_projet.md`](./suivi_projet.md). Cœur API **livré**. D.2–D.6 **livrés** (D.3.4 Prestations et D.3.5 Santé / AT-MP inclus). Vague E **livrée**. Prochain : Vague F cloisonnement.
+
 ---
 
 ## Principes de construction
@@ -1409,4 +1411,4 @@ Avant de passer au module suivant :
 
 ---
 
-*Dernière mise à jour : Mai 2026*
+*Dernière mise à jour : 2026-09-15 — statut réel : [`suivi_projet.md`](./suivi_projet.md)*
