@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OrigineDemandeCongeAnnuel;
 use App\Enums\StatutDemandeConge;
 use App\Traits\HasBureauScope;
 use App\Traits\HasFilterScope;
@@ -17,8 +18,11 @@ class DemandeConge extends Model
     protected $fillable = [
         'agent_id',
         'type_conge_id',
+        'campagne_conge_annuel_id',
+        'origine',
         'date_debut',
         'date_fin',
+        'date_reprise',
         'nb_jours',
         'motif',
         'justificatif_path',
@@ -39,14 +43,16 @@ class DemandeConge extends Model
     protected $casts = [
         'date_debut'         => 'date',
         'date_fin'           => 'date',
+        'date_reprise'       => 'date',
         'nb_jours'           => 'integer',
         'statut'             => StatutDemandeConge::class,
+        'origine'            => OrigineDemandeCongeAnnuel::class,
         'date_validation_n1' => 'datetime',
         'date_validation_rh' => 'datetime',
         'date_validation_dg' => 'datetime',
     ];
 
-    protected array $filterable = ['agent_id', 'type_conge_id', 'statut'];
+    protected array $filterable = ['agent_id', 'type_conge_id', 'statut', 'origine', 'campagne_conge_annuel_id'];
 
     public function agent(): BelongsTo
     {
@@ -56,6 +62,11 @@ class DemandeConge extends Model
     public function typeConge(): BelongsTo
     {
         return $this->belongsTo(TypeConge::class);
+    }
+
+    public function campagne(): BelongsTo
+    {
+        return $this->belongsTo(CampagneCongeAnnuel::class, 'campagne_conge_annuel_id');
     }
 
     public function createur(): BelongsTo

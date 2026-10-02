@@ -76,6 +76,43 @@ class CongeSoldeService extends BaseService
         ]);
     }
 
+    /**
+     * Transfère un reliquat de l'année source vers l'année cible.
+     * Le cumul reporté ne peut pas dépasser 60 jours ouvrables.
+     */
+    public function reporterReliquat(int $agentId, int $typeCongeId, int $anneeSource, int $anneeCible, float $joursDemandes): CongeSolde
+    {
+        $source = $this->repository->findFor($agentId, $typeCongeId, $anneeSource);
+        abort_unless($source, 422, "Aucun solde de congé annuel pour {$anneeSource}.");
+
+        $reliquat = (float) $source->solde_actuel;
+        abort_if($reliquat < 1, 422, "Aucun reliquat à reporter pour {$anneeSource}.");
+        abort_if(
+            $reliquat > 60 || $joursDemandes > 60,
+            422,
+            "Le report ne peut pas excéder 60 jours ouvrables (deux mois). Reliquat : {$reliquat} j."
+        );
+
+        $jours = min($joursDemandes, $reliquat);
+        $cible = $this->getOrCreate($agentId, $typeCongeId, $anneeCible);
+        $deja  = (float) $cible->jours_reportes;
+        abort_if(
+            $deja + $jours > 60,
+            422,
+            "Le cumul reporté ne peut pas excéder 60 jours ouvrables. Déjà reportés : {$deja} j., demandés : {$jours} j."
+        );
+
+        $this->repository->update($source->id, [
+            'solde_actuel' => $reliquat - $jours,
+        ]);
+
+        return $this->repository->update($cible->id, [
+            'solde_initial'  => (float) $cible->solde_initial + $jours,
+            'solde_actuel'   => (float) $cible->solde_actuel + $jours,
+            'jours_reportes' => $deja + $jours,
+        ]);
+    }
+
     private function soldeBase(int $typeCongeId): float
     {
         $regle = $this->regleRepository->findByTypeConge($typeCongeId);

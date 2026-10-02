@@ -29,7 +29,10 @@ use App\Http\Controllers\API\ConnaissanceComplementaireController;
 use App\Http\Controllers\API\ContactUrgenceController;
 use App\Http\Controllers\API\ContratController;
 use App\Http\Controllers\API\ConventionStageController;
+use App\Http\Controllers\API\CampagneCongeAnnuelController;
+use App\Http\Controllers\API\CongeAnnuelDemandeController;
 use App\Http\Controllers\API\DemandeCongeController;
+use App\Http\Controllers\API\ReportCongeAnnuelController;
 use App\Http\Controllers\API\DiplomeController;
 use App\Http\Controllers\API\DirectionController;
 use App\Http\Controllers\API\DocumentAgentController;
@@ -479,6 +482,34 @@ Route::middleware('auth:sanctum')->prefix('conges')->group(function () {
     Route::get('demandes/{id}/justificatif', [DemandeCongeController::class, 'justificatif'])->middleware('permission:consulter-conges');
     Route::get('demandes/{id}/fiche-pdf', [DemandeCongeController::class, 'fichePdf'])->middleware('permission:consulter-conges');
     Route::get('demandes/{id}/attestation', [DemandeCongeController::class, 'attestation'])->middleware('permission:consulter-conges');
+});
+
+Route::middleware('auth:sanctum')->prefix('conges-annuels')->group(function () {
+    Route::get('campagnes', [CampagneCongeAnnuelController::class, 'index'])->middleware('permission:consulter-conges');
+    Route::post('campagnes', [CampagneCongeAnnuelController::class, 'store'])->middleware('permission:valider-conges');
+    Route::get('campagnes/{id}/sans-proposition', [CampagneCongeAnnuelController::class, 'sansProposition'])->middleware('permission:valider-conges');
+    Route::post('campagnes/{id}/ouvrir', [CampagneCongeAnnuelController::class, 'ouvrir'])->middleware('permission:valider-conges');
+    Route::post('campagnes/{id}/cloturer', [CampagneCongeAnnuelController::class, 'cloturer'])->middleware('permission:valider-conges');
+    Route::get('campagnes/{id}', [CampagneCongeAnnuelController::class, 'show'])->middleware('permission:consulter-conges');
+
+    Route::get('agents/{agent}/solde', [CongeAnnuelDemandeController::class, 'solde'])->middleware('permission:consulter-conges');
+    Route::get('statistiques', [CongeAnnuelDemandeController::class, 'statistiques'])->middleware('permission:consulter-conges');
+    Route::get('demandes/a-valider', [CongeAnnuelDemandeController::class, 'aValider'])->middleware('permission:valider-conges');
+    Route::get('demandes', [CongeAnnuelDemandeController::class, 'index'])->middleware(['permission:consulter-conges', 'scope.bureau']);
+    Route::post('demandes', [CongeAnnuelDemandeController::class, 'store'])->middleware('permission:creer-conges');
+    Route::get('demandes/{id}', [CongeAnnuelDemandeController::class, 'show'])->middleware('permission:consulter-conges');
+    Route::post('demandes/{id}/valider-n1', [CongeAnnuelDemandeController::class, 'validerN1'])->middleware('permission:valider-conges');
+    Route::post('demandes/{id}/rejeter-n1', [CongeAnnuelDemandeController::class, 'rejeterN1'])->middleware('permission:valider-conges');
+    Route::post('demandes/{id}/valider-rh', [CongeAnnuelDemandeController::class, 'validerRH'])->middleware('permission:valider-conges');
+    Route::post('demandes/{id}/rejeter-rh', [CongeAnnuelDemandeController::class, 'rejeterRH'])->middleware('permission:valider-conges');
+    Route::post('demandes/{id}/annuler', [CongeAnnuelDemandeController::class, 'annuler'])->middleware('permission:creer-conges');
+    Route::get('demandes/{id}/fiche-pdf', [CongeAnnuelDemandeController::class, 'fichePdf'])->middleware('permission:consulter-conges');
+    Route::get('demandes/{id}/attestation', [CongeAnnuelDemandeController::class, 'attestation'])->middleware('permission:consulter-conges');
+
+    Route::get('reports', [ReportCongeAnnuelController::class, 'index'])->middleware('permission:consulter-conges');
+    Route::post('reports', [ReportCongeAnnuelController::class, 'store'])->middleware('permission:valider-conges');
+    Route::post('reports/{id}/accorder', [ReportCongeAnnuelController::class, 'accorder'])->middleware('permission:valider-conges');
+    Route::post('reports/{id}/refuser', [ReportCongeAnnuelController::class, 'refuser'])->middleware('permission:valider-conges');
 });
 
 Route::middleware('auth:sanctum')->prefix('absences')->group(function () {
