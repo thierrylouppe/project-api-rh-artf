@@ -2,7 +2,7 @@
 
 > Document **vivant** : à mettre à jour à chaque livraison API qui impacte le front.  
 > Objectif : un seul point d’entrée pour les échanges FE (quoi appeler, quoi ne plus attendre, où lire le détail).  
-> Dernière mise à jour : **2026-09-18** (Liste Personnel filtrée — §2d + §2k)
+> Dernière mise à jour : **2026-10-02** (Congé annuel — campagne §2c)
 
 Détail métier / contrats : les notes liées ci-dessous. **Ce fichier reste résumé.**
 
@@ -45,7 +45,7 @@ Menus **et** boutons d’action : **permissions** (union de tous les rôles), pa
 | Personnel | `/personnel/…` | **Livré** | **Liste = `GET /personnel/agents` uniquement** (filtrée). **Interdit** : `GET /integration/agents` sur cet écran (non filtré). Fiche vie courante §2d. Wizard : `GET /integration/agents/{id}`. |
 | Carrière | `/carriere/…` | **Livré** | Affectations, nominations, contrats, salaires agent, synthèse, **reclassements art. 73–75**, **positions art. 76–80**. Alias `/integration/…` encore OK **sauf** `GET /carriere/agents/{id}`. |
 | Grille / salaires | `/grille-classes`, `/salaires`, `/salaires-agents` | **Livré** | `consulter-salaires` / `gerer-salaires`. **DG/DC/DD hors grille** (art. 55) : `hors_grille` / `salaire_fonctionnel`. Bonif d’échelon à l’entrée : `meta.annexe1`. |
-| Congés / absences | `/conges/…`, `/absences` | **Livré** | Circuit **par type** (N+1 / RH / DG), soldes, justificatif, PDF. Contrat FE : §2c. |
+| Congés / absences | `/conges/…`, `/conges-annuels/…`, `/absences` | **Livré** | Autres congés : circuit par type. **Congé annuel** : campagne, date de départ seule, report. Permissions d’absence inchangées. Contrat §2c. |
 | Évaluations | `/avancements/…` | **Livré** | P1–P5 + lots A–C (art. 62, tableau D5, PDF). Contrat : §7b. Reclassement de **classe** : §4 (`/carriere/reclassements`), pas ici. |
 | Discipline | `/discipline` | **Livré** | Vague D.2 + CCN art. 89–91 — contrat §2e. Menus : `consulter-discipline` (RH/DG), `proposer-discipline` (N+1), `prononcer-discipline` (DG). |
 | Affaires sociales | `/affaires-sociales` | **Livré (P1 + D.3.4 + D.3.5)** | Vague D.3.1–D.3.5. Contrats §2f / §2f-bis / §2f-ter. Rôle `rh` global. Dossier retraite CNSS hors V1. |
@@ -96,16 +96,22 @@ Forme `GET /notifications` :
 
 ## 2c. Congés & absences — contrat FE
 
-Préfixes : **`/api/conges`**, **`/api/absences`**. Auth Bearer obligatoire. Listes **non paginées**. Pas de filtre « ma structure seulement » (V1).
+Préfixes : **`/api/conges`**, **`/api/conges-annuels`**, **`/api/absences`**. Auth Bearer obligatoire. Listes **non paginées**. Pas de filtre « ma structure seulement » (V1).
+
+Le **congé annuel** (campagne, solde, report) se fait sur `/api/conges-annuels`. Ne pas le saisir via `POST /conges/demandes`. Les autres types restent sur `/api/conges`. Les permissions d’absence restent sur `/api/absences`.
 
 ### Écrans recommandés
 
 | Écran | Qui | APIs |
 |-------|-----|------|
-| Mes demandes | `agent` (`creer-conges`) | `GET /conges/agents/{agent_id}/demandes` · `POST /conges/demandes` · soldes |
-| File à valider | `valider-conges` | **`GET /conges/demandes/a-valider`** — uniquement les dossiers que le user peut signer (N+1 / RH / DG). `admin` voit toute la file. |
+| Campagne de congé annuel | rôle `rh` ou `admin` | `POST /conges-annuels/campagnes` · ouvrir · clôturer · sans-proposition |
+| Ma proposition annuelle | `agent` (`creer-conges`) | `POST /conges-annuels/demandes` — **date de départ seule** · solde |
+| File congé annuel | `valider-conges` | `GET /conges-annuels/demandes/a-valider` — visible **après clôture** pour `origine=campagne` |
+| Report nécessité de service | N+1 propose, RH décide | `POST /conges-annuels/reports` · accorder · refuser |
+| Mes autres demandes | `agent` (`creer-conges`) | `GET /conges/agents/{agent_id}/demandes` · `POST /conges/demandes` |
+| File autres congés | `valider-conges` | **`GET /conges/demandes/a-valider`** — N+1 / RH / DG. `admin` voit toute la file. |
 | Paramétrage | `rh` / `admin` | types, jours fériés, règles d’acquisition |
-| Absences | `creer-absences` · file **`GET /absences/a-valider`** · valider = **N+1** (même règle que les congés). Chefs ont `valider-absences`. |
+| Absences (permissions) | `creer-absences` | file **`GET /absences/a-valider`** · valider = **N+1** |
 
 `agent_id` du connecté : `GET /user` → `data.agent_id` (peut être `null` pour un compte RH/DG non lié à un agent).
 
@@ -210,9 +216,13 @@ Pas de PUT/PATCH après soumission. **Annulation** : `POST /conges/demandes/{id}
   "agent_id": 12,
   "agent": { "id": 12, "matricule": null, "nom": "Agent", "prenom": "Jean", "nom_complet": "Jean Agent" },
   "type_conge_id": 1,
+  "campagne_conge_annuel_id": null,
+  "origine": null,
+  "origine_label": null,
   "type_conge": { "necessite_n1": true, "necessite_rh": true, "necessite_dg": false, "debite_solde": true, "justificatif_requis": false },
   "date_debut": "2026-09-07",
   "date_fin": "2026-09-11",
+  "date_reprise": null,
   "nb_jours": 4,
   "motif": "…",
   "statut": "soumise",
@@ -229,6 +239,8 @@ Pas de PUT/PATCH après soumission. **Annulation** : `POST /conges/demandes/{id}
 ```
 
 `justificatif` : `{ "nom": "certificat.pdf", "url": "/api/conges/demandes/{id}/justificatif" }` ou `null`. Téléchargement : `GET` cette URL (blob + Bearer).
+
+`campagne_conge_annuel_id`, `origine`, `origine_label` et `date_reprise` sont `null` hors congé annuel de campagne. Les tolérer sur les écrans `/conges`.
 
 `prochaine_etape` : `"valider-n1"` | `"valider-rh"` | `"valider-dg"` | `null` (terminée ou rejetée). **Afficher uniquement le bouton correspondant.**
 
@@ -268,7 +280,7 @@ Mauvaise étape (ex. `valider-rh` alors que `prochaine_etape` est `valider-n1`) 
 - `GET /conges/soldes` (tous)
 
 ```json
-{ "id": 1, "agent_id": 12, "type_conge_id": 1, "type_conge": { }, "annee": 2026, "solde_initial": 36, "solde_actuel": 33, "jours_anciennete": 6 }
+{ "id": 1, "agent_id": 12, "type_conge_id": 1, "type_conge": { }, "annee": 2026, "solde_initial": 36, "solde_actuel": 33, "jours_anciennete": 6, "jours_reportes": 0 }
 ```
 
 Le solde des types `debite_solde` est **créé à la lecture** (`GET …/soldes?annee=`). Liste vide uniquement s’il n’existe aucun type à débit. Débit **uniquement à la validation finale**.
@@ -308,6 +320,156 @@ Même modèle que les fériés. Permission lecture : `consulter-conges` ; écrit
 | `GET /conges/demandes/{id}/attestation` | Seulement si le circuit du type est **terminé validé** (`prochaine_etape === null` et statut `validee_rh` ou `validee_dg` selon le type). Sinon **422** |
 
 Réponse **binaire** `application/pdf` (pas JSON). Appeler avec le Bearer, `blob` / download. Ne pas parser en JSON.
+
+### Congé annuel — campagne (`/api/conges-annuels`)
+
+Écran à part. Ne pas réutiliser le formulaire début/fin de `/api/conges`. Pas de visa DG. Les permissions d’absence ne passent pas ici.
+
+Une demande créée par `POST /conges/demandes` n’a pas d’`origine` : `GET /conges-annuels/demandes/{id}` répond **422**.
+
+#### Campagne (RH)
+
+Boutons réserver au rôle `rh` ou `admin` (un chef avec `valider-conges` reçoit **403**).
+
+`POST /conges-annuels/campagnes`
+
+```json
+{ "annee": 2026, "date_ouverture": "2026-01-05", "date_cloture": "2026-03-31" }
+```
+
+```json
+{
+  "id": 1,
+  "annee": 2026,
+  "date_ouverture": "2026-01-05",
+  "date_cloture": "2026-03-31",
+  "date_cloture_effective": null,
+  "statut": "brouillon",
+  "statut_label": "Brouillon"
+}
+```
+
+| `statut` | Label | Boutons |
+|----------|--------|---------|
+| `brouillon` | Brouillon | Ouvrir |
+| `ouverte` | Ouverte | Clôturer. Les agents peuvent proposer. |
+| `cloturee` | Clôturée | Plus de proposition `campagne`. Le traitement N+1 puis RH devient possible. |
+
+`POST /conges-annuels/campagnes/{id}/ouvrir` · `POST …/cloturer` — pas de body. Une seule campagne par année, une seule `ouverte` à la fois (sinon **422**). La clôture ne débite pas le solde.
+
+`GET /conges-annuels/campagnes` · `GET /conges-annuels/campagnes/{id}` — permission `consulter-conges`.
+
+`GET /conges-annuels/campagnes/{id}/sans-proposition` — RH. Tableau des agents actifs sans proposition non annulée : `{ "id", "matricule", "nom", "prenom", "nom_complet" }`.
+
+#### Proposition (agent)
+
+Formulaire : **un seul champ date**, la date de départ. Ne pas afficher date de fin, nombre de jours, ni date de reprise en saisie. Les afficher **après** la réponse, en lecture seule.
+
+`POST /conges-annuels/demandes` — `creer-conges`.
+
+```json
+{
+  "agent_id": 12,
+  "date_debut": "2026-09-07",
+  "motif": "optionnel",
+  "origine": "campagne"
+}
+```
+
+`origine` omis = `campagne`. Le système pose **tout le solde** de l’année (jours ouvrables, hors week-ends et fériés) et renvoie la même forme que `/conges/demandes`, avec :
+
+| Champ | Exemple | Rôle FE |
+|-------|---------|---------|
+| `origine` | `campagne` | |
+| `origine_label` | `Campagne` | |
+| `date_debut` | `2026-09-07` | saisi |
+| `date_fin` | `2026-10-16` | calculé |
+| `date_reprise` | `2026-10-19` | calculé, premier jour ouvrable après la fin |
+| `nb_jours` | `30` | calculé, égal au solde posé |
+| `prochaine_etape` | `valider-n1` | ne pas montrer le bouton tant que la campagne est `ouverte` |
+
+Départ un week-end ou un férié, solde à 0, chevauchement, moins de 12 mois au départ → **422** `message`.
+
+**Annuler** : `POST /conges-annuels/demandes/{id}/annuler` tant que `soumise` **et** campagne `ouverte`. Après clôture → **422**. Masquer le bouton.
+
+#### Traitement après clôture
+
+Même règle de signataire que § « Qui clique quoi », sans étape DG.
+
+| Action | Route | Body |
+|--------|--------|------|
+| File | `GET /conges-annuels/demandes/a-valider` | Les `origine=campagne` encore `soumise` n’y sont **pas** tant que la campagne est ouverte |
+| Visa N+1 | `POST …/demandes/{id}/valider-n1` | `{ "commentaire"? }` |
+| Rejet N+1 | `POST …/rejeter-n1` | `{ "commentaire" }` min. 3 |
+| Attribution RH | `POST …/valider-rh` | débit du solde, attestation disponible |
+| Rejet RH | `POST …/rejeter-rh` | commentaire obligatoire |
+
+Liste : `GET /conges-annuels/demandes?agent_id=&statut=&origine=`. Détail : `GET /conges-annuels/demandes/{id}`.
+
+PDF : `GET …/demandes/{id}/fiche-pdf` dès la soumission · `GET …/attestation` seulement si `validee_rh`. Binaire, pas JSON.
+
+Stats : `GET /conges-annuels/statistiques` → même forme que `/conges/statistiques`, limitée aux propositions de ce préfixe.
+
+#### Droit acquis après la clôture
+
+Même `POST /conges-annuels/demandes`, avec `"origine": "apres_cloture"`.
+
+Afficher ce formulaire seulement si la campagne de l’année est `cloturee`. L’API refuse (**422**) si l’agent avait déjà 12 mois à la clôture, ou si `date_debut` est avant le jour des 12 mois. Le N+1 peut viser tout de suite (la campagne est déjà close). Annulation possible tant que `soumise`.
+
+#### Report pour nécessité de service
+
+L’agent ne voit pas ce formulaire. Le N+1 propose, la RH décide. Le report ne choisit pas de dates.
+
+`POST /conges-annuels/reports`
+
+```json
+{ "agent_id": 12, "annee_source": 2025, "motif": "Nécessité de service" }
+```
+
+```json
+{
+  "id": 1,
+  "agent_id": 12,
+  "agent": { "id": 12, "matricule": null, "nom": "Agent", "prenom": "Jean", "nom_complet": "Jean Agent" },
+  "annee_source": 2025,
+  "annee_cible": 2026,
+  "jours": 10,
+  "motif": "Nécessité de service",
+  "statut": "propose",
+  "statut_label": "Proposé",
+  "commentaire_decision": null,
+  "date_decision": null
+}
+```
+
+| `statut` | Qui | Action |
+|----------|-----|--------|
+| `propose` | RH | `POST …/reports/{id}/accorder` (pas de body) ou `POST …/refuser` avec `{ "commentaire" }` |
+| `accorde` | — | Reliquat versé sur l’année cible. Afficher `jours_reportes` sur le solde. |
+| `refuse` | — | Le reliquat reste sur l’année source. |
+
+Plafond **60** jours ouvrables. Au-delà, **422** dès la proposition. Un chef qui accorde lui-même reçoit **403**.
+
+`GET /conges-annuels/reports?agent_id=&statut=&annee_source=`
+
+#### Solde annuel
+
+`GET /conges-annuels/agents/{id}/solde?annee=2026`
+
+```json
+{
+  "id": 1,
+  "agent_id": 12,
+  "type_conge_id": 1,
+  "annee": 2026,
+  "solde_initial": 40,
+  "solde_actuel": 40,
+  "jours_anciennete": 0,
+  "jours_reportes": 10
+}
+```
+
+Avant la proposition, montrer ce solde : c’est la durée qui sera posée. `jours_reportes` est aussi présent sur `GET /conges/agents/{id}/soldes`.
 
 ### Jours fériés (paramétrage RH)
 
@@ -2146,6 +2308,7 @@ Format : date · quoi · impact FE (1 ligne).
 
 | Date | Implémentation | Impact FE |
 |------|----------------|-----------|
+| 2026-10-02 | **Congé annuel** : préfixe `/api/conges-annuels` (campagne, départ seul, droit après clôture, report ≤ 60 j.) | Nouvel écran. Ne plus saisir le congé annuel via `POST /conges/demandes`. Contrat §2c. Champs ajoutés sur toute demande : `origine`, `campagne_conge_annuel_id`, `date_reprise` (souvent `null`). Solde : `jours_reportes`. |
 | 2026-09-17 | **Vague F — Cloisonnement bureau DRHL** : `bureau_id` sur `users`, `POST/DELETE /users/{id}/bureau`, scope `maStructure` (niveaux bureau/service/direction), 5 rôles DRHL fins, middleware `scope.bureau` sur agents/congés/absences/sanctions | Contrat **§2j**. Pas de changement sur les écrans existants. Brancher le rattachement bureau dans la gestion des utilisateurs (`modifier-utilisateurs`). Ajouter `Bureau des Affaires Sociales (B.A.S.)` au select bureau. |
 | 2026-09-17 | **Santé / AT-MP D.3.5** : structures, visites, prises en charge, arrêts (art. 122–135), pose paie, PDF | Même permission **`decider-prestations`**. Contrat §2f-ter. Alerte visites annuelles. Codes `remboursement_sante`, `allocation_maladie`, `allocation_accident_non_pro`. |
 | 2026-09-17 | **Prestations D.3.4** : `/api/affaires-sociales/prestations` (circuit DG, barèmes art. 119–121, pose paie, PDF) | Permission **`decider-prestations`** (DG). Reconnecter. Contrat §2f-bis. Codes paie retraite/décès **actifs**. |

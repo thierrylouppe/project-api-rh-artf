@@ -18,6 +18,7 @@ class CongeSoldeResource extends JsonResource
             'solde_initial'    => (float) $this->solde_initial,
             'solde_actuel'     => (float) $this->solde_actuel,
             'jours_anciennete' => (float) $this->jours_anciennete,
+            'jours_reportes'   => (float) $this->jours_reportes,
         ];
     }
 }

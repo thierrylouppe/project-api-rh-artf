@@ -25,6 +25,7 @@ use App\Interfaces\CircuitValidationInterface;
 use App\Interfaces\ClassegrillesalarialeInterface;
 use App\Interfaces\CommissionAvancementInterface;
 use App\Interfaces\CommissionPreparatoireInterface;
+use App\Interfaces\CampagneCongeAnnuelInterface;
 use App\Interfaces\CompteIntegrationInterface;
 use App\Interfaces\CongeSoldeInterface;
 use App\Interfaces\ConnaissanceComplementaireInterface;
@@ -72,6 +73,7 @@ use App\Interfaces\QuestionEvaluationInterface;
 use App\Interfaces\ReclamationInterface;
 use App\Interfaces\ReclassementInterface;
 use App\Interfaces\RegleAcquisitionCongeInterface;
+use App\Interfaces\ReportCongeAnnuelInterface;
 use App\Interfaces\RemiseMaterielInterface;
 use App\Interfaces\ReportingInterface;
 use App\Interfaces\RoleInterface;
@@ -115,6 +117,7 @@ use App\Repositories\CircuitValidationRepository;
 use App\Repositories\ClassegrillesalarialeRepository;
 use App\Repositories\CommissionAvancementRepository;
 use App\Repositories\CommissionPreparatoireRepository;
+use App\Repositories\CampagneCongeAnnuelRepository;
 use App\Repositories\CompteIntegrationRepository;
 use App\Repositories\CongeSoldeRepository;
 use App\Repositories\ConnaissanceComplementaireRepository;
@@ -162,6 +165,7 @@ use App\Repositories\QuestionEvaluationRepository;
 use App\Repositories\ReclamationRepository;
 use App\Repositories\ReclassementRepository;
 use App\Repositories\RegleAcquisitionCongeRepository;
+use App\Repositories\ReportCongeAnnuelRepository;
 use App\Repositories\RemiseMaterielRepository;
 use App\Repositories\ReportingRepository;
 use App\Repositories\RoleRepository;
@@ -231,6 +235,8 @@ class AppServiceProvider extends ServiceProvider
         RegleAcquisitionCongeInterface::class => RegleAcquisitionCongeRepository::class,
         CongeSoldeInterface::class => CongeSoldeRepository::class,
         DemandeCongeInterface::class => DemandeCongeRepository::class,
+        CampagneCongeAnnuelInterface::class => CampagneCongeAnnuelRepository::class,
+        ReportCongeAnnuelInterface::class => ReportCongeAnnuelRepository::class,
         AbsenceInterface::class => AbsenceRepository::class,
         // Module Discipline
         TypeSanctionInterface::class => TypeSanctionRepository::class,

@@ -110,6 +110,8 @@ Référentiels `TypeConge` / `TypeAbsence` déjà en place.
 
 Préfixe : `/api/conges/…` et `/api/absences`.
 
+Complément **livré** — congé annuel isolé (campagne, droit acquis après clôture, report nécessité de service) : [`plan-module-conges-annuels.md`](./plan-module-conges-annuels.md). Préfixe `/api/conges-annuels`. Les permissions restent sur `/api/absences`.
+
 ---
 
 ## Vague D — Carrière / évaluations puis compléments
