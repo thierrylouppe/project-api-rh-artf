@@ -11,4 +11,7 @@ interface AbsenceInterface extends BaseInterface
     public function getEnAttente(): Collection;
 
     public function chevauchements(int $agentId, string $debut, string $fin, ?int $exclureId = null): Collection;
+
+    /** Somme des jours d'absences validées et non justifiées qui chevauchent [debut, fin]. */
+    public function sommeJoursNonJustifiesEntre(int $agentId, string $debut, string $fin): int;
 }

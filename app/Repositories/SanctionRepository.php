@@ -80,6 +80,27 @@ class SanctionRepository extends BaseRepository implements SanctionInterface
             ->get();
     }
 
+    public function getPrononceesEntre(int $agentId, string $debut, string $fin): Collection
+    {
+        return Sanction::query()
+            ->where('agent_id', $agentId)
+            ->where('statut', StatutSanction::VALIDEE)
+            ->where(function ($query) use ($debut, $fin) {
+                $query->where(function ($parDecision) use ($debut, $fin) {
+                    $parDecision->whereNotNull('date_decision')
+                        ->whereDate('date_decision', '>=', $debut)
+                        ->whereDate('date_decision', '<=', $fin);
+                })->orWhere(function ($parCreation) use ($debut, $fin) {
+                    $parCreation->whereNull('date_decision')
+                        ->whereDate('created_at', '>=', $debut)
+                        ->whereDate('created_at', '<=', $fin);
+                });
+            })
+            ->with(['typeSanction'])
+            ->orderBy('date_decision')
+            ->get();
+    }
+
     public function getPrononceesDepuisTous(string $depuis): Collection
     {
         return Sanction::query()
