@@ -1763,11 +1763,12 @@ Hiérarchie (`directeur`, `chef-service`, …) : **pas** de menus salaires / con
 | POST | `/avancements/sessions/{id}/generer-fiches` | Regénérer fiches manquantes |
 | GET | `/avancements/sessions/{id}/sans-superieur` | Agents éligibles **sans N+1** (à corriger en affectation) |
 
-#### Grille de critères (RH — `creer-evaluations` pour CRUD)
+#### Grille de critères
 
-| Méthode | Endpoint |
-|---------|----------|
-| GET / POST / PUT / DELETE | `/avancements/questions-evaluation[/{id}]` |
+| Méthode | Endpoint | Permission |
+|---------|----------|------------|
+| GET | `/avancements/questions-evaluation` et `/{id}` | `consulter-evaluations` (notateur N+1, agent évalué, RH) |
+| POST / PUT / DELETE | `/avancements/questions-evaluation[/{id}]` | `creer-evaluations` (RH) |
 
 **Seeder 24 questions** : 12 compétences pro (/10) + 3 assiduité (/3) + 9 relations sociales (/7) = **20 pts**.
 

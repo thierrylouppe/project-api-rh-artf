@@ -761,14 +761,10 @@ Route::middleware('auth:sanctum')->group(function () {
 // ============================================================
 Route::middleware('auth:sanctum')->prefix('avancements')->group(function () {
 
-    // ---- Grille de critères (référentiel RH) ----
-    Route::apiResource('questions-evaluation', QuestionEvaluationController::class)->middleware([
-        'index' => 'permission:consulter-evaluations',
-        'show' => 'permission:consulter-evaluations',
-        'store' => 'permission:creer-evaluations',
-        'update' => 'permission:creer-evaluations',
-        'destroy' => 'permission:creer-evaluations',
-    ]);
+    // ---- Grille de critères : lecture (notateur, agent, RH) / écriture (RH) ----
+    Route::apiResource('questions-evaluation', QuestionEvaluationController::class)
+        ->middlewareFor(['index', 'show'], 'permission:consulter-evaluations')
+        ->middlewareFor(['store', 'update', 'destroy'], 'permission:creer-evaluations');
 
     // ---- Sessions d'évaluation (cycle annuel) ----
     Route::get('sessions', [SessionEvaluationController::class, 'index'])
