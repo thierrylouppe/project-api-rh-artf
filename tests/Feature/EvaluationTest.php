@@ -8,10 +8,16 @@ use App\Enums\StatutSessionEvaluation;
 use App\Models\Administration;
 use App\Models\Affectation;
 use App\Models\Agent;
+use App\Models\Categorie;
+use App\Models\Classegrillesalariale;
 use App\Models\Direction;
+use App\Models\Grade;
 use App\Models\Evaluation;
 use App\Models\Localite;
 use App\Models\QuestionEvaluation;
+use App\Models\Reclamation;
+use App\Models\Salaire;
+use App\Models\SalaireAgent;
 use App\Models\Service;
 use App\Models\SessionEvaluation;
 use App\Models\User;
@@ -99,6 +105,46 @@ class EvaluationTest extends TestCase
 
         // Ancienneté ≥ 2 ans : date de prise de service par défaut pour les tests
         $this->agent->update(['date_prise_service' => '2024-01-01']);
+
+        // Ligne salariale de l'agent : l'avancement d'échelon (art. 69–70) est un
+        // acte de paie — sans salaire actif, il n'a rien à faire avancer.
+        $this->donnerSalaire($this->agent);
+    }
+
+    /**
+     * Dote un agent d'une grille complète et d'un salaire actif à l'échelon 1.
+     */
+    private function donnerSalaire(Agent $agent): void
+    {
+        $categorie = Categorie::firstOrCreate(['nom' => 'Classe VII'], ['sigle' => 'CL-VII']);
+        $grade     = Grade::firstOrCreate(['nom' => 'Vérificateur'], ['sigle' => 'VER', 'niveau' => 7]);
+
+        $classe = Classegrillesalariale::firstOrCreate([
+            'categorie_id' => $categorie->id,
+            'grade_id'     => $grade->id,
+        ], ['coefficient' => 105]);
+
+        // Grille complète : un avancement peut porter sur 1 ou 2 échelons, et la
+        // commission peut en accorder jusqu'au plafond de la classe.
+        for ($echelon = 1; $echelon <= 12; $echelon++) {
+            Salaire::firstOrCreate([
+                'classegrillesalariale_id' => $classe->id,
+                'echelon'                  => $echelon,
+            ], ['indice' => 800 + $echelon, 'salaire' => 100_000 + ($echelon * 10_000)]);
+        }
+
+        $ligne = Salaire::where('classegrillesalariale_id', $classe->id)->where('echelon', 1)->first();
+
+        SalaireAgent::create([
+            'agent_id'                 => $agent->id,
+            'salaire_id'               => $ligne->id,
+            'classegrillesalariale_id' => $classe->id,
+            'echelon'                  => 1,
+            'montant_base'             => $ligne->salaire,
+            'montant_net'              => $ligne->salaire,
+            'date_debut'               => '2024-01-01',
+            'statut'                   => 'actif',
+        ]);
     }
 
     // ----------------------------------------------------------------
@@ -594,6 +640,146 @@ class EvaluationTest extends TestCase
         $this->postJson('/api/avancements/sessions', [
             'debut_session' => '2026-10-01',
         ])->assertCreated();
+    }
+
+
+    // ================================================================
+    // Correctifs B3 / B4 / B5
+    // ================================================================
+
+    /**
+     * B4 — l'avancement d'échelon est un acte de paie : il doit créer une
+     * nouvelle ligne salariale et déplacer l'agent, pas seulement cocher la fiche.
+     */
+    public function test_avancer_echelon_cree_la_nouvelle_ligne_salariale(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        $this->finaliserFiche($fiche);
+
+        Sanctum::actingAs($this->rhUser);
+
+        $prepId = $this->postJson("/api/avancements/sessions/{$session->id}/commission-preparatoire")
+            ->assertCreated()->json('data.id');
+        $this->postJson("/api/avancements/commissions-preparatoires/{$prepId}/cloturer")->assertOk();
+
+        $avanId = $this->postJson("/api/avancements/sessions/{$session->id}/commission-avancement")
+            ->assertCreated()->json('data.id');
+        $this->postJson("/api/avancements/commissions-avancements/{$avanId}/decider", [
+            'evaluation_id'   => $fiche->id,
+            'decision'        => 'favorable',
+            'nombre_echelons' => 1,
+        ])->assertOk();
+
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/avancer-echelon")
+            ->assertOk()
+            ->assertJsonPath('data.avance', true);
+
+        // La ligne précédente est clôturée, la nouvelle est à l'échelon 2.
+        $actuel = SalaireAgent::where('agent_id', $this->agent->id)
+            ->where('statut', 'actif')
+            ->firstOrFail();
+
+        $this->assertSame(2, (int) $actuel->echelon);
+        $this->assertSame(
+            1,
+            SalaireAgent::where('agent_id', $this->agent->id)->where('statut', 'cloture')->count(),
+        );
+    }
+
+    /**
+     * B5 — une fiche peut connaître plusieurs réclamations : la première
+     * acceptée renvoie au notateur, l'agent peut contester la nouvelle note.
+     */
+    public function test_seconde_reclamation_possible_apres_traitement_de_la_premiere(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        $this->menerJusquaSigneeEvalue($fiche);
+
+        Sanctum::actingAs($this->agentUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/reclamer", [
+            'motif' => 'La note du critère A ne reflète pas mon travail.',
+        ])->assertOk();
+
+        // La RH accepte : la fiche repart en notation.
+        Sanctum::actingAs($this->rhUser);
+        $reclamationId = $this->getJson('/api/avancements/reclamations/en-attente')->json('data.0.id');
+        $this->postJson("/api/avancements/reclamations/{$reclamationId}/traiter", [
+            'acceptee' => true,
+        ])->assertOk();
+
+        // Nouveau tour de notation, puis nouvelle contestation.
+        $this->menerJusquaSigneeEvalue($fiche->fresh());
+
+        Sanctum::actingAs($this->agentUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/reclamer", [
+            'motif' => 'La correction ne tient pas compte de mes observations.',
+        ])->assertOk();
+
+        $this->assertSame(2, Reclamation::where('evaluation_id', $fiche->id)->count());
+    }
+
+    /** B5 — l'agent ne court-circuite pas l'arbitrage RH en transmettant la fiche. */
+    public function test_envoi_rh_refuse_pendant_une_reclamation(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        $this->menerJusquaSigneeEvalue($fiche);
+
+        Sanctum::actingAs($this->agentUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/reclamer", [
+            'motif' => 'Je conteste la note attribuée au critère A.',
+        ])->assertOk();
+
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/envoyer-rh")
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.reclamation.0', fn ($m) => str_contains($m, 'réclamation'));
+    }
+
+    /**
+     * B3 — le module émet enfin des notifications : le notateur à l'attribution,
+     * l'agent à la signature du notateur, la RH à la transmission.
+     */
+    public function test_les_etapes_de_la_fiche_notifient_les_bons_acteurs(): void
+    {
+        $session = $this->creerSession();
+        $fiche   = $this->fichePourAgent($session);
+
+        // Attribution → le notateur est prévenu.
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_id' => $this->chefUser->id,
+        ]);
+        $this->assertTrue(
+            $this->chefUser->notifications()->get()->contains(
+                fn ($n) => ($n->data['domaine'] ?? null) === 'evaluation'
+                    && ($n->data['action'] ?? null) === 'fiche_a_noter',
+            ),
+        );
+
+        $this->menerJusquaSigneeEvalue($fiche);
+
+        // Signature du notateur → l'agent doit signer.
+        $this->assertTrue(
+            $this->agentUser->notifications()->get()->contains(
+                fn ($n) => ($n->data['action'] ?? null) === 'fiche_a_signer_evalue',
+            ),
+        );
+
+        $this->signerChaineAvis($fiche);
+
+        Sanctum::actingAs($this->agentUser);
+        $this->postJson("/api/avancements/evaluations/{$fiche->id}/envoyer-rh")->assertOk();
+
+        // Transmission → l'équipe RH prend la main.
+        $this->assertTrue(
+            $this->rhUser->notifications()->get()->contains(
+                fn ($n) => ($n->data['action'] ?? null) === 'fiche_en_validation_rh',
+            ),
+        );
     }
 
     // ----------------------------------------------------------------

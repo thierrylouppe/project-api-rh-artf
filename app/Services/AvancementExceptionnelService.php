@@ -22,6 +22,7 @@ class AvancementExceptionnelService extends BaseService
     public function __construct(
         AvancementExceptionnelInterface     $repository,
         private readonly SalaireAgentService $salaireService,
+        private readonly EvaluationNotificationService $notifications,
     ) {
         parent::__construct($repository);
     }
@@ -44,7 +45,7 @@ class AvancementExceptionnelService extends BaseService
             ]);
         }
 
-        return $this->repository->create([
+        $proposition = $this->repository->create([
             'agent_id'                => $agentId,
             'commission_avancement_id' => $data['commission_avancement_id'] ?? null,
             'nb_echelons'             => $nbEchelons,
@@ -53,6 +54,10 @@ class AvancementExceptionnelService extends BaseService
             'date_proposition'        => $data['date_proposition'] ?? now()->toDateString(),
             'statut'                  => StatutBonification::EN_ATTENTE->value,
         ]);
+
+        $this->notifications->avancementExceptionnelPourRh($agentId, $proposition->id);
+
+        return $proposition;
     }
 
     /**

@@ -25,9 +25,10 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'compact'])
 <div class="page">
     <div class="header">
-        <div class="org">Autorité de Régulation des Transports Ferroviaires (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'compact'])
         <div class="titre">Bulletin de salaire</div>
         <div class="reference">
             Agent #{{ $agent->id }}

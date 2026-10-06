@@ -22,9 +22,9 @@
         /* Bloc informations */
         .bloc { border: 1px solid #ccc; border-radius: 4px; padding: 16px 20px; margin-bottom: 20px; background: #fafafa; }
         .bloc-titre { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #003366; letter-spacing: 0.5px; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
-        .ligne { display: flex; margin-bottom: 6px; }
-        .ligne .label { width: 200px; font-weight: bold; color: #444; flex-shrink: 0; }
-        .ligne .valeur { flex: 1; }
+        .ligne { display: block; margin-bottom: 6px; }
+        .ligne .label { width: 200px; font-weight: bold; color: #444; display: inline-block; vertical-align: top; }
+        .ligne .valeur { display: inline-block; vertical-align: top; width: 60%; }
 
         /* Évaluation */
         .evaluation { margin-bottom: 20px; }
@@ -34,8 +34,9 @@
         .certifie { background: #eef4ff; border-left: 4px solid #003366; padding: 12px 16px; margin-bottom: 28px; font-size: 12.5px; }
 
         /* Signatures */
-        .signatures { display: flex; justify-content: space-between; margin-top: 40px; }
-        .sign-bloc { text-align: center; width: 45%; }
+        .signatures { display: block; margin-top: 40px; }
+        .sign-bloc { display: inline-block; vertical-align: top; text-align: center; width: 44%; }
+        .sign-bloc + .sign-bloc { margin-left: 10%; }
         .sign-bloc .sign-titre { font-weight: bold; font-size: 11px; text-transform: uppercase; color: #003366; margin-bottom: 8px; }
         .sign-bloc .sign-espace { height: 60px; border-bottom: 1px solid #999; margin-bottom: 8px; }
         .sign-bloc .sign-nom { font-size: 11px; color: #555; }
@@ -45,11 +46,12 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'officiel'])
 <div class="page">
 
     {{-- En-tête --}}
     <div class="header">
-        <div class="org">Autorité de Régulation des Transports Ferroviaires (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'officiel'])
         <div class="titre">Attestation de Stage</div>
         <div class="reference">
             Réf. : {{ $convention->dossier?->reference ?? '—' }} &nbsp;|&nbsp;
@@ -59,7 +61,7 @@
 
     {{-- Introduction --}}
     <p class="intro">
-        Le <span class="signataire">Directeur Général de l'Autorité de Régulation des Transports Ferroviaires</span>,
+        Le <span class="signataire">Directeur Général de l'Agence de Régulation des Transferts de Fonds</span>,
         <br>certifie que :
     </p>
 

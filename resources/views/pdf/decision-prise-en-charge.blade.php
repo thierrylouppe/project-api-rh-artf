@@ -18,9 +18,10 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'officiel'])
 <div class="page">
     <div class="header">
-        <div class="org">Agence de régulation des transferts de fonds (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'officiel'])
         <div class="titre">Décision de prise en charge sanitaire</div>
         <div class="ref">Directeur général — CCN art. {{ $dossier->type?->articleCcn() }}</div>
     </div>

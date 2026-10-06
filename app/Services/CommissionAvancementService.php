@@ -34,6 +34,8 @@ class CommissionAvancementService extends BaseService
         CommissionAvancementInterface             $repository,
         private readonly EvaluationInterface      $evaluationRepository,
         private readonly CommissionPreparatoireInterface $prepRepository,
+        private readonly SalaireAgentService      $salaireService,
+        private readonly EvaluationNotificationService $notifications,
     ) {
         parent::__construct($repository);
     }
@@ -61,13 +63,17 @@ class CommissionAvancementService extends BaseService
             ]);
         }
 
-        return $this->repository->create([
+        $commission = $this->repository->create([
             'session_id'     => $sessionId,
             'statut'         => StatutCommission::EN_COURS->value,
             'date_ouverture' => $data['date_ouverture'] ?? now()->toDateString(),
             'created_by'     => $user->id,
             'observations'   => $data['observations'] ?? null,
         ]);
+
+        $this->notifications->commissionOuvertePourResponsables('avancement', $sessionId);
+
+        return $commission;
     }
 
     /**
@@ -148,36 +154,28 @@ class CommissionAvancementService extends BaseService
             throw ValidationException::withMessages(['agent' => 'Agent non trouvé.']);
         }
 
-        $echelonActuelId = $agent->echelon_id;
-        $nouvelEchelonId = null;
+        $echelonPrecedent = $agent->echelon_id;
 
-        // Chercher le prochain échelon (même classe)
-        if ($echelonActuelId && $evaluation->nombre_echelons > 0) {
-            $echelon = \App\Models\Echelon::find($echelonActuelId);
-            if ($echelon) {
-                // Incrémenter : trouver le Nième échelon suivant de la même classe
-                $prochainEchelon = \App\Models\Echelon::query()
-                    ->where('classe_id', $echelon->classe_id)
-                    ->where('numero', $echelon->numero + $evaluation->nombre_echelons)
-                    ->first();
-
-                $nouvelEchelonId = $prochainEchelon?->id ?? $echelonActuelId; // plafonné si dernier
-            }
-        }
-
-        // Mettre à jour l'agent
-        if ($nouvelEchelonId && $nouvelEchelonId !== $echelonActuelId) {
-            $agent->update(['echelon_id' => $nouvelEchelonId]);
-        }
+        // L'avancement en paie appartient à SalaireAgentService : c'est lui qui
+        // connaît la grille (ligne salariale, plafond de classe, clôture de la
+        // ligne courante) et qui synchronise `agents.echelon_id`. La bonification
+        // (art. 71) et l'avancement exceptionnel (art. 72) passent déjà par là.
+        $this->salaireService->avancerEchelons(
+            $evaluation->agent_id,
+            max(1, (int) $evaluation->nombre_echelons),
+            'Avancement d\'échelon — commission d\'avancement art. 69–70',
+        );
 
         // Marquer comme avancé (idempotent)
-        $this->evaluationRepository->update($evaluationId, ['echelon_avance' => true]);
+        $avancee = $this->evaluationRepository->update($evaluationId, ['echelon_avance' => true]);
+
+        $this->notifications->avancementAccordePourAgent($avancee);
 
         return [
-            'avance'              => true,
-            'echelon_precedent_id' => $echelonActuelId,
-            'echelon_nouveau_id'  => $nouvelEchelonId ?? $echelonActuelId,
-            'message'             => 'Échelon appliqué avec succès.',
+            'avance'               => true,
+            'echelon_precedent_id' => $echelonPrecedent,
+            'echelon_nouveau_id'   => $agent->fresh()?->echelon_id ?? $echelonPrecedent,
+            'message'              => 'Échelon appliqué avec succès.',
         ];
     }
 

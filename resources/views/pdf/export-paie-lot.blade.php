@@ -20,12 +20,13 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'compact', 'marge' => 32])
 @php
     $fmt = fn ($montant) => number_format((float) $montant, 0, ',', ' ');
 @endphp
 <div class="page">
     <div class="header">
-        <div class="org">Autorité de Régulation des Transports Ferroviaires (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'compact'])
         <div class="titre">Masse salariale</div>
         <div class="reference">
             {{ $periode_label }} — {{ $lot->nb_lignes }} bulletin(s) — Statut {{ $lot->statut?->label() }}

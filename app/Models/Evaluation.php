@@ -104,9 +104,20 @@ class Evaluation extends Model
         return $this->hasMany(NoteEvaluation::class, 'evaluation_id');
     }
 
+    /**
+     * Réclamation **courante** : la dernière déposée. Une fiche peut en
+     * connaître plusieurs (art. 65 : réclamation acceptée → renotation →
+     * nouvelle contestation possible).
+     */
     public function reclamation(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne(Reclamation::class, 'evaluation_id');
+        return $this->hasOne(Reclamation::class, 'evaluation_id')->latestOfMany();
+    }
+
+    /** Historique complet des réclamations de la fiche. */
+    public function reclamations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Reclamation::class, 'evaluation_id');
     }
 
     public function avisHierarchiques(): \Illuminate\Database\Eloquent\Relations\HasMany

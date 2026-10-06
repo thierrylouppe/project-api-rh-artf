@@ -13,18 +13,29 @@
     </style>
 </head>
 <body>
+@include('pdf.partials.charte', ['variante' => 'officiel'])
 <div class="page">
     <div class="header">
-        <div class="org">Autorité de Régulation des Transports Ferroviaires (ARTF)</div>
+        @include('pdf.partials.entete', ['variante' => 'officiel'])
         <div class="titre">Attestation de congé</div>
     </div>
-    <p>
-        Il est attesté que {{ $demande->agent->prenom }} {{ $demande->agent->nom }}
-        a obtenu un {{ strtolower($demande->typeConge->nom) }}
-        du {{ $demande->date_debut->format('d/m/Y') }} au {{ $demande->date_fin->format('d/m/Y') }}
-        ({{ $demande->nb_jours }} jour(s) ouvrable(s)).
+    <p class="corps">
+        Le <span class="signataire">Directeur Général de l'{{ config('artf.nom') }}</span>
+        atteste que l'agent désigné ci-dessous a obtenu un {{ mb_strtolower($demande->typeConge->nom) }} dans les conditions suivantes :
     </p>
-    <p>Décision RH du {{ $demande->date_validation_rh?->format('d/m/Y') ?? now()->format('d/m/Y') }}.</p>
+    <table class="info">
+        <tr><td class="label">Agent</td><td><strong>{{ mb_strtoupper($demande->agent->nom) }}</strong> {{ $demande->agent->prenom }}</td></tr>
+        <tr><td class="label">Matricule</td><td>{{ $demande->agent->matricule ?? '—' }}</td></tr>
+        <tr><td class="label">Nature du congé</td><td>{{ $demande->typeConge->nom }}</td></tr>
+        <tr><td class="label">Période</td><td>du <strong>{{ $demande->date_debut->format('d/m/Y') }}</strong> au <strong>{{ $demande->date_fin->format('d/m/Y') }}</strong></td></tr>
+        <tr><td class="label">Durée</td><td>{{ $demande->nb_jours }} jour(s) ouvrable(s)</td></tr>
+        <tr><td class="label">Décision RH</td><td>{{ $demande->date_validation_rh?->format('d/m/Y') ?? now()->format('d/m/Y') }}</td></tr>
+    </table>
+    <p class="corps">En foi de quoi, la présente attestation lui est délivrée pour servir et valoir ce que de droit.</p>
+    <div class="sig">
+        <p>Le Directeur Général</p>
+        <p>Signature &amp; cachet</p>
+    </div>
 </div>
 </body>
 </html>

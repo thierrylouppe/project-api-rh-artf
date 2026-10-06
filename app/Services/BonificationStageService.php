@@ -23,6 +23,7 @@ class BonificationStageService extends BaseService
     public function __construct(
         BonificationStageInterface          $repository,
         private readonly SalaireAgentService $salaireService,
+        private readonly EvaluationNotificationService $notifications,
     ) {
         parent::__construct($repository);
     }
@@ -49,7 +50,7 @@ class BonificationStageService extends BaseService
             ]);
         }
 
-        return $this->repository->create([
+        $bonification = $this->repository->create([
             'agent_id'           => $agentId,
             'date_debut_stage'   => $debut->toDateString(),
             'date_fin_stage'     => $fin->toDateString(),
@@ -60,6 +61,10 @@ class BonificationStageService extends BaseService
             'statut'             => StatutBonification::EN_ATTENTE->value,
             'created_by'         => $user->id,
         ]);
+
+        $this->notifications->bonificationStagePourRh($agentId, $bonification->id);
+
+        return $bonification;
     }
 
     /**
