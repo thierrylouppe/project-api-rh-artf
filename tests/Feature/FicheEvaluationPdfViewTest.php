@@ -12,7 +12,14 @@ class FicheEvaluationPdfViewTest extends TestCase
             'doc' => $this->document(),
         ])->render();
 
-        $this->assertStringContainsString('MINISTERE DE L\'ECONOMIE ET DES FINANCES', $html);
+        $this->assertStringContainsString('Ubuntu-Regular.ttf', $html);
+        $this->assertStringContainsString('pdf/img/logo-symbole.png', $html);
+        $this->assertStringContainsString('pdf/img/filigrane.png', $html);
+        $this->assertStringContainsString('ET DES FINANCES', $html);
+        $this->assertStringContainsString('AGENCE DE RÉGULATION', $html);
+        $this->assertStringContainsString('BUREAU PERSONNEL', $html);
+        $this->assertStringContainsString(config('artf.email'), $html);
+        $this->assertStringContainsString('charte-barre', $html);
         $this->assertStringContainsString('RENSEIGNEMENTS GENERAUX', $html);
         $this->assertStringContainsString('Identification de l\'agent à noter', $html);
         $this->assertStringContainsString('Suivi administratif', $html);

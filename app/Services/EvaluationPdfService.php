@@ -120,7 +120,6 @@ class EvaluationPdfService
             'date_evaluation'  => $fiche->date_evaluation?->format('d/m/Y')
                 ?? $fiche->created_at?->format('d/m/Y')
                 ?? '—',
-            'logo'             => $this->cheminSiFichier(public_path('assets/logo/logotop.png')),
             'photo'            => $this->cheminPhoto($fiche->agent?->photo_path),
             'agent'            => [
                 'nom'        => $fiche->agent?->nom ?? '—',
@@ -227,7 +226,7 @@ class EvaluationPdfService
             $blocs[] = [
                 'numero' => (string) $numero,
                 'titre'  => $titre,
-                'saut'   => $type === 'assiduite',
+                'saut'   => false,
                 'lignes' => $lignes->all(),
                 'total'  => $this->formatNote($total),
                 'bareme' => $this->formatNote($bareme),
@@ -407,11 +406,6 @@ class EvaluationPdfService
         }
 
         return null;
-    }
-
-    private function cheminSiFichier(string $chemin): ?string
-    {
-        return is_file($chemin) ? $chemin : null;
     }
 
     private function assertPeutLireFiche(User $user, Evaluation $fiche): void

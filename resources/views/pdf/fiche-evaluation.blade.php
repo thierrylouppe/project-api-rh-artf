@@ -3,20 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <title>ARTF - Fiche d'évaluation</title>
-    <style>
+</head>
+<body>
+@include('pdf.partials.charte', ['variante' => 'officiel', 'marge' => 36])
+<style>
         body {
-            font-family: 'DejaVu Serif', serif;
-            font-size: 12px;
+            font-family: 'Ubuntu', 'DejaVu Sans', sans-serif;
+            font-size: 13px;
             color: #111;
         }
+        .page { padding: 4px 36px 0; }
         table { width: 100%; border-collapse: collapse; }
         td, th { vertical-align: top; }
         .nu, .nu td, .nu th { border: none; padding: 0; }
         .grille { margin-bottom: 8px; }
         .grille td, .grille th {
             border: 1px solid #222;
-            padding: 4px 6px;
-            font-size: 12px;
+            padding: 7px 8px;
+            font-size: 13px;
         }
         .grille th { background: #f4f4f4; font-weight: bold; text-align: center; }
         .entete { font-size: 9px; font-weight: bold; text-align: center; line-height: 1.35; }
@@ -28,23 +32,18 @@
         .titre-fiche {
             border: 1px solid #222;
             text-align: center;
-            padding: 8px 6px;
-            margin: 12px 0;
+            padding: 20px 12px;
+            margin: 16px 0 14px;
         }
         .titre-fiche h1 {
             font-size: 14px;
             margin: 0;
             letter-spacing: 0.4px;
         }
-        .titre-fiche p { margin: 4px 0 0; font-size: 12px; }
-        h2 {
-            font-size: 13px;
-            margin: 14px 0 6px;
-            text-align: center;
-        }
+        .titre-fiche p { margin: 10px 0 0; font-size: 13px; }
         h3 {
-            font-size: 12px;
-            margin: 10px 0 4px;
+            font-size: 13px;
+            margin: 14px 0 12px;
         }
         table.identite, table.identite tr, table.identite td {
             border: none;
@@ -53,8 +52,8 @@
             border-top: 0;
             border-bottom: 0;
         }
-        table.identite { margin: 0 0 8px; border-collapse: collapse; }
-        table.identite td { padding: 3px 10px 3px 0; font-size: 12px; }
+        table.identite { margin: 4px 0 10px; border-collapse: collapse; }
+        table.identite td { padding: 6px 10px 6px 0; font-size: 13px; }
         .nouvelle-page { page-break-before: always; }
         .encadre {
             border: 1px solid #222;
@@ -63,36 +62,105 @@
         }
         .encadre p { margin: 0 0 6px; }
         .signature { height: 62px; }
-        .mention { font-size: 13px; font-weight: bold; margin: 8px 0; }
-        .logo { width: 72px; height: 72px; }
-        .photo { width: 88px; height: 110px; }
+        .mention { font-size: 14px; font-weight: bold; margin: 10px 0; }
+        .photo { width: 72px; height: 90px; }
+        h2 {
+            font-size: 14px;
+            margin: 18px 0 14px;
+            text-align: center;
+            text-transform: none;
+            letter-spacing: 0;
+            border: none;
+            padding: 0;
+            color: #111;
+        }
+        table.grille th {
+            background: #f4f4f4;
+            color: #111;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            text-transform: none;
+            letter-spacing: 0;
+            border: 1px solid #222;
+        }
+        table.grille td { background: #fff; color: #111; border: 1px solid #222; }
+        table.grille tr:nth-child(even) td { background: #fff; }
+        table.identite tr td, table.identite tr:nth-child(even) td, table.nu td {
+            background: none;
+            border: none;
+            color: #111;
+        }
+        .bandeau td { border: none; background: none; vertical-align: top; padding: 0; }
+        table.entete-lettre, table.entete-lettre tr td, table.entete-lettre tr:nth-child(even) td {
+            border: none;
+            background: none;
+            color: #1a1a1a;
+            vertical-align: top;
+            padding: 0;
+        }
+        .entete-lettre .pile { width: 1px; }
+        .entete-lettre .pile-axe {
+            width: auto;
+            margin: 0;
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            line-height: 1.25;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .entete-lettre .pile-axe .agence { color: {{ config('artf.couleurs.bleu') }}; margin-top: 8px; }
+        .entete-lettre .pile-axe .suite { margin-top: 8px; }
+        .entete-lettre .cote { width: 100%; text-align: right; }
+        .entete-lettre .republique {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            line-height: 1.35;
+        }
+        .entete-lettre .devise { font-weight: normal; text-transform: none; }
+        table.entete-lettre table.charte-filet {
+            width: 60px;
+            margin: 5px auto 0;
+            border-collapse: collapse;
+        }
+        table.entete-lettre table.charte-filet td,
+        table.entete-lettre table.charte-filet tr:nth-child(even) td {
+            height: 3px;
+            padding: 0;
+            border: none;
+            font-size: 0;
+            line-height: 0;
+        }
+        table.entete-lettre table.charte-filet td.b { width: 44px; background: {{ config('artf.couleurs.bleu') }}; }
+        table.entete-lettre table.charte-filet td.r { width: 16px; background: {{ config('artf.couleurs.rouge') }}; }
+        .logo-entete { height: 78px; margin: 4px 0; }
     </style>
-</head>
-<body>
-
-<table class="nu">
+@php
+    $maj = fn (?string $texte) => mb_strtoupper((string) $texte, 'UTF-8');
+@endphp
+<div class="page">
+<table class="entete-lettre">
     <tr>
-        <td class="entete" style="width: 48%;">
-            MINISTERE DE L'ECONOMIE ET DES FINANCES<br>
-            <span class="filet">----------------</span><br>
-            AGENCE DE REGULATION DES TRANSFERTS DE FONDS<br><br>
-            @if($doc['logo'])
-                <img src="{{ $doc['logo'] }}" alt="" class="logo"><br><br>
-            @endif
-            DIRECTION DES RESSOURCES HUMAINES ET DE LA LOGISTIQUE<br>
-            <span class="filet">----------------</span><br>
-            SERVICE DES RESSOURCES HUMAINES<br>
-            <span class="filet">----------------</span><br>
-            BUREAU DU PERSONNEL<br>
-            <span class="filet">----------------</span>
+        <td class="pile">
+            <table class="pile-axe" align="left">
+                <tr><td>
+                    {{ $maj("Ministère de l'Économie") }}<br>ET DES FINANCES
+                    <table class="charte-filet" align="center"><tr><td class="b"></td><td class="r"></td></tr></table>
+                    <div class="agence">{{ $maj('Agence de Régulation') }}<br>{{ $maj('des Transferts de Fonds') }}</div>
+                    <img class="logo-entete" src="{{ resource_path('pdf/img/logo-symbole.png') }}" alt="{{ config('artf.sigle') }}">
+                    <div class="suite">{{ $maj('Direction des Ressources') }}<br>{{ $maj('Humaines et de la Logistique') }}</div>
+                    <div class="suite">{{ $maj('Service des ressources humaines') }}</div>
+                    <div class="suite">{{ $maj('Bureau personnel') }}</div>
+                </td></tr>
+            </table>
         </td>
-        <td style="width: 8%;"></td>
-        <td class="entete" style="width: 44%;">
-            REPUBLIQUE DU CONGO<br>
-            Unité -:- Travail -:- Progrès<br>
-            <span class="filet">----------------</span><br><br>
+        <td class="cote republique">
+            {{ $maj(config('artf.pays')) }}<br>
+            <span class="devise">{{ config('artf.devise') }}</span>
             @if($doc['photo'])
-                <img src="{{ $doc['photo'] }}" alt="" class="photo">
+                <br><img src="{{ $doc['photo'] }}" alt="" class="photo">
             @endif
         </td>
     </tr>
@@ -220,7 +288,7 @@
     </div>
 @endif
 
-<h3 class="nouvelle-page centre souligne">Avis</h3>
+<h3 class="centre souligne">Avis</h3>
 
 @foreach($doc['avis'] as $avis)
     <div class="encadre">
@@ -231,7 +299,7 @@
 @endforeach
 
 @if($doc['reclamation'])
-    <h3 class="nouvelle-page centre souligne">Réclamations éventuelles (s'il y a lieu)</h3>
+    <h3 class="centre souligne">Réclamations éventuelles (s'il y a lieu)</h3>
     <div class="encadre">
         <p>{{ $doc['reclamation'] }}</p>
     </div>
@@ -259,7 +327,7 @@
 </table>
 
 @if($doc['commission'])
-    <h2 class="nouvelle-page">III. <span class="souligne">EVALUATION GENERALE PAR LA COMMISSION</span></h2>
+    <h2>III. <span class="souligne">EVALUATION GENERALE PAR LA COMMISSION</span></h2>
 
     <table class="grille">
         <tr>
@@ -318,5 +386,6 @@
     @endif
 @endif
 
+</div>
 </body>
 </html>
