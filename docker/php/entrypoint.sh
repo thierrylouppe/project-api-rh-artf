@@ -9,6 +9,13 @@ if [ ! -f .env ] && [ -f .env.docker ]; then
   echo "Fichier .env créé depuis .env.docker"
 fi
 
+# Partage des fichiers publics avec nginx (volume nommé, image immuable)
+if [ -n "${SYNC_PUBLIC_TO:-}" ] && [ -d /var/www/html/public ]; then
+  mkdir -p "$SYNC_PUBLIC_TO"
+  cp -a /var/www/html/public/. "$SYNC_PUBLIC_TO/"
+  echo "Fichiers public/ synchronisés vers $SYNC_PUBLIC_TO"
+fi
+
 # Attendre MySQL
 if [ -n "$DB_HOST" ]; then
   echo "Attente de MySQL ($DB_HOST:${DB_PORT:-3306})..."
@@ -31,12 +38,18 @@ fi
 if [ -z "$APP_KEY" ]; then
   echo "Génération de APP_KEY..."
   php artisan key:generate --force --no-interaction
-  # Recopie la clé générée vers .env.docker si présent
+  # Recopie la clé générée vers .env.docker si présent (bind-mount local uniquement)
   if [ -f .env ] && [ -f .env.docker ]; then
     KEY=$(grep '^APP_KEY=' .env | head -1)
     if [ -n "$KEY" ]; then
       sed -i.bak "s|^APP_KEY=.*|$KEY|" .env.docker && rm -f .env.docker.bak
     fi
+  fi
+  # Docker injecte APP_KEY vide via env_file : il faut l'exporter pour ce process
+  GENERATED_KEY=$(grep '^APP_KEY=' .env | head -1 | cut -d= -f2-)
+  if [ -n "$GENERATED_KEY" ]; then
+    export APP_KEY="$GENERATED_KEY"
+    echo "APP_KEY générée. En production, copiez-la dans le .env.docker de l'hôte puis recréez les conteneurs."
   fi
 fi
 
