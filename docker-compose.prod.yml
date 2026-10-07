@@ -1,10 +1,11 @@
-# Les ports ${APP_PORT} / ${DB_PUBLISH_PORT} sont interpolés depuis
-# --env-file .env.docker (pas depuis env_file des conteneurs).
-# Toujours lancer :
-#   docker compose --env-file .env.docker config
-#   docker compose --env-file .env.docker up -d
+# Production : le code vient de l'image (COPY . .), pas d'un bind-mount du dépôt.
+# Lancer uniquement avec :
+#   docker compose --env-file .env.docker -f docker-compose.prod.yml config
+#   docker compose --env-file .env.docker -f docker-compose.prod.yml up -d
 #
-# En production, utiliser docker-compose.prod.yml (image immuable, sans bind-mount du code).
+# Ports hôtes recommandés si 8080 / 3307 / 3310 sont déjà pris :
+#   APP_PORT=8081
+#   DB_PUBLISH_PORT=3311
 
 services:
   app:
@@ -15,11 +16,13 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
-      - .:/var/www/html
+      - rh_artf_storage:/var/www/html/storage
+      - rh_artf_public:/shared/public
     env_file:
       - .env.docker
     environment:
       RUN_MIGRATIONS: "${RUN_MIGRATIONS:-true}"
+      SYNC_PUBLIC_TO: /shared/public
     depends_on:
       db:
         condition: service_healthy
@@ -35,7 +38,7 @@ services:
     working_dir: /var/www/html
     command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
     volumes:
-      - .:/var/www/html
+      - rh_artf_storage:/var/www/html/storage
     env_file:
       - .env.docker
     environment:
@@ -53,9 +56,9 @@ services:
     container_name: rh-artf-nginx
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-8080}:80"
+      - "${APP_PORT:-8081}:80"
     volumes:
-      - .:/var/www/html
+      - rh_artf_public:/var/www/html/public:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - app
@@ -67,7 +70,7 @@ services:
     container_name: rh-artf-db
     restart: unless-stopped
     ports:
-      - "${DB_PUBLISH_PORT:-3307}:3306"
+      - "${DB_PUBLISH_PORT:-3311}:3306"
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-bd_api_rh_artf}
       MYSQL_USER: ${DB_USERNAME:-rh_user}
@@ -86,6 +89,8 @@ services:
 
 volumes:
   rh_artf_mysql:
+  rh_artf_storage:
+  rh_artf_public:
 
 networks:
   rh-artf:
