@@ -24,12 +24,13 @@ class UserController extends BaseController
 
     protected function showRelations(): array
     {
-        return ['roles.permissions'];
+        return ['roles.permissions', ...$this->service->relationsContexte()];
     }
 
     public function index(Request $request): JsonResponse
     {
         $items = $this->service->getAll($request->query());
+        $items->load($this->service->relationsContexte());
 
         return response()->json(['data' => UserResource::collection($items)]);
     }

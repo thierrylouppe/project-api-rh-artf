@@ -64,11 +64,10 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,                  // depends: Role
             ParametreApplicationSeeder::class,
 
-            // ── 8. Agents & stagiaires intégrés ─────────────────────────
-            // DG + par direction : Directeur · CS · CB · 2 Agents · 1 Stagiaire
-            // depends: Direction, Service, Bureau, Grade, Categorie, Echelon,
-            //          Fonction, TypeIntegration, TypeContrat
-            AgentIntegrationSeeder::class,
+            // ── 8. Agents réels (dump gestRHdb) ─────────────────────────
+            // Retire les matricules de démonstration ARFT- / STG- puis charge
+            // les agents sur l'organigramme déjà seedé.
+            AgentsGestRhSeeder::class,
             SyncAgentRolesSeeder::class,        // rôles + bureau_id selon affectation et fonction
 
             // ── 9. Salaires agents ───────────────────────────────────────

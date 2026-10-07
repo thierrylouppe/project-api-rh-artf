@@ -1,5 +1,5 @@
 # Annuaire des comptes utilisateurs ARTF
-> Généré par `AgentIntegrationSeeder` — Base : `bd_api_rh_artf`  
+> Annuaire historique du jeu de démonstration retiré. Les comptes actifs viennent de `AgentsGestRhSeeder`.  
 > Convention : **Email** `prenom.nom@artf.cg` · **Mot de passe** `Nom@2026`  
 > Les stagiaires n'ont pas de compte (CCN art. 46).
 

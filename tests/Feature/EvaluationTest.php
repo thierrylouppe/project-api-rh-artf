@@ -1337,4 +1337,39 @@ class EvaluationTest extends TestCase
         $this->assertTrue($show['avis_hierarchiques'][0]['signe']);
         $this->assertTrue($show['avis_hierarchiques'][1]['signe']);
     }
+
+    public function test_notateur_et_agent_lisent_la_grille_sans_pouvoir_la_modifier(): void
+    {
+        $payload = [
+            'libelle'      => 'Nouveau critère',
+            'type_critere' => 'competence_pro',
+            'bareme_max'   => 5,
+        ];
+
+        Sanctum::actingAs($this->chefUser);
+
+        $this->getJson('/api/avancements/questions-evaluation')
+            ->assertOk()
+            ->assertJsonFragment(['libelle' => 'Critère A']);
+
+        $this->getJson("/api/avancements/questions-evaluation/{$this->q1->id}")
+            ->assertOk()
+            ->assertJsonPath('data.libelle', 'Critère A');
+
+        $this->postJson('/api/avancements/questions-evaluation', $payload)->assertForbidden();
+        $this->putJson("/api/avancements/questions-evaluation/{$this->q1->id}", $payload)->assertForbidden();
+        $this->deleteJson("/api/avancements/questions-evaluation/{$this->q1->id}")->assertForbidden();
+
+        Sanctum::actingAs($this->agentUser);
+
+        $this->getJson('/api/avancements/questions-evaluation')
+            ->assertOk()
+            ->assertJsonFragment(['libelle' => 'Critère A']);
+
+        $this->getJson("/api/avancements/questions-evaluation/{$this->q1->id}")
+            ->assertOk()
+            ->assertJsonPath('data.libelle', 'Critère A');
+
+        $this->postJson('/api/avancements/questions-evaluation', $payload)->assertForbidden();
+    }
 }

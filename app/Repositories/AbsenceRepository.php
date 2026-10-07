@@ -60,4 +60,15 @@ class AbsenceRepository extends BaseRepository implements AbsenceInterface
 
         return $query->get();
     }
+
+    public function sommeJoursNonJustifiesEntre(int $agentId, string $debut, string $fin): int
+    {
+        return (int) Absence::query()
+            ->where('agent_id', $agentId)
+            ->where('justifiee', false)
+            ->where('statut', StatutAbsence::VALIDEE)
+            ->whereDate('date_debut', '<=', $fin)
+            ->whereDate('date_fin', '>=', $debut)
+            ->sum('nb_jours');
+    }
 }

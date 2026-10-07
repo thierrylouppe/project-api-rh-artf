@@ -141,7 +141,8 @@ class SuperieurHierarchiqueService
 
         return $this->affectationRepository->resoudreSuperiorParStructure(
             $affectation->structurable_type,
-            (int) $affectation->structurable_id
+            (int) $affectation->structurable_id,
+            (int) $affectation->agent_id,
         );
     }
 

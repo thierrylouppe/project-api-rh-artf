@@ -79,25 +79,26 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
         return $affectation->fresh();
     }
 
-    public function resoudreSuperiorParStructure(string $structurableType, int $structurableId): ?int
+    public function resoudreSuperiorParStructure(string $structurableType, int $structurableId, ?int $saufAgentId = null): ?int
     {
-        $nomination = $this->nominationActiveParStructure($structurableType, $structurableId);
+        $nomination = $this->nominationActiveParStructure($structurableType, $structurableId, $saufAgentId);
         if ($nomination) {
-            return $nomination->agent_id;
+            return (int) $nomination->agent_id;
         }
 
         if ($structurableType === Bureau::class) {
             $bureau = Bureau::find($structurableId);
             if ($bureau?->service_id) {
-                $nomination = $this->nominationActiveParStructure(Service::class, $bureau->service_id);
+                $nomination = $this->nominationActiveParStructure(Service::class, $bureau->service_id, $saufAgentId);
                 if ($nomination) {
-                    return $nomination->agent_id;
+                    return (int) $nomination->agent_id;
                 }
 
                 $service = Service::find($bureau->service_id);
                 if ($service?->direction_id) {
-                    $nomination = $this->nominationActiveParStructure(Direction::class, $service->direction_id);
-                    return $nomination?->agent_id;
+                    $nomination = $this->nominationActiveParStructure(Direction::class, $service->direction_id, $saufAgentId);
+
+                    return $nomination ? (int) $nomination->agent_id : null;
                 }
             }
         }
@@ -105,12 +106,36 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
         if ($structurableType === Service::class) {
             $service = Service::find($structurableId);
             if ($service?->direction_id) {
-                $nomination = $this->nominationActiveParStructure(Direction::class, $service->direction_id);
-                return $nomination?->agent_id;
+                $nomination = $this->nominationActiveParStructure(Direction::class, $service->direction_id, $saufAgentId);
+
+                return $nomination ? (int) $nomination->agent_id : null;
             }
         }
 
         return null;
+    }
+
+    public function getActivesPourHierarchie(): Collection
+    {
+        $affectations = Affectation::query()
+            ->where('statut', StatutAffectation::ACTIVE)
+            ->with('agent.fonction')
+            ->orderBy('id')
+            ->get();
+
+        $bureaux = Bureau::query()->with('service')->get()->keyBy('id');
+        $services = Service::query()->with('direction')->get()->keyBy('id');
+        $directions = Direction::query()->get()->keyBy('id');
+
+        return $affectations->each(function (Affectation $affectation) use ($bureaux, $services, $directions) {
+            $structure = match ($affectation->structurable_type) {
+                Bureau::class => $bureaux->get($affectation->structurable_id),
+                Service::class => $services->get($affectation->structurable_id),
+                Direction::class => $directions->get($affectation->structurable_id),
+                default => null,
+            };
+            $affectation->setRelation('structure', $structure);
+        });
     }
 
     public function getByLot(int $lotId): Collection
@@ -128,11 +153,12 @@ class AffectationRepository extends BaseRepository implements AffectationInterfa
             ->update(['statut' => $statut]);
     }
 
-    private function nominationActiveParStructure(string $type, int $id): ?Nomination
+    private function nominationActiveParStructure(string $type, int $id, ?int $saufAgentId = null): ?Nomination
     {
         return Nomination::where('structurable_type', $type)
             ->where('structurable_id', $id)
             ->where('statut', StatutNomination::ACTIVE)
+            ->when($saufAgentId !== null, fn ($query) => $query->where('agent_id', '!=', $saufAgentId))
             ->latest()
             ->first();
     }

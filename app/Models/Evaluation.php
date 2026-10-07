@@ -125,6 +125,11 @@ class Evaluation extends Model
         return $this->hasMany(AvisHierarchique::class, 'evaluation_id')->orderBy('ordre');
     }
 
+    public function connaissancesComplementaires(): HasMany
+    {
+        return $this->hasMany(ConnaissanceComplementaire::class, 'evaluation_id');
+    }
+
     // ----------------------------------------------------------------
     // Helpers
     // ----------------------------------------------------------------

@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\OrigineDemandeCongeAnnuel;
 use App\Enums\StatutDemandeConge;
 use App\Interfaces\DemandeCongeInterface;
 use App\Models\DemandeConge;
@@ -67,5 +68,16 @@ class DemandeCongeRepository extends BaseRepository implements DemandeCongeInter
         }
 
         return $query->get();
+    }
+
+    public function agentIdsPourCampagne(int $campagneId): Collection
+    {
+        return DemandeConge::query()
+            ->where('campagne_conge_annuel_id', $campagneId)
+            ->where('origine', OrigineDemandeCongeAnnuel::CAMPAGNE->value)
+            ->where('statut', '!=', StatutDemandeConge::ANNULEE->value)
+            ->pluck('agent_id')
+            ->unique()
+            ->values();
     }
 }

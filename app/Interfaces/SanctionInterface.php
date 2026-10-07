@@ -14,6 +14,9 @@ interface SanctionInterface extends BaseInterface
 
     public function getPrononceesDepuis(int $agentId, string $depuis, ?int $exclureId = null): Collection;
 
+    /** Sanctions prononcées dont la décision (ou la création) tombe dans [debut, fin]. */
+    public function getPrononceesEntre(int $agentId, string $debut, string $fin): Collection;
+
     /** Sanctions validées depuis une date, groupées par agent_id. */
     public function getPrononceesDepuisTous(string $depuis): Collection;
 

@@ -43,6 +43,24 @@ class User extends Authenticatable
         return $this->belongsTo(Agent::class);
     }
 
+    /**
+     * Relations nécessaires pour exposer le nom de la structure et de la fonction.
+     *
+     * @return list<string>
+     */
+    public static function relationsContexte(): array
+    {
+        return [
+            'bureau.service.direction',
+            'agent.fonction',
+        ];
+    }
+
+    public function chargerContexte(): static
+    {
+        return $this->load(self::relationsContexte());
+    }
+
     // ─── Helpers cloisonnement ────────────────────────────────────────────────
 
     /** Retourne l'ID du bureau de rattachement ou null. */

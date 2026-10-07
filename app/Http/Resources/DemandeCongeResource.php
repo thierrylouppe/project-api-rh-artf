@@ -17,9 +17,13 @@ class DemandeCongeResource extends JsonResource
                 fn () => $this->agent ? new AgentIdentiteResource($this->agent) : null
             ),
             'type_conge_id'       => $this->type_conge_id,
+            'campagne_conge_annuel_id' => $this->campagne_conge_annuel_id,
+            'origine'             => $this->origine?->value,
+            'origine_label'       => $this->origine?->label(),
             'type_conge'          => new TypeCongeResource($this->whenLoaded('typeConge')),
             'date_debut'          => $this->date_debut?->format('Y-m-d'),
             'date_fin'            => $this->date_fin?->format('Y-m-d'),
+            'date_reprise'        => $this->date_reprise?->format('Y-m-d'),
             'nb_jours'            => $this->nb_jours,
             'motif'               => $this->motif,
             'statut'              => $this->statut?->value,

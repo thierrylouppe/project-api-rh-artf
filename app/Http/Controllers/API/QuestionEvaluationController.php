@@ -12,7 +12,8 @@ use OpenApi\Attributes as OA;
 
 /**
  * Gestion de la grille de questions d'évaluation (référentiel RH-paramétrable).
- * Réservé à la RH (permission : creer-evaluations).
+ * Lecture : consulter-evaluations (notateur N+1, agent évalué, RH).
+ * Écriture : creer-evaluations (RH).
  *
  * Phase 1 : CRUD simple.
  * Phase 2 : verrouillage si session ouverte avec fiches en cours.
