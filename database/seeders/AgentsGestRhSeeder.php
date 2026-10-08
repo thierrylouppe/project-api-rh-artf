@@ -43,7 +43,7 @@ use Spatie\Permission\PermissionRegistrar;
  */
 class AgentsGestRhSeeder extends Seeder
 {
-    private const DUMP = 'doc/gestRHdb_010724.sql';
+    private const DUMP = 'database/dumps/gestRHdb_010724.sql';
 
     /** @var array<string, string> sigle dump du diplôme → sigle du référentiel actuel */
     private const DIPLOMES = [
