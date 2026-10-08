@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Gestion RH API — ARTF",
-        "description": "API REST de gestion RH (intégration administrative des agents).\n\n## Authentification\n\n1. Appeler `POST /api/login` avec email / mot de passe\n2. Copier le `token` retourné\n3. Cliquer **Authorize** en haut à droite\n4. Saisir : `Bearer {token}` (ou uniquement le token selon le client)\n\nComptes de test (seeders) :\n- `admin@arft.cg` / `Admin@2026`\n- `rh@arft.cg` / `Rh@2026`\n\n## Convention de réponse\n\n```json\n{ \"data\": {}, \"message\": \"...\" }\n```\n\nErreurs : `{ \"success\": false, \"message\": \"...\", \"errors\": {} }`",
+        "description": "API REST de gestion RH (intégration administrative des agents).\n\n## Authentification\n\n1. Appeler `POST /api/login` avec email / mot de passe\n2. Copier le `token` retourné\n3. Cliquer **Authorize** en haut à droite\n4. Saisir : `Bearer {token}` (ou uniquement le token selon le client)\n\nComptes de test (seeders) :\n- `admin@artf.cg` / `Admin@2026`\n- `rh@artf.cg` / `Rh@2026`\n\n## Convention de réponse\n\n```json\n{ \"data\": {}, \"message\": \"...\" }\n```\n\nErreurs : `{ \"success\": false, \"message\": \"...\", \"errors\": {} }`",
         "version": "1.0.0"
     },
     "servers": [
@@ -1389,6 +1389,485 @@
                 ]
             }
         },
+        "/api/affaires-sociales/arrets": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Liste des arrêts maladie / AT-MP",
+                "operationId": "listArretsSante",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Créer un arrêt (brouillon)",
+                "operationId": "storeArretSante",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/agents/{agent}/arrets": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Arrêts d'un agent",
+                "operationId": "arretsParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/arrets/{id}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Détail d'un arrêt",
+                "operationId": "showArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Modifier un arrêt en brouillon ou soumis",
+                "operationId": "updateArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Supprimer un brouillon",
+                "operationId": "destroyArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/arrets/{id}/soumettre": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Soumettre un arrêt",
+                "operationId": "soumettreArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Soumis"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/arrets/{id}/instruire": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Instruire un arrêt et le transmettre au DG",
+                "operationId": "instruireArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Instruit"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/arrets/{id}/accorder": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Accorder un arrêt (DG) et poser l'allocation en paie",
+                "operationId": "accorderArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Accordé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/arrets/{id}/refuser": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Refuser un arrêt (DG)",
+                "operationId": "refuserArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Refusé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/arrets/{id}/classer": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Classer un arrêt sans suite",
+                "operationId": "classerArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Classé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/arrets/{id}/simulation": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Simuler l'allocation CCN",
+                "operationId": "simulationArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Simulation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/arrets/{id}/pdf-decision": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "PDF de la décision du DG",
+                "operationId": "decisionArretSantePdf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/arrets/{id}/pieces": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Pièces d'un arrêt",
+                "operationId": "listPiecesArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Joindre une pièce à un arrêt",
+                "operationId": "storePieceArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/arrets/{id}/pieces/{pieceId}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Télécharger une pièce",
+                "operationId": "downloadPieceArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "pieceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Retirer une pièce",
+                "operationId": "destroyPieceArretSante",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "pieceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/login": {
             "post": {
                 "tags": [
@@ -2119,6 +2598,128 @@
                 ]
             }
         },
+        "/api/conges-annuels/campagnes": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Campagnes de congé annuel",
+                "operationId": "listCampagnesCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Créer une campagne",
+                "operationId": "storeCampagneCongeAnnuel",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/campagnes/{id}": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Détail d'une campagne",
+                "operationId": "showCampagneCongeAnnuel",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/campagnes/{id}/ouvrir": {
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Ouvrir la campagne",
+                "operationId": "ouvrirCampagneCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "Ouverte"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/campagnes/{id}/cloturer": {
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Clôturer la campagne",
+                "operationId": "cloturerCampagneCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "Clôturée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/campagnes/{id}/sans-proposition": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Agents sans proposition",
+                "operationId": "sansPropositionCampagneCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/carriere/agents/{id}": {
             "get": {
                 "tags": [
@@ -2727,6 +3328,261 @@
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/agents/{agent}/solde": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Solde de congé annuel",
+                "operationId": "soldeCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "Solde"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/statistiques": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Statistiques du congé annuel",
+                "operationId": "statsCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "Stats"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/demandes/a-valider": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "File à traiter",
+                "operationId": "congeAnnuelAValider",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/demandes": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Propositions de congé annuel",
+                "operationId": "listCongesAnnuels",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Proposer un congé annuel",
+                "operationId": "storeCongeAnnuel",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/demandes/{id}": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Détail",
+                "operationId": "showCongeAnnuel",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/demandes/{id}/valider-n1": {
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Visa N+1",
+                "operationId": "validerCongeAnnuelN1",
+                "responses": {
+                    "200": {
+                        "description": "Visée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/demandes/{id}/rejeter-n1": {
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Rejet N+1",
+                "operationId": "rejeterCongeAnnuelN1",
+                "responses": {
+                    "200": {
+                        "description": "Rejetée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/demandes/{id}/valider-rh": {
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Attribution RH",
+                "operationId": "validerCongeAnnuelRh",
+                "responses": {
+                    "200": {
+                        "description": "Attribuée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/demandes/{id}/rejeter-rh": {
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Rejet RH",
+                "operationId": "rejeterCongeAnnuelRh",
+                "responses": {
+                    "200": {
+                        "description": "Rejetée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/demandes/{id}/annuler": {
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Annuler une proposition",
+                "operationId": "annulerCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "Annulée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/demandes/{id}/fiche-pdf": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Fiche PDF",
+                "operationId": "ficheCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/demandes/{id}/attestation": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Attestation PDF",
+                "operationId": "attestationCongeAnnuel",
                 "responses": {
                     "200": {
                         "description": "PDF"
@@ -7036,6 +7892,783 @@
                 ]
             }
         },
+        "/api/paie/affectations": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Liste des affectations d'éléments de paie",
+                "operationId": "listPaieAffectations",
+                "parameters": [
+                    {
+                        "name": "agent_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "element_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "actives",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Affecter un élément de paie à un agent",
+                "operationId": "storePaieAffectation",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/agents/{agent}/affectations": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Affectations de paie d'un agent",
+                "operationId": "paieAffectationsParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/affectations/{id}": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Détail d'une affectation de paie",
+                "operationId": "showPaieAffectation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Modifier une affectation de paie",
+                "operationId": "updatePaieAffectation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Supprimer une affectation de paie",
+                "operationId": "destroyPaieAffectation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/elements": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Liste des éléments de paie",
+                "operationId": "listPaieElements",
+                "parameters": [
+                    {
+                        "name": "nature",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "actif",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Créer un élément de paie (hors codes CCN)",
+                "operationId": "storePaieElement",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/elements/{id}": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Détail d'un élément de paie",
+                "operationId": "showPaieElement",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Modifier un élément de paie",
+                "operationId": "updatePaieElement",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Supprimer un élément de paie non système",
+                "operationId": "destroyPaieElement",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/lots": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Liste des lots de paie",
+                "operationId": "listPaieLots",
+                "parameters": [
+                    {
+                        "name": "annee",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "mois",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "statut",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Créer un lot de paie brouillon",
+                "operationId": "storePaieLot",
+                "responses": {
+                    "201": {
+                        "description": "Créé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/lots/{id}": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Détail d'un lot de paie",
+                "operationId": "showPaieLot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Modifier le commentaire d'un lot non verrouillé",
+                "operationId": "updatePaieLot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mis à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Supprimer un lot non validé",
+                "operationId": "destroyPaieLot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/lots/{id}/generer": {
+            "post": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Générer ou recalculer les lignes du lot",
+                "operationId": "genererPaieLot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Généré"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/lots/{id}/controler": {
+            "post": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Contrôler un lot généré",
+                "operationId": "controlerPaieLot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contrôlé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/lots/{id}/valider": {
+            "post": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Valider un lot contrôlé",
+                "operationId": "validerPaieLot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Validé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/lots/{id}/cloturer": {
+            "post": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Clôturer un lot validé",
+                "operationId": "cloturerPaieLot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Clôturé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/lots/{id}/lignes": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Lignes d'un lot de paie",
+                "operationId": "listPaieLotLignes",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "agent_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "hors_grille",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/lots/{id}/lignes/{ligneId}": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Détail d'une ligne de lot",
+                "operationId": "showPaieLotLigne",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "ligneId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/lots/{id}/lignes/{ligneId}/bulletin": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Bulletin de paie PDF enrichi d'une ligne de lot",
+                "operationId": "bulletinPaieLotLigne",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "ligneId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/lots/{id}/export": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Export masse salariale CSV ou PDF",
+                "operationId": "exportPaieLot",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "csv",
+                                "pdf"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/paie/agents/{agent}/bulletins": {
+            "get": {
+                "tags": [
+                    "Paie"
+                ],
+                "summary": "Bulletins clôturés d'un agent",
+                "operationId": "paieBulletinsParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/conges/paliers-anciennete": {
             "get": {
                 "tags": [
@@ -7801,6 +9434,485 @@
                 ]
             }
         },
+        "/api/affaires-sociales/prestations": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Liste des prestations sociales",
+                "operationId": "listPrestations",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Créer une demande de prestation (brouillon)",
+                "operationId": "storePrestation",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/agents/{agent}/prestations": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Prestations d'un agent",
+                "operationId": "prestationsParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prestations/{id}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Détail d'une prestation",
+                "operationId": "showPrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Modifier une prestation en brouillon ou soumise",
+                "operationId": "updatePrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Supprimer un brouillon",
+                "operationId": "destroyPrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prestations/{id}/soumettre": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Soumettre une prestation",
+                "operationId": "soumettrePrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Soumise"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prestations/{id}/instruire": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Instruire une prestation et la transmettre au DG",
+                "operationId": "instruirePrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Instruite"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prestations/{id}/accorder": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Accorder une prestation (DG) et poser en paie",
+                "operationId": "accorderPrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Accordée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prestations/{id}/refuser": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Refuser une prestation (DG)",
+                "operationId": "refuserPrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Refusée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prestations/{id}/classer": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Classer une prestation sans suite",
+                "operationId": "classerPrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Classée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prestations/{id}/simulation": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Simuler le montant CCN",
+                "operationId": "simulationPrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Simulation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prestations/{id}/pdf-decision": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "PDF de la décision du DG",
+                "operationId": "decisionPrestationPdf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prestations/{id}/pieces": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Pièces d'une prestation",
+                "operationId": "listPiecesPrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Joindre une pièce à une prestation",
+                "operationId": "storePiecePrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prestations/{id}/pieces/{pieceId}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Télécharger une pièce",
+                "operationId": "downloadPiecePrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "pieceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Retirer une pièce",
+                "operationId": "destroyPiecePrestation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "pieceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/integration/prises-de-service": {
             "post": {
                 "tags": [
@@ -7896,6 +10008,485 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Liste des prises en charge santé",
+                "operationId": "listPrisesEnCharge",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Créer une prise en charge (brouillon)",
+                "operationId": "storePriseEnCharge",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/agents/{agent}/prises-en-charge": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Prises en charge d'un agent",
+                "operationId": "prisesEnChargeParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge/{id}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Détail d'une prise en charge",
+                "operationId": "showPriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Modifier une prise en charge en brouillon ou soumise",
+                "operationId": "updatePriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Supprimer un brouillon",
+                "operationId": "destroyPriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge/{id}/soumettre": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Soumettre une prise en charge",
+                "operationId": "soumettrePriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Soumise"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge/{id}/instruire": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Instruire une prise en charge et la transmettre au DG",
+                "operationId": "instruirePriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Instruite"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge/{id}/accorder": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Accorder une prise en charge (DG) et poser en paie",
+                "operationId": "accorderPriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Accordée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge/{id}/refuser": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Refuser une prise en charge (DG)",
+                "operationId": "refuserPriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Refusée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge/{id}/classer": {
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Classer une prise en charge sans suite",
+                "operationId": "classerPriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Classée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge/{id}/simulation": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Simuler le montant CCN",
+                "operationId": "simulationPriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Simulation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge/{id}/pdf-decision": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "PDF de la décision du DG",
+                "operationId": "decisionPriseEnChargePdf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge/{id}/pieces": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Pièces d'une prise en charge",
+                "operationId": "listPiecesPriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Joindre une pièce à une prise en charge",
+                "operationId": "storePiecePriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/prises-en-charge/{id}/pieces/{pieceId}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Télécharger une pièce",
+                "operationId": "downloadPiecePriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "pieceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Retirer une pièce",
+                "operationId": "destroyPiecePriseEnCharge",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "pieceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
                     }
                 },
                 "security": [
@@ -8176,6 +10767,317 @@
                 "responses": {
                     "200": {
                         "description": "Mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/reports": {
+            "get": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Reports pour nécessité de service",
+                "operationId": "listReportsCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Proposer un report",
+                "operationId": "storeReportCongeAnnuel",
+                "responses": {
+                    "201": {
+                        "description": "Proposé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/reports/{id}/accorder": {
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Accorder un report",
+                "operationId": "accorderReportCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "Accordé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/conges-annuels/reports/{id}/refuser": {
+            "post": {
+                "tags": [
+                    "Congé annuel"
+                ],
+                "summary": "Refuser un report",
+                "operationId": "refuserReportCongeAnnuel",
+                "responses": {
+                    "200": {
+                        "description": "Refusé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reporting/dashboard": {
+            "get": {
+                "tags": [
+                    "Reporting"
+                ],
+                "summary": "Tableau de bord RH (effectifs, répartitions, masse salariale)",
+                "operationId": "reportingDashboard",
+                "parameters": [
+                    {
+                        "name": "annee",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "direction_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "service_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "bureau_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dashboard"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reporting/effectifs": {
+            "get": {
+                "tags": [
+                    "Reporting"
+                ],
+                "summary": "Liste paginée des effectifs",
+                "operationId": "reportingEffectifs",
+                "responses": {
+                    "200": {
+                        "description": "Liste paginée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reporting/repartitions": {
+            "get": {
+                "tags": [
+                    "Reporting"
+                ],
+                "summary": "Répartition selon un axe (direction, grade, genre, âge, …)",
+                "operationId": "reportingRepartitions",
+                "parameters": [
+                    {
+                        "name": "axe",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Répartition"
+                    },
+                    "422": {
+                        "description": "Axe invalide"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reporting/stats/conges": {
+            "get": {
+                "tags": [
+                    "Reporting"
+                ],
+                "summary": "Statistiques congés et absences de l'année",
+                "operationId": "reportingStatsConges",
+                "parameters": [
+                    {
+                        "name": "annee",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stats"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reporting/stats/evaluations": {
+            "get": {
+                "tags": [
+                    "Reporting"
+                ],
+                "summary": "Statistiques évaluations (année + session courante)",
+                "operationId": "reportingStatsEvaluations",
+                "parameters": [
+                    {
+                        "name": "annee",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stats"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reporting/alertes": {
+            "get": {
+                "tags": [
+                    "Reporting"
+                ],
+                "summary": "Alertes de conformité RH",
+                "operationId": "reportingAlertes",
+                "responses": {
+                    "200": {
+                        "description": "Alertes"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reporting/exports/{type}": {
+            "get": {
+                "tags": [
+                    "Reporting"
+                ],
+                "summary": "Export PDF ou CSV (effectifs, conges, evaluations)",
+                "operationId": "reportingExports",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "csv",
+                                "pdf"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "annee",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "portee",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "annee",
+                                "session"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Fichier"
+                    },
+                    "422": {
+                        "description": "Type ou format invalide"
                     }
                 },
                 "security": [
@@ -9044,6 +11946,125 @@
                 ]
             }
         },
+        "/api/affaires-sociales/structures-sanitaires": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Liste des structures sanitaires agréées",
+                "operationId": "listStructuresSanitaires",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Créer une structure sanitaire agréée",
+                "operationId": "storeStructureSanitaire",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/structures-sanitaires/{id}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Détail d'une structure sanitaire",
+                "operationId": "showStructureSanitaire",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Modifier une structure sanitaire",
+                "operationId": "updateStructureSanitaire",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Supprimer une structure sanitaire",
+                "operationId": "destroyStructureSanitaire",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/types-integrations": {
             "get": {
                 "tags": [
@@ -9602,6 +12623,173 @@
                     }
                 ]
             }
+        },
+        "/api/affaires-sociales/visites-medicales": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Liste des visites médicales",
+                "operationId": "listVisitesMedicales",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Enregistrer une visite médicale",
+                "operationId": "storeVisiteMedicale",
+                "responses": {
+                    "201": {
+                        "description": "Créée"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/alertes/visites-annuelles-manquantes": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Agents sans visite annuelle (alerte CCN art. 122)",
+                "operationId": "alertesVisitesAnnuelles",
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/agents/{agent}/visites-medicales": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Visites médicales d'un agent",
+                "operationId": "visitesParAgent",
+                "parameters": [
+                    {
+                        "name": "agent",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/affaires-sociales/visites-medicales/{id}": {
+            "get": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Détail d'une visite médicale",
+                "operationId": "showVisiteMedicale",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Modifier une visite médicale",
+                "operationId": "updateVisiteMedicale",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mise à jour"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Affaires sociales"
+                ],
+                "summary": "Supprimer une visite médicale",
+                "operationId": "destroyVisiteMedicale",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supprimé"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -9615,7 +12803,7 @@
                     "email": {
                         "type": "string",
                         "format": "email",
-                        "example": "admin@arft.cg"
+                        "example": "admin@artf.cg"
                     },
                     "password": {
                         "type": "string",
@@ -9698,7 +12886,7 @@
                     },
                     "email": {
                         "type": "string",
-                        "example": "admin@arft.cg"
+                        "example": "admin@artf.cg"
                     },
                     "agent_id": {
                         "type": "integer",
@@ -9708,6 +12896,88 @@
                     "is_active": {
                         "type": "boolean",
                         "example": true
+                    },
+                    "bureau_id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "vue_personnel": {
+                        "type": "string",
+                        "example": "service",
+                        "enum": [
+                            "globale",
+                            "direction",
+                            "service",
+                            "bureau"
+                        ]
+                    },
+                    "bureau": {
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "nom": {
+                                "type": "string",
+                                "example": "Bureau Personnel"
+                            },
+                            "sigle": {
+                                "type": "string",
+                                "example": "B.P",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "structure": {
+                        "description": "Structure du périmètre (nom complet), selon vue_personnel. Null si vue globale.",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 2
+                            },
+                            "nom": {
+                                "type": "string",
+                                "example": "Service RH"
+                            },
+                            "sigle": {
+                                "type": "string",
+                                "example": "S.R.H",
+                                "nullable": true
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "direction",
+                                    "service",
+                                    "bureau"
+                                ]
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "fonction": {
+                        "description": "Fonction de l'agent rattaché.",
+                        "properties": {
+                            "id": {
+                                "type": "integer",
+                                "example": 4
+                            },
+                            "nom": {
+                                "type": "string",
+                                "example": "Chef de service"
+                            },
+                            "sigle": {
+                                "type": "string",
+                                "example": "C.S",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
                     },
                     "roles": {
                         "type": "array",
@@ -11286,11 +14556,19 @@
         },
         {
             "name": "Affaires sociales",
-            "description": "Organismes, affiliations CNSS, ayants droit (CCN art. 58–59)"
+            "description": "Organismes, affiliations CNSS, ayants droit, prestations CCN art. 119–121, santé / AT-MP art. 122–135"
         },
         {
             "name": "Formations",
             "description": "Formation continue des agents (CCN art. 92–104)"
+        },
+        {
+            "name": "Paie",
+            "description": "Éléments de paie, lots mensuels, bulletin enrichi, export (CCN art. 54–59)"
+        },
+        {
+            "name": "Reporting",
+            "description": "Tableau de bord RH, statistiques, alertes de conformité, exports PDF/CSV"
         },
         {
             "name": "Absences",
@@ -11303,6 +14581,10 @@
         {
             "name": "Évaluation",
             "description": "Évaluation"
+        },
+        {
+            "name": "Congé annuel",
+            "description": "Congé annuel"
         },
         {
             "name": "Commissions",
