@@ -25,6 +25,7 @@ use App\Models\Service;
 use App\Models\SituationFamiliale;
 use App\Models\TypeIntegration;
 use App\Models\User;
+use App\Services\CompteFusionService;
 use App\Services\SalaireService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -568,7 +569,26 @@ class AgentsGestRhSeeder extends Seeder
             ->orderBy('id')
             ->get();
 
+        $fusion = app(CompteFusionService::class);
+
         foreach ($agents as $agent) {
+            // Ne jamais créer un second compte : réutiliser celui de la fiche,
+            // sinon rattacher l'ancien compte orphelin de la même personne
+            // (compte d'un agent de démonstration retiré). C'est ce qui
+            // produisait les doublons `prenom.nom@` / `prenom.nom.<matricule>@`.
+            $existant = User::query()
+                ->where('agent_id', $agent->id)
+                ->orderByDesc('is_active')
+                ->orderBy('id')
+                ->first()
+                ?? $fusion->compteOrphelinPour($agent);
+
+            if ($existant !== null) {
+                $this->rattacherCompte($agent, $existant);
+
+                continue;
+            }
+
             $email = $this->emailConnexion($agent, $pris, $reserves);
 
             $user = User::query()->create([
@@ -601,6 +621,43 @@ class AgentsGestRhSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         return $crees;
+    }
+
+    /**
+     * Rattache un compte existant à l'agent au lieu d'en créer un nouveau.
+     * Un compte neutralisé par retirerAgentsFictifs (désactivé, mot de passe
+     * aléatoire) retrouve le mot de passe initial des comptes importés.
+     */
+    private function rattacherCompte(Agent $agent, User $user): void
+    {
+        $attributs = ['agent_id' => $agent->id];
+        if (! $user->is_active) {
+            $attributs += ['is_active' => true, 'password' => 'password'];
+        }
+        $user->update($attributs);
+
+        $email = mb_strtolower($user->email);
+        $adressePrise = CompteIntegration::query()
+            ->where(fn ($query) => $query->where('login', $email)->orWhere('email_professionnel', $email))
+            ->exists();
+
+        if (! $adressePrise) {
+            CompteIntegration::query()->create([
+                'agent_id' => $agent->id,
+                'user_id' => $user->id,
+                'login' => $email,
+                'email_professionnel' => $email,
+                'badge_numero' => $agent->matricule,
+                'mot_de_passe_provisoire_envoye' => false,
+                'date_creation' => now(),
+            ]);
+        }
+
+        if ($agent->email_professionnel === null) {
+            $agent->update(['email_professionnel' => $email]);
+        }
+
+        SyncAgentRolesSeeder::attribuer($user->fresh());
     }
 
     /**

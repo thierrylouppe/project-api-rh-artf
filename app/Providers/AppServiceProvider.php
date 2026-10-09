@@ -26,6 +26,7 @@ use App\Interfaces\ClassegrillesalarialeInterface;
 use App\Interfaces\CommissionAvancementInterface;
 use App\Interfaces\CommissionPreparatoireInterface;
 use App\Interfaces\CampagneCongeAnnuelInterface;
+use App\Interfaces\CompteFusionInterface;
 use App\Interfaces\CompteIntegrationInterface;
 use App\Interfaces\CongeSoldeInterface;
 use App\Interfaces\ConnaissanceComplementaireInterface;
@@ -184,6 +185,7 @@ use App\Repositories\TypeDocumentRepository;
 use App\Repositories\TypeIntegrationRepository;
 use App\Repositories\TypeSanctionRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\CompteFusionRepository;
 use App\Repositories\ValidationWorkflowRepository;
 use App\Repositories\VisiteMedicaleRepository;
 use Illuminate\Support\ServiceProvider;
@@ -294,6 +296,7 @@ class AppServiceProvider extends ServiceProvider
         // Module 1.3 — Administration système
         NotificationInterface::class => NotificationRepository::class,
         UserInterface::class => UserRepository::class,
+        CompteFusionInterface::class => CompteFusionRepository::class,
         RoleInterface::class => RoleRepository::class,
         PermissionInterface::class => PermissionRepository::class,
         AuditLogInterface::class => AuditLogRepository::class,
