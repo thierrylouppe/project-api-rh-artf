@@ -16,6 +16,30 @@
 
 Après un `migrate:fresh --seed` ou `db:seed --class=SyncAgentRolesSeeder` : **se déconnecter puis se reconnecter**.
 
+### Doublons et comptes de démonstration — `comptes:fusionner`
+
+Une base seedée avec l'ancien jeu de démonstration puis avec `AgentsGestRhSeeder`
+garde les comptes `prenom.nom@artf.cg` des agents fictifs, désactivés et sans
+fiche. Quand la même personne existe dans gestRH, l'import lui avait créé un
+second compte `prenom.nom.<matricule>@artf.cg`. L'import réutilise désormais le
+compte existant ; pour nettoyer une base déjà touchée :
+
+```
+php artisan comptes:fusionner                      # bilan seul, aucune écriture
+php artisan comptes:fusionner --appliquer          # fusionne les doublons
+php artisan comptes:fusionner --appliquer --purger # + retire les comptes de démonstration
+php artisan comptes:fusionner --appliquer --paire=ABSORBE:CONSERVE   # cas ambigu tranché à la main
+```
+
+- **Fusion** : le compte qui a la fiche est conservé ; tout l'historique du
+  compte absorbé (clés étrangères, notifications, rôles) lui est repointé. Il
+  récupère l'adresse simple `prenom.nom@artf.cg` ; son mot de passe ne change pas.
+- **Purge** (`--purger`) : comptes sans fiche, **désactivés** et sans
+  correspondant. Supprimés s'ils n'ont aucun historique, sinon laissés désactivés.
+  Les comptes **actifs** sans fiche ne sont jamais touchés (à vérifier à la main).
+- Comptes système (`admin@`, `rh@`, `dg@`…) jamais touchés. Sauvegarder la base
+  avant `--appliquer`.
+
 ---
 
 ## 🏛️ Directeur Général
