@@ -366,17 +366,26 @@ class AgentsGestRhSeeder extends Seeder
                 return $agent;
             }
 
+            // Une fiche déjà présente sans matricule peut correspondre à cette
+            // ligne complète du dump. La réutiliser évite de créer un second
+            // agent et conserve son compte utilisateur / son identifiant.
+            $agent = $this->trouverParIdentite($fiche, sansMatricule: true);
+            if ($agent) {
+                $agent->fill($attributs + ['matricule' => $fiche['matricule']])->save();
+                $stats['deja']++;
+
+                return $agent;
+            }
+
             $stats['crees']++;
 
             return Agent::query()->create($attributs + ['matricule' => $fiche['matricule']]);
         }
 
-        $agent = Agent::query()
-            ->where('nom', $fiche['nom'])
-            ->where('prenom', $fiche['prenom'])
-            ->whereDate('date_naissance', $fiche['date_naissance'])
-            ->whereNull('matricule')
-            ->first();
+        // Le dump peut contenir les deux variantes d'une même personne dans
+        // n'importe quel ordre. Une ligne sans matricule doit aussi retrouver
+        // une fiche complète déjà importée, sans effacer son matricule.
+        $agent = $this->trouverParIdentite($fiche);
 
         if ($agent) {
             $stats['deja']++;
@@ -387,6 +396,30 @@ class AgentsGestRhSeeder extends Seeder
         $stats['crees']++;
 
         return Agent::query()->create($attributs + ['matricule' => null]);
+    }
+
+    /**
+     * Recherche une fiche correspondant à l'identité du dump.
+     *
+     * @param  array<string, mixed>  $fiche
+     */
+    private function trouverParIdentite(array $fiche, bool $sansMatricule = false): ?Agent
+    {
+        $query = Agent::query()
+            ->whereRaw('LOWER(TRIM(nom)) = ?', [mb_strtolower(trim($fiche['nom']))])
+            ->whereRaw('LOWER(TRIM(prenom)) = ?', [mb_strtolower(trim($fiche['prenom']))]);
+
+        if ($fiche['date_naissance'] === null) {
+            $query->whereNull('date_naissance');
+        } else {
+            $query->whereDate('date_naissance', $fiche['date_naissance']);
+        }
+
+        if ($sansMatricule) {
+            $query->whereNull('matricule');
+        }
+
+        return $query->orderByRaw('matricule IS NOT NULL')->orderBy('id')->first();
     }
 
     /**
